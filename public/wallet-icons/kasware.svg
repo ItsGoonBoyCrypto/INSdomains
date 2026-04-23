@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="kasware-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#70C7BA"/>
+      <stop offset="100%" stop-color="#49EACB"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#kasware-bg)"/>
+  <g fill="#0a2a26">
+    <path d="M18 16h7v14l10-14h8.5L32.5 30.5 44 48h-8.5L27 35v13h-7z" fill="#ffffff"/>
+  </g>
+</svg>
