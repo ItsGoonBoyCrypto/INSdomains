@@ -173,7 +173,7 @@ export default async function OGImage() {
                   lineHeight: 1,
                 }}
               >
-                alice
+                igra
               </div>
               <div
                 style={{
