@@ -326,8 +326,8 @@ function saveCandidates(labels: string[]) {
 }
 
 function ReservedNamesCard() {
-  // Candidate pool: seed + every label this client has ever reserved (localStorage).
-  // On-chain `reserved(label)` is the source of truth for display.
+  // Candidate pool: seed + every label this client has ever reserved or imported (localStorage).
+  // On-chain `reserved(label)` is the source of truth per row.
   const [candidates, setCandidates] = useState<string[]>(() =>
     Array.from(new Set([...Array.from(RESERVED_NAMES), ...loadCandidates()])).sort(),
   );
@@ -337,6 +337,8 @@ function ReservedNamesCard() {
 
   const [newLabel, setNewLabel] = useState("");
   const [pendingAction, setPendingAction] = useState<{ kind: "add" | "remove"; label: string } | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importRaw, setImportRaw] = useState("");
 
   const { writeContract, data: hash, isPending, error, reset } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
@@ -355,19 +357,33 @@ function ReservedNamesCard() {
     query: { enabled: REGISTRY_LIVE && candidates.length > 0 },
   });
 
-  // Display list = candidates confirmed reserved on-chain.
-  const reserved = useMemo(() => {
-    if (!REGISTRY_LIVE) return candidates; // show local list when registry not deployed
-    const out: string[] = [];
-    candidates.forEach((label, i) => {
-      const row = chainData?.[i];
-      if (row?.status === "success" && row.result === true) out.push(label);
+  // Per-row on-chain status — true = reserved, false = not reserved, undefined = still loading.
+  const statusFor = (i: number): boolean | undefined => {
+    const row = chainData?.[i];
+    if (!row || row.status !== "success") return undefined;
+    return row.result === true;
+  };
+
+  const onChainCount = useMemo(() => {
+    if (!REGISTRY_LIVE) return candidates.length;
+    let n = 0;
+    candidates.forEach((_, i) => {
+      if (statusFor(i) === true) n++;
     });
-    return out.sort();
+    return n;
+  }, [candidates, chainData]);
+
+  // For validation — are we trying to re-add something already confirmed reserved?
+  const reservedSet = useMemo(() => {
+    const s = new Set<string>();
+    candidates.forEach((label, i) => {
+      if (statusFor(i) === true) s.add(label);
+    });
+    return s;
   }, [candidates, chainData]);
 
   const clean = cleanLabel(newLabel);
-  const valid = isValidLabel(clean) && !reserved.includes(clean);
+  const valid = isValidLabel(clean) && !reservedSet.has(clean);
 
   useEffect(() => {
     if (isConfirmed && pendingAction) {
@@ -405,8 +421,13 @@ function ReservedNamesCard() {
     });
   };
 
+  const onUntrack = (label: string) => {
+    // Remove from local candidate pool only — does NOT unreserve on-chain.
+    setCandidates((prev) => prev.filter((x) => x !== label));
+  };
+
   const onBatchSeed = () => {
-    const toAdd = Array.from(RESERVED_NAMES).filter((n) => !reserved.includes(n));
+    const toAdd = Array.from(RESERVED_NAMES).filter((n) => !reservedSet.has(n));
     if (toAdd.length === 0) return;
     setCandidates((prev) => Array.from(new Set([...prev, ...toAdd])).sort());
     setPendingAction({ kind: "add", label: "(batch)" });
@@ -418,9 +439,22 @@ function ReservedNamesCard() {
     });
   };
 
-  const subtitle = isLoadingChain && reserved.length === 0
-    ? "loading on-chain state…"
-    : `${reserved.length} names blocked from public mint`;
+  const onImport = () => {
+    const parsed = parseBulkInput(importRaw, []);
+    if (parsed.valid.length === 0) return;
+    setCandidates((prev) =>
+      Array.from(new Set([...prev, ...parsed.valid])).sort(),
+    );
+    setImportRaw("");
+    setImportOpen(false);
+    // Chain reads will auto-refire because `candidates` changed (hook dependency).
+  };
+
+  const importParsed = useMemo(() => parseBulkInput(importRaw, []), [importRaw]);
+
+  const subtitle = isLoadingChain && onChainCount === 0
+    ? "reading on-chain state…"
+    : `${onChainCount} on-chain / ${candidates.length} tracked`;
 
   return (
     <Card
@@ -462,7 +496,7 @@ function ReservedNamesCard() {
       <TxError message={error?.message} onReset={reset} />
 
       <BulkReserveSection
-        currentReserved={reserved}
+        currentReserved={Array.from(reservedSet)}
         disabled={!REGISTRY_LIVE || busy}
         onBatchDone={(labels) => {
           setCandidates((prev) =>
@@ -472,31 +506,110 @@ function ReservedNamesCard() {
         }}
       />
 
-      <ul className="mt-4 max-h-72 overflow-y-auto divide-y divide-white/5 rounded-xl border border-white/5">
-        {reserved.map((label) => (
-          <li key={label} className="flex items-center justify-between px-3 py-2 text-sm">
-            <span className="font-mono">
-              {label}<span className="text-white/30">.ins</span>
-            </span>
+      {/* Free-track import — paste labels to populate the tracking list without sending a tx */}
+      {!importOpen ? (
+        <button
+          onClick={() => setImportOpen(true)}
+          className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold text-white/70 transition hover:border-cyan/30 hover:text-cyan"
+        >
+          <ClipboardList className="h-3 w-3" /> Track additional labels (no tx)
+        </button>
+      ) : (
+        <div className="mt-3 rounded-xl border border-cyan/20 bg-cyan/[0.03] p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-cyan">
+              <ClipboardList className="h-3.5 w-3.5" /> Track list
+            </div>
             <button
-              onClick={() => onRemove(label)}
-              disabled={!REGISTRY_LIVE || busy}
-              className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-xs text-white/60 transition hover:border-red-500/30 hover:text-red-300 disabled:opacity-40"
+              onClick={() => { setImportOpen(false); setImportRaw(""); }}
+              className="inline-flex items-center gap-1 text-[10px] text-white/40 hover:text-white/80"
             >
-              {busy && pendingAction?.kind === "remove" && pendingAction.label === label
-                ? <Loader2 className="h-3 w-3 animate-spin" />
-                : <Trash2 className="h-3 w-3" />}
-              Unreserve
+              <X className="h-3 w-3" /> close
             </button>
-          </li>
-        ))}
-        {reserved.length === 0 && !isLoadingChain && (
+          </div>
+          <p className="mt-1 text-[10px] text-white/50">
+            Paste labels you&rsquo;ve already reserved on-chain from a different device. This
+            just adds them to the display list — no gas, no tx.
+          </p>
+          <textarea
+            value={importRaw}
+            onChange={(e) => setImportRaw(e.target.value)}
+            rows={4}
+            placeholder="alice, bob, zealous…"
+            className="mt-2 w-full resize-none rounded-lg border border-white/10 bg-black/40 p-2 font-mono text-xs text-white/80 placeholder:text-white/30 focus:outline-none focus:border-cyan/40"
+            spellCheck={false}
+          />
+          <div className="mt-2 flex items-center justify-between">
+            <div className="text-[10px] text-white/50">
+              {importParsed.valid.length} valid · {importParsed.invalid.length} invalid · {importParsed.dup.length} dup
+            </div>
+            <button
+              onClick={onImport}
+              disabled={importParsed.valid.length === 0}
+              className="inline-flex items-center gap-1 rounded-lg border border-cyan/30 bg-cyan/10 px-3 py-1 text-xs font-semibold text-cyan transition hover:bg-cyan/20 disabled:opacity-40"
+            >
+              <Plus className="h-3 w-3" /> Track {importParsed.valid.length}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <ul className="mt-4 max-h-72 overflow-y-auto divide-y divide-white/5 rounded-xl border border-white/5">
+        {candidates.map((label, i) => {
+          const status = statusFor(i);
+          const isOnChain = status === true;
+          const isOffChain = status === false;
+          const isUnknown = status === undefined;
+          return (
+            <li key={label} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+              <div className="flex items-center gap-2 min-w-0">
+                {isOnChain && (
+                  <span className="inline-flex h-1.5 w-1.5 flex-none rounded-full bg-emerald-400" title="Reserved on-chain" />
+                )}
+                {isOffChain && (
+                  <span className="inline-flex h-1.5 w-1.5 flex-none rounded-full bg-amber-400" title="Tracked locally but NOT reserved on-chain" />
+                )}
+                {isUnknown && (
+                  <Loader2 className="h-3 w-3 flex-none animate-spin text-white/30" />
+                )}
+                <span className="font-mono truncate">
+                  {label}<span className="text-white/30">.ins</span>
+                </span>
+                {isOffChain && (
+                  <span className="flex-none rounded-full border border-amber-400/30 bg-amber-400/10 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-amber-300">
+                    not on-chain
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-none items-center gap-1">
+                {isOnChain && (
+                  <button
+                    onClick={() => onRemove(label)}
+                    disabled={!REGISTRY_LIVE || busy}
+                    className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-xs text-white/60 transition hover:border-red-500/30 hover:text-red-300 disabled:opacity-40"
+                    title="Call setReserved(label, false) on-chain"
+                  >
+                    {busy && pendingAction?.kind === "remove" && pendingAction.label === label
+                      ? <Loader2 className="h-3 w-3 animate-spin" />
+                      : <Trash2 className="h-3 w-3" />}
+                    Unreserve
+                  </button>
+                )}
+                {!isOnChain && (
+                  <button
+                    onClick={() => onUntrack(label)}
+                    className="inline-flex items-center gap-1 rounded-full border border-white/5 bg-white/[0.02] px-2 py-0.5 text-[10px] text-white/40 transition hover:border-white/20 hover:text-white/70"
+                    title="Remove from local tracking list (does not touch chain)"
+                  >
+                    <X className="h-3 w-3" /> untrack
+                  </button>
+                )}
+              </div>
+            </li>
+          );
+        })}
+        {candidates.length === 0 && (
           <li className="px-3 py-4 text-center text-xs text-white/40">No reserved names yet.</li>
-        )}
-        {reserved.length === 0 && isLoadingChain && (
-          <li className="px-3 py-4 text-center text-xs text-white/40">
-            <Loader2 className="inline h-3 w-3 animate-spin" /> Reading on-chain state…
-          </li>
         )}
       </ul>
     </Card>
