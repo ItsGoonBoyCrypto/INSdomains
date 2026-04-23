@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ShieldCheck, Lock, Gift, Tag, Gem, ArrowRight, Loader2,
   Check, Plus, Trash2, Wallet, AlertTriangle, Settings2, ExternalLink,
+  ClipboardList, X,
 } from "lucide-react";
 import {
   useAccount,
@@ -404,6 +405,16 @@ function ReservedNamesCard() {
 
       <TxError message={error?.message} onReset={reset} />
 
+      <BulkReserveSection
+        currentReserved={reserved}
+        disabled={!REGISTRY_LIVE || busy}
+        onBatchDone={(labels) =>
+          setReserved((prev) =>
+            Array.from(new Set([...prev, ...labels])).sort()
+          )
+        }
+      />
+
       <ul className="mt-4 max-h-72 overflow-y-auto divide-y divide-white/5 rounded-xl border border-white/5">
         {reserved.map((label) => (
           <li key={label} className="flex items-center justify-between px-3 py-2 text-sm">
@@ -427,6 +438,265 @@ function ReservedNamesCard() {
         )}
       </ul>
     </Card>
+  );
+}
+
+/* ── Bulk reserve section (embedded in Reserved card) ──── */
+const BULK_CHUNK = 50;
+
+function parseBulkInput(raw: string, currentReserved: string[]) {
+  const already = new Set(currentReserved);
+  const tokens = raw
+    .split(/[\s,;]+/)
+    .map((t) => t.trim().toLowerCase().replace(/\.ins$/, ""))
+    .filter(Boolean);
+
+  const seen = new Set<string>();
+  const valid: string[] = [];
+  const invalid: string[] = [];
+  const dup: string[] = [];
+
+  for (const t of tokens) {
+    const clean = t.replace(/[^a-z0-9-]/g, "");
+    if (!clean) continue;
+    if (seen.has(clean)) continue;
+    seen.add(clean);
+
+    const ok =
+      clean.length >= 1 &&
+      clean.length <= 32 &&
+      !clean.startsWith("-") &&
+      !clean.endsWith("-") &&
+      /^[a-z0-9-]+$/.test(clean);
+
+    if (!ok) { invalid.push(t); continue; }
+    if (already.has(clean)) { dup.push(clean); continue; }
+    valid.push(clean);
+  }
+  return { valid, invalid, dup };
+}
+
+function chunkLabels(labels: string[], size = BULK_CHUNK): string[][] {
+  const out: string[][] = [];
+  for (let i = 0; i < labels.length; i += size) {
+    out.push(labels.slice(i, i + size));
+  }
+  return out;
+}
+
+function BulkReserveSection({
+  currentReserved,
+  disabled,
+  onBatchDone,
+}: {
+  currentReserved: string[];
+  disabled: boolean;
+  onBatchDone: (labels: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [raw, setRaw] = useState("");
+  const [batches, setBatches] = useState<string[][]>([]);
+  const [chunkIndex, setChunkIndex] = useState<number | null>(null);
+  const [sent, setSent] = useState<{ labels: string[]; hash: `0x${string}` }[]>([]);
+  const processedRef = useRef<Set<string>>(new Set());
+
+  const { writeContract, data: hash, isPending, error, reset } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({ hash });
+
+  const busy = chunkIndex !== null || isPending || isConfirming;
+
+  const parsed = useMemo(
+    () => parseBulkInput(raw, currentReserved),
+    [raw, currentReserved],
+  );
+  const chunks = useMemo(() => chunkLabels(parsed.valid), [parsed.valid]);
+
+  useEffect(() => {
+    if (!isConfirmed || !hash || chunkIndex === null) return;
+    if (processedRef.current.has(hash)) return;
+    processedRef.current.add(hash);
+
+    const justDone = batches[chunkIndex];
+    if (justDone) {
+      onBatchDone(justDone);
+      setSent((prev) => [...prev, { labels: justDone, hash }]);
+    }
+
+    const next = chunkIndex + 1;
+    if (next < batches.length) {
+      setChunkIndex(next);
+      reset();
+      writeContract({
+        address: REGISTRY_ADDRESS,
+        abi: REGISTRY_ABI,
+        functionName: "setReservedBatch",
+        args: [batches[next], true],
+      });
+    } else {
+      setChunkIndex(null);
+      setBatches([]);
+      const t = setTimeout(() => {
+        setRaw("");
+        setSent([]);
+        processedRef.current.clear();
+        reset();
+      }, 2500);
+      return () => clearTimeout(t);
+    }
+  }, [isConfirmed, hash, chunkIndex, batches, onBatchDone, writeContract, reset]);
+
+  const onStart = () => {
+    if (parsed.valid.length === 0 || busy) return;
+    processedRef.current.clear();
+    setBatches(chunks);
+    setSent([]);
+    setChunkIndex(0);
+    writeContract({
+      address: REGISTRY_ADDRESS,
+      abi: REGISTRY_ABI,
+      functionName: "setReservedBatch",
+      args: [chunks[0], true],
+    });
+  };
+
+  const onStopAfterFail = () => {
+    setChunkIndex(null);
+    setBatches([]);
+    reset();
+  };
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold text-white/70 transition hover:border-red-500/30 hover:text-red-200"
+      >
+        <ClipboardList className="h-3 w-3" /> Bulk reserve — paste a list
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/[0.03] p-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-red-200">
+          <ClipboardList className="h-3.5 w-3.5" /> Bulk reserve
+        </div>
+        <button
+          onClick={() => { if (!busy) { setOpen(false); setRaw(""); } }}
+          disabled={busy}
+          className="inline-flex items-center gap-1 text-[10px] text-white/40 hover:text-white/80 disabled:opacity-30"
+        >
+          <X className="h-3 w-3" /> close
+        </button>
+      </div>
+      <p className="mt-1 text-[10px] text-white/50">
+        Paste names — any separator (newline, comma, space).{" "}
+        <code className="rounded bg-black/30 px-1">.ins</code> suffix auto-stripped.
+        Duplicates + invalid labels filtered. {BULK_CHUNK} names per batch tx.
+      </p>
+      <textarea
+        value={raw}
+        onChange={(e) => setRaw(e.target.value)}
+        disabled={busy}
+        rows={5}
+        placeholder={"alice\nbob.ins\nkaspa, igra, zealous\nkasplex, kasware, kastle\n..."}
+        className="mt-2 w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 font-mono text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/40 disabled:opacity-60"
+        spellCheck={false}
+      />
+
+      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px]">
+        {parsed.valid.length > 0 && (
+          <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 font-semibold text-emerald-300">
+            {parsed.valid.length} to reserve
+          </span>
+        )}
+        {parsed.dup.length > 0 && (
+          <span
+            title={parsed.dup.join(", ")}
+            className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-white/50"
+          >
+            {parsed.dup.length} already reserved
+          </span>
+        )}
+        {parsed.invalid.length > 0 && (
+          <span
+            title={parsed.invalid.join(", ")}
+            className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-amber-300"
+          >
+            {parsed.invalid.length} invalid
+          </span>
+        )}
+        {chunks.length > 0 && parsed.valid.length > 0 && chunkIndex === null && (
+          <span className="text-white/40">
+            → {chunks.length} {chunks.length === 1 ? "tx" : "txs"}
+          </span>
+        )}
+      </div>
+
+      {chunkIndex !== null && (
+        <div className="mt-3 rounded-lg border border-white/5 bg-black/40 p-2">
+          <div className="flex items-center gap-1.5 text-[11px] text-white/80">
+            <Loader2 className="h-3 w-3 animate-spin text-cyan" />
+            Sending batch {chunkIndex + 1} of {batches.length}
+            {isPending ? " — confirm in wallet…" : isConfirming ? " — mining…" : "…"}
+          </div>
+          {sent.length > 0 && (
+            <ul className="mt-2 space-y-1 text-[10px] text-white/50">
+              {sent.map((b, i) => (
+                <li key={i} className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1">
+                    <Check className="h-2.5 w-2.5 text-emerald-400" />
+                    batch {i + 1}: {b.labels.length} names
+                  </span>
+                  <a
+                    href={`${IGRA_EXPLORER}/tx/${b.hash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-0.5 text-cyan/70 hover:text-cyan"
+                  >
+                    tx <ExternalLink className="h-2.5 w-2.5" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {error && chunkIndex !== null && (
+        <div className="mt-2 rounded-lg border border-red-500/40 bg-red-500/10 p-2 text-[10px] text-red-200">
+          <div className="font-semibold">Batch {chunkIndex + 1} failed</div>
+          <div className="truncate" title={error.message}>
+            {error.message.split("\n")[0]}
+          </div>
+          <button
+            onClick={onStopAfterFail}
+            className="mt-1 text-red-100 underline decoration-dotted"
+          >
+            Stop &amp; reset (earlier batches already on-chain)
+          </button>
+        </div>
+      )}
+
+      <button
+        onClick={onStart}
+        disabled={disabled || busy || parsed.valid.length === 0}
+        className="mt-3 inline-flex w-full items-center justify-center gap-1 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-500/20 disabled:opacity-40"
+      >
+        {busy ? (
+          <><Loader2 className="h-4 w-4 animate-spin" /> Reserving…</>
+        ) : parsed.valid.length === 0 ? (
+          <>Paste names above</>
+        ) : (
+          <>
+            Reserve {parsed.valid.length} name{parsed.valid.length === 1 ? "" : "s"}
+            {" "}({chunks.length} {chunks.length === 1 ? "tx" : "txs"})
+          </>
+        )}
+      </button>
+    </div>
   );
 }
 
