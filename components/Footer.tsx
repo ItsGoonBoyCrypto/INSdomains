@@ -8,7 +8,7 @@ const COLS = [
       { label: "App", href: "/app" },
       { label: "My Domains", href: "/domains" },
       { label: "Marketplace", href: "/marketplace" },
-      { label: "Docs", href: "/docs" },
+      { label: "About", href: "/about" },
     ],
   },
   {
@@ -70,7 +70,7 @@ export function Footer() {
       <div className="mx-auto mt-12 flex max-w-7xl flex-col items-center justify-between gap-3 border-t border-white/5 pt-8 text-xs text-white/40 md:flex-row">
         <span>Built on Igra · Secured by Kaspa · © 2026 INS Labs</span>
         <div className="flex items-center gap-4">
-          <Link href="/docs" className="hover:text-white">Docs</Link>
+          <Link href="/about" className="hover:text-white">About</Link>
           <Link href="/terms" className="hover:text-white">Terms</Link>
           <Link href="/privacy" className="hover:text-white">Privacy</Link>
         </div>

@@ -55,6 +55,41 @@ export const REGISTRY_ABI = [
   },
   {
     type: "function",
+    name: "ownerOf",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [{ type: "address" }],
+  },
+  {
+    type: "function",
+    name: "tokenIdOf",
+    stateMutability: "view",
+    inputs: [{ name: "label", type: "string" }],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "labelOf",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [{ type: "string" }],
+  },
+  {
+    type: "function",
+    name: "targetOf",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [{ type: "address" }],
+  },
+  {
+    type: "function",
+    name: "mintedAt",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
     name: "resolve",
     stateMutability: "view",
     inputs: [{ name: "label", type: "string" }],
@@ -186,6 +221,23 @@ export const REGISTRY_ABI = [
     inputs: [
       { name: "label", type: "string", indexed: true },
       { name: "isReserved", type: "bool", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "Transfer",
+    inputs: [
+      { name: "from", type: "address", indexed: true },
+      { name: "to", type: "address", indexed: true },
+      { name: "tokenId", type: "uint256", indexed: true },
+    ],
+  },
+  {
+    type: "event",
+    name: "TargetSet",
+    inputs: [
+      { name: "tokenId", type: "uint256", indexed: true },
+      { name: "target", type: "address", indexed: true },
     ],
   },
 ] as const;

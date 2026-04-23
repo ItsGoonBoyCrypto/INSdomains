@@ -361,22 +361,7 @@ function RegisterButton({
 
   // On-chain flow.
   if (isConfirmed && hash) {
-    return (
-      <div className="flex flex-col items-end gap-2">
-        <Link href="/domains" className="btn-primary bg-emerald-400">
-          <Check className="mr-1 inline h-4 w-4" />
-          Minted! View →
-        </Link>
-        <a
-          href={`${IGRA_EXPLORER}/tx/${hash}`}
-          target="_blank"
-          rel="noreferrer"
-          className="text-[11px] text-white/50 hover:text-cyan"
-        >
-          View tx <ExternalLink className="inline h-3 w-3" />
-        </a>
-      </div>
-    );
+    return <MintedSuccess label={label} hash={hash} />;
   }
 
   const onMint = () => {
@@ -414,6 +399,38 @@ function RegisterButton({
           {writeError.message.split("\n")[0] || "Transaction failed"} — retry
         </button>
       )}
+    </div>
+  );
+}
+
+function MintedSuccess({ label, hash }: { label: string; hash: `0x${string}` }) {
+  const { data: tokenId } = useReadContract({
+    address: REGISTRY_ADDRESS,
+    abi: REGISTRY_ABI,
+    functionName: "tokenIdOf",
+    args: [label],
+    query: { enabled: REGISTRY_LIVE && !!label },
+  });
+
+  return (
+    <div className="flex flex-col items-end gap-2">
+      <Link href="/domains" className="btn-primary bg-emerald-400">
+        <Check className="mr-1 inline h-4 w-4" />
+        Minted! View →
+      </Link>
+      {typeof tokenId === "bigint" && tokenId > 0n && (
+        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-[11px] font-semibold text-white/70">
+          INS #{tokenId.toString()}
+        </span>
+      )}
+      <a
+        href={`${IGRA_EXPLORER}/tx/${hash}`}
+        target="_blank"
+        rel="noreferrer"
+        className="text-[11px] text-white/50 hover:text-cyan"
+      >
+        View tx <ExternalLink className="inline h-3 w-3" />
+      </a>
     </div>
   );
 }

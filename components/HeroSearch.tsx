@@ -73,7 +73,7 @@ export function HeroSearch() {
         </span>
         <span>· gas ~$0.0004</span>
         <span className="dot-sep" />
-        <Link href="/docs#pricing" className="underline decoration-dotted underline-offset-2 hover:text-white/70">
+        <Link href="/about" className="underline decoration-dotted underline-offset-2 hover:text-white/70">
           Why forever?
         </Link>
       </div>

@@ -50,7 +50,7 @@ npm run dev  # http://localhost:3000
 - `/domains` — wallet dashboard (owned names, edit resolver target, activity)
 - `/marketplace` — secondary-market listings
 - `/admin` — wallet-gated registry console (all 6 admin cards wired via wagmi)
-- `/docs` — developer docs + pricing explainer + Registry API table
+- `/about` — mission, tiered pricing explainer, stack, contract registry, roadmap
 - `/api/suggest` — POST `{seed}` → JSON `{names: string[]}`
 
 ## Contracts

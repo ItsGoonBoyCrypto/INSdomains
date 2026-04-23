@@ -7,10 +7,11 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { isAddress } from "viem";
 import {
   Copy, Check, Wallet, ExternalLink, Plus, Star,
-  Settings2, Send, GitBranch, Image as ImageIcon, Save, Loader2,
+  Settings2, Send, GitBranch, Image as ImageIcon, Save, Loader2, History,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { NameHistory } from "@/components/NameHistory";
 import { DEMO_OWNED } from "@/lib/mock-registry";
 import { shortAddr } from "@/lib/names";
 import { explorerAddr } from "@/lib/igra-chain";
@@ -160,6 +161,7 @@ function useOwnedNames(address: `0x${string}`) {
 
 function LiveDomainCard({ name, owner }: { name: OwnedName; owner: `0x${string}` }) {
   const [expanded, setExpanded] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [copied, setCopied] = useState(false);
   const [target, setTarget] = useState<string>(name.target);
 
@@ -194,9 +196,17 @@ function LiveDomainCard({ name, owner }: { name: OwnedName; owner: `0x${string}`
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-ins-gradient text-xl font-black text-black">
           {name.label[0]?.toUpperCase() ?? "?"}
         </div>
-        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
-          Owned
-        </span>
+        <div className="flex flex-col items-end gap-1.5">
+          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+            Owned
+          </span>
+          <span
+            title="ERC-721 token ID"
+            className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-[10px] font-semibold text-white/60"
+          >
+            INS #{name.tokenId.toString()}
+          </span>
+        </div>
       </div>
 
       <h3 className="relative mt-5 text-2xl font-bold">
@@ -217,6 +227,7 @@ function LiveDomainCard({ name, owner }: { name: OwnedName; owner: `0x${string}`
 
       <div className="relative mt-5 flex flex-wrap gap-2">
         <IconBtn title="Edit target" icon={<Settings2 className="h-3.5 w-3.5" />} onClick={() => setExpanded(!expanded)} />
+        <IconBtn title="History" icon={<History className="h-3.5 w-3.5" />} onClick={() => setShowHistory(!showHistory)} />
         <a
           href={explorerAddr(name.target)}
           target="_blank"
@@ -227,6 +238,15 @@ function LiveDomainCard({ name, owner }: { name: OwnedName; owner: `0x${string}`
           <ExternalLink className="h-3.5 w-3.5" /> Explorer
         </a>
       </div>
+
+      {showHistory && (
+        <div className="relative mt-5 space-y-2">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-white/40">
+            On-chain history
+          </div>
+          <NameHistory tokenId={name.tokenId} />
+        </div>
+      )}
 
       {expanded && (
         <div className="relative mt-5 space-y-3 rounded-xl bg-black/40 p-4">

@@ -94,8 +94,8 @@ export default function Home() {
           <Link href="/app" className="btn-primary text-base px-7 py-3.5">
             Get your .ins name →
           </Link>
-          <Link href="/docs" className="btn-ghost text-base px-7 py-3.5">
-            Read the docs
+          <Link href="/about" className="btn-ghost text-base px-7 py-3.5">
+            About INS
           </Link>
         </div>
       </main>
