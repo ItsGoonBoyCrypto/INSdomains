@@ -304,11 +304,37 @@ function AdminMintCard() {
 }
 
 /* ── Reserved names ─────────────────────────────────────── */
+const RESERVED_LS_KEY = "ins-reserved-candidates-v1";
+
+function loadCandidates(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(RESERVED_LS_KEY);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCandidates(labels: string[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(RESERVED_LS_KEY, JSON.stringify(labels));
+  } catch {
+    /* quota exceeded — silently skip */
+  }
+}
+
 function ReservedNamesCard() {
-  // Optimistic UI list (seeded from mock; on-chain state is reflected by events + chain reads).
-  const [reserved, setReserved] = useState<string[]>(
-    () => Array.from(RESERVED_NAMES).sort()
+  // Candidate pool: seed + every label this client has ever reserved (localStorage).
+  // On-chain `reserved(label)` is the source of truth for display.
+  const [candidates, setCandidates] = useState<string[]>(() =>
+    Array.from(new Set([...Array.from(RESERVED_NAMES), ...loadCandidates()])).sort(),
   );
+  useEffect(() => {
+    saveCandidates(candidates);
+  }, [candidates]);
+
   const [newLabel, setNewLabel] = useState("");
   const [pendingAction, setPendingAction] = useState<{ kind: "add" | "remove"; label: string } | null>(null);
 
@@ -316,22 +342,47 @@ function ReservedNamesCard() {
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
   const busy = isPending || isConfirming;
 
+  // Batch-read on-chain reserved status for every candidate.
+  const { data: chainData, refetch: refetchReserved, isLoading: isLoadingChain } = useReadContracts({
+    contracts: REGISTRY_LIVE
+      ? candidates.map((label) => ({
+          address: REGISTRY_ADDRESS,
+          abi: REGISTRY_ABI,
+          functionName: "reserved" as const,
+          args: [label] as const,
+        }))
+      : [],
+    query: { enabled: REGISTRY_LIVE && candidates.length > 0 },
+  });
+
+  // Display list = candidates confirmed reserved on-chain.
+  const reserved = useMemo(() => {
+    if (!REGISTRY_LIVE) return candidates; // show local list when registry not deployed
+    const out: string[] = [];
+    candidates.forEach((label, i) => {
+      const row = chainData?.[i];
+      if (row?.status === "success" && row.result === true) out.push(label);
+    });
+    return out.sort();
+  }, [candidates, chainData]);
+
   const clean = cleanLabel(newLabel);
   const valid = isValidLabel(clean) && !reserved.includes(clean);
 
   useEffect(() => {
     if (isConfirmed && pendingAction) {
-      if (pendingAction.kind === "add") {
-        setReserved((prev) => [...prev, pendingAction.label].sort());
-      } else {
-        setReserved((prev) => prev.filter((x) => x !== pendingAction.label));
+      if (pendingAction.kind === "add" && pendingAction.label !== "(batch)") {
+        setCandidates((prev) =>
+          Array.from(new Set([...prev, pendingAction.label])).sort(),
+        );
       }
+      refetchReserved();
       setNewLabel("");
       setPendingAction(null);
       const t = setTimeout(reset, 1200);
       return () => clearTimeout(t);
     }
-  }, [isConfirmed, pendingAction, reset]);
+  }, [isConfirmed, pendingAction, reset, refetchReserved]);
 
   const onAdd = () => {
     if (!valid) return;
@@ -357,6 +408,7 @@ function ReservedNamesCard() {
   const onBatchSeed = () => {
     const toAdd = Array.from(RESERVED_NAMES).filter((n) => !reserved.includes(n));
     if (toAdd.length === 0) return;
+    setCandidates((prev) => Array.from(new Set([...prev, ...toAdd])).sort());
     setPendingAction({ kind: "add", label: "(batch)" });
     writeContract({
       address: REGISTRY_ADDRESS,
@@ -366,11 +418,15 @@ function ReservedNamesCard() {
     });
   };
 
+  const subtitle = isLoadingChain && reserved.length === 0
+    ? "loading on-chain state…"
+    : `${reserved.length} names blocked from public mint`;
+
   return (
     <Card
       icon={<Lock className="h-5 w-5 text-red-300" />}
       title="Reserved names"
-      subtitle={`${reserved.length} names blocked from public mint`}
+      subtitle={subtitle}
     >
       <div className="flex gap-2">
         <input
@@ -408,11 +464,12 @@ function ReservedNamesCard() {
       <BulkReserveSection
         currentReserved={reserved}
         disabled={!REGISTRY_LIVE || busy}
-        onBatchDone={(labels) =>
-          setReserved((prev) =>
-            Array.from(new Set([...prev, ...labels])).sort()
-          )
-        }
+        onBatchDone={(labels) => {
+          setCandidates((prev) =>
+            Array.from(new Set([...prev, ...labels])).sort(),
+          );
+          refetchReserved();
+        }}
       />
 
       <ul className="mt-4 max-h-72 overflow-y-auto divide-y divide-white/5 rounded-xl border border-white/5">
@@ -433,8 +490,13 @@ function ReservedNamesCard() {
             </button>
           </li>
         ))}
-        {reserved.length === 0 && (
+        {reserved.length === 0 && !isLoadingChain && (
           <li className="px-3 py-4 text-center text-xs text-white/40">No reserved names yet.</li>
+        )}
+        {reserved.length === 0 && isLoadingChain && (
+          <li className="px-3 py-4 text-center text-xs text-white/40">
+            <Loader2 className="inline h-3 w-3 animate-spin" /> Reading on-chain state…
+          </li>
         )}
       </ul>
     </Card>
