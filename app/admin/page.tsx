@@ -326,14 +326,43 @@ function saveCandidates(labels: string[]) {
 }
 
 function ReservedNamesCard() {
-  // Candidate pool: seed + every label this client has ever reserved or imported (localStorage).
-  // On-chain `reserved(label)` is the source of truth per row.
+  // Candidate pool is seeded from: the in-code RESERVED_NAMES list + whatever is cached in
+  // localStorage + whatever /api/reserved-labels discovers on-chain (auto-populated).
+  // On-chain `reserved(label)` is still the source of truth per row.
   const [candidates, setCandidates] = useState<string[]>(() =>
     Array.from(new Set([...Array.from(RESERVED_NAMES), ...loadCandidates()])).sort(),
   );
+  const [chainScanLoading, setChainScanLoading] = useState(false);
+  const [chainScanError, setChainScanError] = useState<string | null>(null);
   useEffect(() => {
     saveCandidates(candidates);
   }, [candidates]);
+
+  // Auto-discover all reserved labels from chain history (parses setReserved* call data
+  // from every tx that emitted a Reserved event, including Safe-wrapped execTransaction).
+  const fetchChainLabels = async () => {
+    setChainScanLoading(true);
+    setChainScanError(null);
+    try {
+      const res = await fetch("/api/reserved-labels", { cache: "no-store" });
+      const data = (await res.json()) as { labels?: string[]; error?: string };
+      if (data.error) throw new Error(data.error);
+      if (Array.isArray(data.labels) && data.labels.length > 0) {
+        setCandidates((prev) =>
+          Array.from(new Set([...prev, ...data.labels!])).sort(),
+        );
+      }
+    } catch (e) {
+      setChainScanError((e as Error).message ?? "scan failed");
+    } finally {
+      setChainScanLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchChainLabels();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [newLabel, setNewLabel] = useState("");
   const [pendingAction, setPendingAction] = useState<{ kind: "add" | "remove"; label: string } | null>(null);
@@ -393,11 +422,13 @@ function ReservedNamesCard() {
         );
       }
       refetchReserved();
+      fetchChainLabels();
       setNewLabel("");
       setPendingAction(null);
       const t = setTimeout(reset, 1200);
       return () => clearTimeout(t);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConfirmed, pendingAction, reset, refetchReserved]);
 
   const onAdd = () => {
@@ -452,9 +483,14 @@ function ReservedNamesCard() {
 
   const importParsed = useMemo(() => parseBulkInput(importRaw, []), [importRaw]);
 
-  const subtitle = isLoadingChain && onChainCount === 0
-    ? "reading on-chain state…"
-    : `${onChainCount} on-chain / ${candidates.length} tracked`;
+  const subtitle =
+    chainScanLoading && candidates.length === Array.from(RESERVED_NAMES).length
+      ? "scanning on-chain history…"
+      : isLoadingChain && onChainCount === 0
+      ? "reading on-chain state…"
+      : chainScanError
+      ? `${onChainCount} on-chain · scan failed (${chainScanError.split("\n")[0]})`
+      : `${onChainCount} on-chain · auto-scanned from chain${chainScanLoading ? " (refreshing…)" : ""}`;
 
   return (
     <Card
@@ -503,6 +539,7 @@ function ReservedNamesCard() {
             Array.from(new Set([...prev, ...labels])).sort(),
           );
           refetchReserved();
+          fetchChainLabels();
         }}
       />
 
