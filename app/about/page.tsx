@@ -30,6 +30,18 @@ export default function AboutPage() {
           renewals, no squatters&rsquo; auctions, no rent-seeking.
         </p>
 
+        {/* Hero card — reuses the /opengraph-image route */}
+        <div className="mt-10 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] shadow-[0_0_80px_rgba(0,240,255,0.08),0_0_120px_rgba(168,85,247,0.06)]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/opengraph-image"
+            alt="INS — Igra Name Service overview: sample igra.ins NFT and tiered iKAS pricing"
+            width={1200}
+            height={630}
+            className="block h-auto w-full"
+          />
+        </div>
+
         <section className="mt-14 grid gap-4 sm:grid-cols-3">
           <Stat
             icon={<InfinityIcon className="h-5 w-5 text-cyan" />}
