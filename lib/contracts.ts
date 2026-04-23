@@ -6,6 +6,9 @@ export const REGISTRY_ADDRESS = (process.env.NEXT_PUBLIC_INS_REGISTRY ??
 export const RESOLVER_ADDRESS = (process.env.NEXT_PUBLIC_INS_RESOLVER ??
   "0x0000000000000000000000000000000000000000") as Address;
 
+export const REVERSE_RESOLVER_ADDRESS = (process.env.NEXT_PUBLIC_INS_REVERSE_RESOLVER ??
+  "0x0000000000000000000000000000000000000000") as Address;
+
 /** Base tier price (5-32 char) in iKAS — kept for backwards-compat display. */
 export const BASE_PRICE_IKAS = Number(process.env.NEXT_PUBLIC_BASE_PRICE_IKAS ?? 10);
 
@@ -259,5 +262,67 @@ export const RESOLVER_ABI = [
       { name: "key", type: "string" },
     ],
     outputs: [{ type: "string" }],
+  },
+] as const;
+
+export const REVERSE_RESOLVER_ABI = [
+  {
+    type: "function",
+    name: "primaryName",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [{ type: "string" }],
+  },
+  {
+    type: "function",
+    name: "primaryTokenId",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "hasPrimary",
+    stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [{ type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "registry",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "address" }],
+  },
+  {
+    type: "function",
+    name: "setPrimary",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "clearPrimary",
+    stateMutability: "nonpayable",
+    inputs: [],
+    outputs: [],
+  },
+  {
+    type: "event",
+    name: "PrimarySet",
+    inputs: [
+      { name: "user", type: "address", indexed: true },
+      { name: "tokenId", type: "uint256", indexed: true },
+      { name: "label", type: "string", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "PrimaryCleared",
+    inputs: [
+      { name: "user", type: "address", indexed: true },
+      { name: "previousTokenId", type: "uint256", indexed: true },
+    ],
   },
 ] as const;

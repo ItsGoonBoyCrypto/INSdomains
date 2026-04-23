@@ -8,7 +8,7 @@ import { isAddress } from "viem";
 import {
   Copy, Check, Wallet, ExternalLink, Plus, Star,
   Settings2, Send, GitBranch, Image as ImageIcon, Save, Loader2, History,
-  AlertTriangle,
+  AlertTriangle, StarOff,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -16,9 +16,13 @@ import { NameHistory } from "@/components/NameHistory";
 import { DEMO_OWNED } from "@/lib/mock-registry";
 import { shortAddr } from "@/lib/names";
 import { explorerAddr } from "@/lib/igra-chain";
-import { REGISTRY_ADDRESS, REGISTRY_ABI } from "@/lib/contracts";
+import {
+  REGISTRY_ADDRESS, REGISTRY_ABI,
+  REVERSE_RESOLVER_ADDRESS, REVERSE_RESOLVER_ABI,
+} from "@/lib/contracts";
 
 const REGISTRY_LIVE = REGISTRY_ADDRESS !== "0x0000000000000000000000000000000000000000";
+const REVERSE_LIVE = REVERSE_RESOLVER_ADDRESS !== "0x0000000000000000000000000000000000000000";
 
 type OwnedName = {
   tokenId: bigint;
@@ -60,6 +64,15 @@ function NotConnected() {
 
 function Dashboard({ address }: { address: `0x${string}` }) {
   const owned = useOwnedNames(address);
+
+  const { data: primaryTokenIdRaw, refetch: refetchPrimary } = useReadContract({
+    address: REVERSE_RESOLVER_ADDRESS,
+    abi: REVERSE_RESOLVER_ABI,
+    functionName: "primaryTokenId",
+    args: [address],
+    query: { enabled: REVERSE_LIVE },
+  });
+  const primaryTokenId = primaryTokenIdRaw as bigint | undefined;
 
   return (
     <>
@@ -108,7 +121,9 @@ function Dashboard({ address }: { address: `0x${string}` }) {
                 key={d.tokenId.toString()}
                 name={d}
                 owner={address}
+                primaryTokenId={primaryTokenId}
                 onChainUpdate={owned.refetch}
+                onPrimaryChange={refetchPrimary}
               />
             ))
           : DEMO_OWNED.map((d) => <DemoDomainCard key={d.label} domain={d} />)}
@@ -166,11 +181,13 @@ function useOwnedNames(address: `0x${string}`) {
 }
 
 function LiveDomainCard({
-  name, owner, onChainUpdate,
+  name, owner, primaryTokenId, onChainUpdate, onPrimaryChange,
 }: {
   name: OwnedName;
   owner: `0x${string}`;
+  primaryTokenId?: bigint;
   onChainUpdate?: () => void;
+  onPrimaryChange?: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -189,6 +206,41 @@ function LiveDomainCard({
   useEffect(() => {
     if (isConfirmed && onChainUpdate) onChainUpdate();
   }, [isConfirmed, onChainUpdate]);
+
+  const {
+    writeContract: writePrimary,
+    data: primaryHash,
+    isPending: primaryPending,
+    error: primaryError,
+    reset: resetPrimary,
+  } = useWriteContract();
+  const { isLoading: primaryConfirming, isSuccess: primaryConfirmed } =
+    useWaitForTransactionReceipt({ hash: primaryHash });
+
+  useEffect(() => {
+    if (primaryConfirmed && onPrimaryChange) onPrimaryChange();
+  }, [primaryConfirmed, onPrimaryChange]);
+
+  const isPrimary =
+    REVERSE_LIVE && primaryTokenId !== undefined && primaryTokenId === name.tokenId;
+  const primaryBusy = primaryPending || primaryConfirming;
+
+  const onTogglePrimary = () => {
+    if (isPrimary) {
+      writePrimary({
+        address: REVERSE_RESOLVER_ADDRESS,
+        abi: REVERSE_RESOLVER_ABI,
+        functionName: "clearPrimary",
+      });
+    } else {
+      writePrimary({
+        address: REVERSE_RESOLVER_ADDRESS,
+        abi: REVERSE_RESOLVER_ABI,
+        functionName: "setPrimary",
+        args: [name.tokenId],
+      });
+    }
+  };
 
   const onSave = () => {
     if (!isAddress(target)) return;
@@ -223,9 +275,15 @@ function LiveDomainCard({
           {name.label[0]?.toUpperCase() ?? "?"}
         </div>
         <div className="flex flex-col items-end gap-1.5">
-          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
-            Owned
-          </span>
+          {isPrimary ? (
+            <span className="inline-flex items-center gap-1 rounded-full border border-cyan/30 bg-cyan/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-cyan">
+              <Star className="h-3 w-3 fill-cyan" /> Primary
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+              Owned
+            </span>
+          )}
           <span
             title="ERC-721 token ID"
             className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-[10px] font-semibold text-white/60"
@@ -280,6 +338,26 @@ function LiveDomainCard({
       )}
 
       <div className="relative mt-5 flex flex-wrap gap-2">
+        {REVERSE_LIVE && (
+          <button
+            onClick={onTogglePrimary}
+            disabled={primaryBusy}
+            title={isPrimary ? "Clear primary reverse name" : "Use this as your primary reverse name"}
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition disabled:opacity-50 ${
+              isPrimary
+                ? "border-cyan/40 bg-cyan/10 text-cyan hover:bg-cyan/20"
+                : "border-white/10 bg-white/[0.03] text-white/70 hover:border-cyan/30 hover:text-white"
+            }`}
+          >
+            {primaryBusy ? (
+              <><Loader2 className="h-3.5 w-3.5 animate-spin" /> {isPrimary ? "Clearing…" : "Setting…"}</>
+            ) : isPrimary ? (
+              <><StarOff className="h-3.5 w-3.5" /> Clear primary</>
+            ) : (
+              <><Star className="h-3.5 w-3.5" /> Set primary</>
+            )}
+          </button>
+        )}
         <IconBtn title="Edit target" icon={<Settings2 className="h-3.5 w-3.5" />} onClick={() => setExpanded(!expanded)} />
         <IconBtn title="History" icon={<History className="h-3.5 w-3.5" />} onClick={() => setShowHistory(!showHistory)} />
         <a
@@ -292,6 +370,18 @@ function LiveDomainCard({
           <ExternalLink className="h-3.5 w-3.5" /> Explorer
         </a>
       </div>
+
+      {primaryError && (
+        <div className="relative mt-3">
+          <button
+            onClick={() => resetPrimary()}
+            className="text-[10px] text-red-300 hover:text-red-200"
+            title={primaryError.message}
+          >
+            {primaryError.message.split("\n")[0] || "Primary write failed"} — dismiss
+          </button>
+        </div>
+      )}
 
       {showHistory && (
         <div className="relative mt-5 space-y-2">
