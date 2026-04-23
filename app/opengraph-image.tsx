@@ -167,10 +167,11 @@ export default async function OGImage() {
                   fontSize: 132,
                   fontWeight: 900,
                   letterSpacing: -4,
-                  background: `linear-gradient(120deg, ${CYAN} 0%, ${PLUM} 100%)`,
+                  backgroundImage: `linear-gradient(120deg, ${CYAN} 0%, ${PLUM} 100%)`,
                   backgroundClip: "text",
                   color: "transparent",
-                  lineHeight: 1,
+                  lineHeight: 1.3,
+                  paddingBottom: 12,
                 }}
               >
                 igra
