@@ -131,19 +131,7 @@ export default function AboutPage() {
         </section>
 
         <section className="mt-16 rounded-3xl border border-cyan/20 bg-cyan/[0.04] p-8">
-          <h2 className="text-2xl font-bold">Who builds this?</h2>
-          <p className="mt-3 max-w-2xl text-white/70">
-            INS is shipped by the team behind{" "}
-            <a href="https://igraforge.xyz"     target="_blank" rel="noreferrer" className="text-cyan underline decoration-dotted">iForge</a>,{" "}
-            <a href="https://alphaprism.it.com" target="_blank" rel="noreferrer" className="text-cyan underline decoration-dotted">AlphaPrism</a>{" "}
-            and{" "}
-            <a href="https://kasinvest.org"     target="_blank" rel="noreferrer" className="text-cyan underline decoration-dotted">KasInvest</a>.
-            Long-term builders on Kaspa + Igra, focused on useful primitives
-            and open source. Code is{" "}
-            <a href="https://github.com/ItsGoonBoyCrypto" target="_blank" rel="noreferrer" className="text-cyan underline decoration-dotted">on GitHub</a>,
-            changes ship publicly.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Link href="/app" className="btn-primary">
               Register a name <ArrowRight className="ml-1 inline h-4 w-4" />
             </Link>
