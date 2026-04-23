@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAccount, useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
@@ -8,6 +8,7 @@ import { isAddress } from "viem";
 import {
   Copy, Check, Wallet, ExternalLink, Plus, Star,
   Settings2, Send, GitBranch, Image as ImageIcon, Save, Loader2, History,
+  AlertTriangle,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -103,7 +104,12 @@ function Dashboard({ address }: { address: `0x${string}` }) {
       <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {REGISTRY_LIVE
           ? owned.list.map((d) => (
-              <LiveDomainCard key={d.tokenId.toString()} name={d} owner={address} />
+              <LiveDomainCard
+                key={d.tokenId.toString()}
+                name={d}
+                owner={address}
+                onChainUpdate={owned.refetch}
+              />
             ))
           : DEMO_OWNED.map((d) => <DemoDomainCard key={d.label} domain={d} />)}
         <Link
@@ -135,7 +141,7 @@ function useOwnedNames(address: `0x${string}`) {
     return arr;
   }, [total]);
 
-  const { data: batched, isLoading } = useReadContracts({
+  const { data: batched, isLoading, refetch } = useReadContracts({
     contracts: ids.flatMap((id) => [
       { address: REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: "ownerOf", args: [id] },
       { address: REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: "labelOf", args: [id] },
@@ -156,10 +162,16 @@ function useOwnedNames(address: `0x${string}`) {
     }
   }
 
-  return { list, loading: isLoading };
+  return { list, loading: isLoading, refetch };
 }
 
-function LiveDomainCard({ name, owner }: { name: OwnedName; owner: `0x${string}` }) {
+function LiveDomainCard({
+  name, owner, onChainUpdate,
+}: {
+  name: OwnedName;
+  owner: `0x${string}`;
+  onChainUpdate?: () => void;
+}) {
   const [expanded, setExpanded] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -174,6 +186,10 @@ function LiveDomainCard({ name, owner }: { name: OwnedName; owner: `0x${string}`
   const { writeContract, data: hash, isPending, error: writeError, reset } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
 
+  useEffect(() => {
+    if (isConfirmed && onChainUpdate) onChainUpdate();
+  }, [isConfirmed, onChainUpdate]);
+
   const onSave = () => {
     if (!isAddress(target)) return;
     writeContract({
@@ -187,6 +203,16 @@ function LiveDomainCard({ name, owner }: { name: OwnedName; owner: `0x${string}`
   const busy = isPending || isConfirming;
   const targetIsValid = isAddress(target);
   const targetChanged = target.toLowerCase() !== name.target.toLowerCase();
+  const targetIsStale = name.target.toLowerCase() !== owner.toLowerCase();
+
+  const onFixTarget = () => {
+    writeContract({
+      address: REGISTRY_ADDRESS,
+      abi: REGISTRY_ABI,
+      functionName: "setTarget",
+      args: [name.label, owner],
+    });
+  };
 
   return (
     <div className="group relative overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.03] p-6 transition hover:border-cyan/30">
@@ -224,6 +250,34 @@ function LiveDomainCard({ name, owner }: { name: OwnedName; owner: `0x${string}`
           {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
         </button>
       </div>
+
+      {targetIsStale && (
+        <div className="relative mt-4 rounded-xl border border-amber-400/30 bg-amber-400/[0.06] p-3">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 h-4 w-4 flex-none text-amber-300" />
+            <div className="flex-1 text-[11px] leading-relaxed text-amber-100/90">
+              <div className="font-bold text-amber-200">Resolution target is stale</div>
+              <p className="mt-1 text-amber-100/70">
+                This name still resolves to the previous owner&rsquo;s address
+                (<span className="font-mono">{shortAddr(name.target)}</span>). Anyone sending crypto
+                to <span className="font-mono">{name.label}.ins</span> right now will land there,
+                not at your wallet. Point it at yourself:
+              </p>
+              <button
+                onClick={onFixTarget}
+                disabled={busy}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-200 transition hover:bg-amber-400/20 disabled:opacity-40"
+              >
+                {busy ? (
+                  <><Loader2 className="h-3 w-3 animate-spin" /> Updating…</>
+                ) : (
+                  <><Save className="h-3 w-3" /> Point at my wallet</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="relative mt-5 flex flex-wrap gap-2">
         <IconBtn title="Edit target" icon={<Settings2 className="h-3.5 w-3.5" />} onClick={() => setExpanded(!expanded)} />
