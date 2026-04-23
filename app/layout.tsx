@@ -7,12 +7,12 @@ export const metadata: Metadata = {
   title: "INS — Igra Name Service",
   description:
     "Your forever .ins name on Igra. Permanent on-chain identities. No renewals. Native to Igra L2, secured by Kaspa.",
-  metadataBase: new URL("https://ins.klaudeonkas.xyz"),
+  metadataBase: new URL("https://insdomains.org"),
   openGraph: {
     title: "Igra Name Service",
     description: "Permanent .ins names on Igra. Forever on-chain.",
     type: "website",
-    url: "https://ins.klaudeonkas.xyz",
+    url: "https://insdomains.org",
   },
   twitter: { card: "summary_large_image", title: "Igra Name Service" },
   icons: { icon: "/favicon.svg" },

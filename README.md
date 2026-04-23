@@ -2,7 +2,7 @@
 
 **Permanent `.ins` names on the Igra Network.** Pay once, own forever. No renewals.
 
-Live at **[ins.klaudeonkas.xyz](https://ins.klaudeonkas.xyz)** · **[insdomains.org](https://insdomains.org)** (DNS-propagating) · [sslip fallback](https://ins.178-104-105-0.sslip.io)
+Live at **[insdomains.org](https://insdomains.org)** (DNS-propagating) · [sslip fallback](https://ins.178-104-105-0.sslip.io)
 
 Built with Next.js 15, React 19, Tailwind v3, wagmi 2 + RainbowKit, viem, Claude Haiku 4.5, Solidity 0.8.24 (Foundry).
 
@@ -78,7 +78,7 @@ systemctl restart ins-dapp
 Caddy block (in `/etc/caddy/Caddyfile`):
 
 ```caddyfile
-insdomains.org, www.insdomains.org, ins.klaudeonkas.xyz, ins.178-104-105-0.sslip.io {
+insdomains.org, www.insdomains.org, ins.178-104-105-0.sslip.io {
     reverse_proxy 127.0.0.1:3105
     encode zstd gzip
     header {
