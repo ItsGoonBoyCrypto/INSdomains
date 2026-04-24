@@ -6,6 +6,16 @@ Live at **[insdomains.org](https://insdomains.org)** (DNS-propagating) · [sslip
 
 Built with Next.js 15, React 19, Tailwind v3, wagmi 2 + RainbowKit, viem, Claude Haiku 4.5, Solidity 0.8.24 (Foundry).
 
+All four contracts **live on Igra mainnet** (chain 38833), Safe-owned:
+
+| Contract           | Address                                        |
+|--------------------|------------------------------------------------|
+| INSRegistry        | `0x535ff4A6710C2b0d087c5afF01b16fE10bC34D46`   |
+| INSResolver        | `0x451D84002cE0eCFd4cc622c72FA40849a8Bb5f2A`   |
+| INSReverseResolver | `0x9afb263be198c35159FafDafa0729Fc8B13562DA`   |
+| INSMarketplace     | `0xf9e41e0a6fa04B641F6Cf8C92562C551034Af9F7`   |
+| Owner / Treasury   | Safe `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1` |
+
 ## Highlights
 
 - **Tiered pricing** in native iKAS — baked into the contract:
