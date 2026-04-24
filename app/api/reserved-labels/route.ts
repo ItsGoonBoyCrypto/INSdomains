@@ -6,7 +6,7 @@ import {
   parseAbiItem,
   type Hex,
 } from "viem";
-import { REGISTRY_ADDRESS } from "@/lib/contracts";
+import { REGISTRY_ADDRESSES, TLDS, type Tld } from "@/lib/contracts";
 
 export const runtime = "nodejs";
 export const revalidate = 30;
@@ -70,14 +70,14 @@ function extractLabels(input: Hex, depth = 0): string[] {
   return [];
 }
 
-async function fetchReservedLogs() {
+async function fetchReservedLogs(registry: `0x${string}`) {
   const latest = await client.getBlockNumber();
   const all: Array<{ transactionHash: Hex }> = [];
   let from = 0n;
   while (from <= latest) {
     const to = from + CHUNK - 1n > latest ? latest : from + CHUNK - 1n;
     const chunk = await client.getLogs({
-      address: REGISTRY_ADDRESS,
+      address: registry,
       event: reservedEvent,
       fromBlock: from,
       toBlock: to,
@@ -88,13 +88,26 @@ async function fetchReservedLogs() {
   return all;
 }
 
-export async function GET() {
-  if (REGISTRY_ADDRESS === "0x0000000000000000000000000000000000000000") {
-    return Response.json({ labels: [] });
+/**
+ * Accepts `?tld=ins|igra|ikas` — defaults to `ins` for backward-compat with
+ * older callers. Returns the on-chain reserved-label history for exactly
+ * that TLD's Registry (parsed from setReserved / setReservedBatch /
+ * Safe-wrapped execTransaction calldata).
+ */
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const tldParam = (url.searchParams.get("tld") ?? "ins").toLowerCase();
+  const tld: Tld = (TLDS as readonly string[]).includes(tldParam)
+    ? (tldParam as Tld)
+    : "ins";
+  const registry = REGISTRY_ADDRESSES[tld];
+
+  if (registry === "0x0000000000000000000000000000000000000000") {
+    return Response.json({ tld, labels: [] });
   }
 
   try {
-    const logs = await fetchReservedLogs();
+    const logs = await fetchReservedLogs(registry);
     const txHashes = Array.from(new Set(logs.map((l) => l.transactionHash)));
 
     const labels = new Set<string>();
@@ -110,10 +123,10 @@ export async function GET() {
       }
     }
 
-    return Response.json({ labels: Array.from(labels).sort() });
+    return Response.json({ tld, labels: Array.from(labels).sort() });
   } catch (e) {
     return Response.json(
-      { error: (e as Error).message ?? "failed", labels: [] },
+      { tld, error: (e as Error).message ?? "failed", labels: [] },
       { status: 500 },
     );
   }

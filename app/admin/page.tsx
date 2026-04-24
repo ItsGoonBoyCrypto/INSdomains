@@ -19,15 +19,17 @@ import { formatEther, parseEther } from "viem";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ADMIN_WALLET, isAdmin } from "@/lib/admin";
-import { REGISTRY_ADDRESS, REGISTRY_ABI, MARKETPLACE_ADDRESS, MARKETPLACE_ABI } from "@/lib/contracts";
+import {
+  REGISTRY_ABI, MARKETPLACE_ABI,
+  REGISTRY_ADDRESSES, MARKETPLACE_ADDRESSES,
+  TLDS, LIVE_TLDS, isTldLive, tldSuffix,
+  type Tld,
+} from "@/lib/contracts";
 import { cleanLabel, isValidLabel, shortAddr } from "@/lib/names";
 import { RESERVED_NAMES } from "@/lib/mock-registry";
 import { formatPrice, TIER_RESERVED } from "@/lib/pricing";
 
-const REGISTRY_LIVE =
-  REGISTRY_ADDRESS !== "0x0000000000000000000000000000000000000000";
-const MARKETPLACE_LIVE =
-  MARKETPLACE_ADDRESS !== "0x0000000000000000000000000000000000000000";
+const ANY_TLD_LIVE = LIVE_TLDS.length > 0;
 const IGRA_EXPLORER = process.env.NEXT_PUBLIC_IGRA_EXPLORER ?? "https://explorer.igralabs.com";
 
 export default function AdminPage() {
@@ -54,7 +56,7 @@ export default function AdminPage() {
           <AdminWalletBadge />
         </header>
 
-        {!REGISTRY_LIVE && <RegistryNotLiveBanner />}
+        {!ANY_TLD_LIVE && <RegistryNotLiveBanner />}
 
         {!ADMIN_WALLET ? (
           <MissingEnvScreen />
@@ -149,15 +151,81 @@ function RegistryNotLiveBanner() {
 /* ─────────────────────────── Dashboard ─────────────────────────── */
 
 function AdminDashboard() {
+  // Which TLD's contracts we're administering right now. Persist the choice
+  // across remounts so a switch to /about + back doesn't drop the operator
+  // back on .ins unexpectedly.
+  const [activeTld, setActiveTld] = useState<Tld>("ins");
+
+  useEffect(() => {
+    try {
+      const saved = typeof window !== "undefined" ? window.localStorage.getItem("ins:adminTld") : null;
+      if (saved === "ins" || saved === "igra" || saved === "ikas") {
+        setActiveTld(saved);
+      }
+    } catch { /* sessionStorage / localStorage may be blocked — silently fall back */ }
+  }, []);
+
+  const onSelectTld = (t: Tld) => {
+    setActiveTld(t);
+    try { window.localStorage.setItem("ins:adminTld", t); } catch { /* noop */ }
+  };
+
   return (
-    <div className="mt-10 grid gap-6 lg:grid-cols-2">
-      <AdminMintCard />
-      <ReservedNamesCard />
-      <TierPricingCard />
-      <PremiumOverridesCard />
-      <TreasuryCard />
-      <MarketplaceCard />
-      <OwnershipCard />
+    <>
+      <TldSelector activeTld={activeTld} onSelect={onSelectTld} />
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <AdminMintCard tld={activeTld} />
+        <ReservedNamesCard tld={activeTld} />
+        <TierPricingCard tld={activeTld} />
+        <PremiumOverridesCard tld={activeTld} />
+        <TreasuryCard tld={activeTld} />
+        <MarketplaceCard tld={activeTld} />
+        <OwnershipCard tld={activeTld} />
+      </div>
+    </>
+  );
+}
+
+/**
+ * Three-tab selector at the top of the admin dashboard. Disabled tabs for
+ * any TLD whose contracts aren't deployed in the current env.
+ */
+function TldSelector({
+  activeTld, onSelect,
+}: { activeTld: Tld; onSelect: (t: Tld) => void }) {
+  return (
+    <div className="mt-10 flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-2">
+      <span className="px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/50">
+        Admin TLD
+      </span>
+      {TLDS.map((t) => {
+        const live = isTldLive(t);
+        const active = t === activeTld;
+        const accent: Record<Tld, string> = {
+          ins:  "border-cyan/60 bg-cyan/15 text-cyan",
+          igra: "border-plum/60 bg-plum/15 text-plum",
+          ikas: "border-emerald-500/60 bg-emerald-500/15 text-emerald-300",
+        };
+        return (
+          <button
+            key={t}
+            disabled={!live}
+            onClick={() => live && onSelect(t)}
+            title={live ? `Admin ${tldSuffix(t)}` : `${tldSuffix(t)} not deployed in current env`}
+            className={`rounded-xl border px-4 py-1.5 text-sm font-bold transition ${
+              active && live ? accent[t] :
+              live           ? "border-white/10 bg-white/[0.02] text-white/70 hover:border-white/20 hover:text-white" :
+                               "cursor-not-allowed border-white/5 bg-white/[0.01] text-white/25"
+            }`}
+          >
+            {tldSuffix(t)}
+            {!live && <span className="ml-1 text-[9px] uppercase text-white/35">soon</span>}
+          </button>
+        );
+      })}
+      <span className="ml-auto hidden text-[11px] text-white/40 sm:block">
+        Every card below reads + writes the <span className="font-mono text-white/70">{tldSuffix(activeTld)}</span> Registry &amp; Marketplace.
+      </span>
     </div>
   );
 }
@@ -216,7 +284,9 @@ function TxError({ message, onReset }: { message?: string; onReset: () => void }
 }
 
 /* ── Admin Mint ─────────────────────────────────────────── */
-function AdminMintCard() {
+function AdminMintCard({ tld }: { tld: Tld }) {
+  const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
+  const REGISTRY_LIVE = isTldLive(tld);
   const [label, setLabel] = useState("");
   const [target, setTarget] = useState("");
   const { writeContract, data: hash, isPending, error, reset } = useWriteContract();
@@ -328,7 +398,9 @@ function saveCandidates(labels: string[]) {
   }
 }
 
-function ReservedNamesCard() {
+function ReservedNamesCard({ tld }: { tld: Tld }) {
+  const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
+  const REGISTRY_LIVE = isTldLive(tld);
   // Candidate pool is seeded from: the in-code RESERVED_NAMES list + whatever is cached in
   // localStorage + whatever /api/reserved-labels discovers on-chain (auto-populated).
   // On-chain `reserved(label)` is still the source of truth per row.
@@ -341,13 +413,30 @@ function ReservedNamesCard() {
     saveCandidates(candidates);
   }, [candidates]);
 
+  // Auto-fetch the active TLD's on-chain reserved labels whenever the TLD
+  // changes, so switching from .ins → .igra re-seeds candidates correctly.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/reserved-labels?tld=${tld}`, { cache: "no-store" });
+        const data = (await res.json()) as { labels?: string[] };
+        if (cancelled) return;
+        if (Array.isArray(data.labels) && data.labels.length > 0) {
+          setCandidates((prev) => Array.from(new Set([...prev, ...data.labels!])).sort());
+        }
+      } catch { /* non-fatal; user can still use manual refresh */ }
+    })();
+    return () => { cancelled = true; };
+  }, [tld]);
+
   // Auto-discover all reserved labels from chain history (parses setReserved* call data
   // from every tx that emitted a Reserved event, including Safe-wrapped execTransaction).
   const fetchChainLabels = async () => {
     setChainScanLoading(true);
     setChainScanError(null);
     try {
-      const res = await fetch("/api/reserved-labels", { cache: "no-store" });
+      const res = await fetch(`/api/reserved-labels?tld=${tld}`, { cache: "no-store" });
       const data = (await res.json()) as { labels?: string[]; error?: string };
       if (data.error) throw new Error(data.error);
       if (Array.isArray(data.labels) && data.labels.length > 0) {
@@ -535,6 +624,7 @@ function ReservedNamesCard() {
       <TxError message={error?.message} onReset={reset} />
 
       <BulkReserveSection
+        tld={tld}
         currentReserved={Array.from(reservedSet)}
         disabled={!REGISTRY_LIVE || busy}
         onBatchDone={(labels) => {
@@ -700,14 +790,17 @@ function chunkLabels(labels: string[], size = BULK_CHUNK): string[][] {
 }
 
 function BulkReserveSection({
+  tld,
   currentReserved,
   disabled,
   onBatchDone,
 }: {
+  tld: Tld;
   currentReserved: string[];
   disabled: boolean;
   onBatchDone: (labels: string[]) => void;
 }) {
+  const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
   const [open, setOpen] = useState(false);
   const [raw, setRaw] = useState("");
   const [batches, setBatches] = useState<string[][]>([]);
@@ -916,9 +1009,11 @@ function BulkReserveSection({
 }
 
 /* ── Tier pricing ───────────────────────────────────────── */
-function TierPricingCard() {
+function TierPricingCard({ tld }: { tld: Tld }) {
+  const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
+  const REGISTRY_LIVE = isTldLive(tld);
   const tiers = [
-    { bucket: 1, label: "1-char", hint: "reserved (auction)" },
+    { bucket: 1, label: "1-char", hint: "ecosystem allocation only" },
     { bucket: 2, label: "2-char", hint: "ultra-rare" },
     { bucket: 3, label: "3-char", hint: "rare" },
     { bucket: 4, label: "4-char", hint: "uncommon" },
@@ -955,6 +1050,7 @@ function TierPricingCard() {
           return (
             <TierRow
               key={t.bucket}
+              tld={tld}
               bucket={t.bucket}
               label={t.label}
               hint={t.hint}
@@ -969,14 +1065,17 @@ function TierPricingCard() {
 }
 
 function TierRow({
-  bucket, label, hint, current, onSaved,
+  tld, bucket, label, hint, current, onSaved,
 }: {
+  tld: Tld;
   bucket: number;
   label: string;
   hint: string;
   current: number | "RESERVED" | null;
   onSaved: () => void;
 }) {
+  const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
+  const REGISTRY_LIVE = isTldLive(tld);
   const currentStr =
     current === null ? "" : current === "RESERVED" ? "RESERVED" : String(current);
   const [value, setValue] = useState<string>(currentStr);
@@ -1042,7 +1141,9 @@ function TierRow({
 }
 
 /* ── Premium overrides ──────────────────────────────────── */
-function PremiumOverridesCard() {
+function PremiumOverridesCard({ tld }: { tld: Tld }) {
+  const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
+  const REGISTRY_LIVE = isTldLive(tld);
   const [label, setLabel] = useState("");
   const [price, setPrice] = useState("");
   const [items, setItems] = useState<{ label: string; price: number }[]>([]);
@@ -1157,7 +1258,9 @@ function PremiumOverridesCard() {
 }
 
 /* ── Treasury ───────────────────────────────────────────── */
-function TreasuryCard() {
+function TreasuryCard({ tld }: { tld: Tld }) {
+  const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
+  const REGISTRY_LIVE = isTldLive(tld);
   const { data: balance, refetch } = useBalance({
     address: REGISTRY_ADDRESS,
     query: { enabled: REGISTRY_LIVE },
@@ -1230,7 +1333,9 @@ function TreasuryCard() {
 }
 
 /* ── Marketplace ────────────────────────────────────────── */
-function MarketplaceCard() {
+function MarketplaceCard({ tld }: { tld: Tld }) {
+  const MARKETPLACE_ADDRESS = MARKETPLACE_ADDRESSES[tld];
+  const MARKETPLACE_LIVE = isTldLive(tld);
   const { data: balance, refetch: refetchBalance } = useBalance({
     address: MARKETPLACE_ADDRESS,
     query: { enabled: MARKETPLACE_LIVE },
@@ -1470,7 +1575,9 @@ function MarketplaceCard() {
 }
 
 /* ── Ownership ──────────────────────────────────────────── */
-function OwnershipCard() {
+function OwnershipCard({ tld }: { tld: Tld }) {
+  const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
+  const REGISTRY_LIVE = isTldLive(tld);
   const [to, setTo] = useState("");
   const [confirming, setConfirming] = useState(false);
 
