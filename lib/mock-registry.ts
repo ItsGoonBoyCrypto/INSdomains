@@ -52,10 +52,12 @@ export const DEMO_OWNED = [
   },
 ] as const;
 
+// Mix of all three TLDs for the homepage marquee — neutral generic names
+// chosen to showcase the multi-TLD offering (no ecosystem brand links).
 export const TRENDING = [
-  "alice.ins", "vitalik.ins", "grok.ins", "igra.ins",
-  "satoshi.ins", "kaspa.ins", "rooftop.ins", "zealous.ins",
-  "ziggy.ins", "klaude.ins", "alphaprism.ins", "kcom.ins",
+  "alice.ins",   "vitalik.igra", "grok.ikas",   "kaspa.ins",
+  "satoshi.igra", "rooftop.ikas", "dev.ins",    "builder.igra",
+  "wagmi.ikas",  "gm.ins",       "ngmi.igra",   "ser.ikas",
 ];
 
 export const STATS = {

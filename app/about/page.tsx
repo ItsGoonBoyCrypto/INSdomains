@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   Sparkles, Infinity as InfinityIcon, ShieldCheck,
-  Layers, Coins, Globe, Github, Twitter, ArrowRight,
+  Layers, Coins, Globe, Github, Send, Hourglass, ArrowRight,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -168,21 +168,27 @@ export default function AboutPage() {
               Register a name <ArrowRight className="ml-1 inline h-4 w-4" />
             </Link>
             <a
-              href="https://github.com/ItsGoonBoyCrypto"
+              href="https://t.me/IgraNameService"
               target="_blank"
-              rel="noreferrer"
+              rel="noreferrer noopener"
+              className="btn-ghost inline-flex items-center gap-2"
+            >
+              <Send className="h-4 w-4" /> Telegram
+            </a>
+            <a
+              href="https://github.com/ItsGoonBoyCrypto/INSdomains"
+              target="_blank"
+              rel="noreferrer noopener"
               className="btn-ghost inline-flex items-center gap-2"
             >
               <Github className="h-4 w-4" /> GitHub
             </a>
-            <a
-              href="https://x.com/GoonBoyCrypto"
-              target="_blank"
-              rel="noreferrer"
-              className="btn-ghost inline-flex items-center gap-2"
+            <span
+              title="Launching once account security is finalised"
+              className="btn-ghost inline-flex cursor-default items-center gap-2 opacity-60"
             >
-              <Twitter className="h-4 w-4" /> X / Twitter
-            </a>
+              <Hourglass className="h-4 w-4" /> X · soon
+            </span>
           </div>
         </section>
       </main>

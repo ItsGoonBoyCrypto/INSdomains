@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { RooftopMark } from "./RooftopMark";
 
-const COLS = [
+type FooterItem = {
+  label: string;
+  href: string;
+  external?: boolean;
+  comingSoon?: boolean;
+};
+
+const COLS: { title: string; items: FooterItem[] }[] = [
   {
     title: "Product",
     items: [
@@ -14,19 +21,10 @@ const COLS = [
   {
     title: "Community",
     items: [
-      { label: "X / Twitter", href: "https://x.com/GoonBoyCrypto" },
-      { label: "Telegram", href: "https://t.me/klaudeonkas" },
-      { label: "GitHub", href: "https://github.com/ItsGoonBoyCrypto" },
+      { label: "Telegram", href: "https://t.me/IgraNameService", external: true },
+      { label: "X / Twitter", href: "#", comingSoon: true },
+      { label: "GitHub", href: "https://github.com/ItsGoonBoyCrypto/INSdomains", external: true },
       { label: "DAO", href: "/dao" },
-    ],
-  },
-  {
-    title: "Ecosystem",
-    items: [
-      { label: "iForge", href: "https://igraforge.xyz" },
-      { label: "AlphaPrism", href: "https://alphaprism.it.com" },
-      { label: "KasInvest", href: "https://kasinvest.org" },
-      { label: "Klaude", href: "https://klaudeonkas.xyz" },
     ],
   },
 ];
@@ -34,14 +32,14 @@ const COLS = [
 export function Footer() {
   return (
     <footer className="mt-32 border-t border-white/[0.06] bg-[#050505] px-6 py-16">
-      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-10 md:grid-cols-5">
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-10 md:grid-cols-4">
         <div className="col-span-2">
           <div className="flex items-center gap-2">
             <RooftopMark />
             <span className="ins-gradient-text text-xl font-black">INS</span>
           </div>
           <p className="mt-3 max-w-xs text-sm text-white/50">
-            The permanent name service for the Igra Network. Built on Kaspa BlockDAG.
+            Permanent <span className="text-cyan">.ins</span> · <span className="text-plum">.igra</span> · <span className="text-emerald-300">.ikas</span> names on the Igra Network. Built on Kaspa BlockDAG.
           </p>
           <div className="mt-6 flex items-center gap-2 text-xs text-white/40">
             <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-emerald-300">
@@ -56,13 +54,41 @@ export function Footer() {
               {col.title}
             </div>
             <ul className="mt-4 space-y-2 text-sm text-white/70">
-              {col.items.map((i) => (
-                <li key={i.label}>
-                  <Link href={i.href} className="hover:text-white">
-                    {i.label}
-                  </Link>
-                </li>
-              ))}
+              {col.items.map((i) => {
+                if (i.comingSoon) {
+                  return (
+                    <li key={i.label}>
+                      <span
+                        className="inline-flex cursor-default items-center gap-2 text-white/40"
+                        title="Coming soon"
+                      >
+                        {i.label}
+                        <span className="rounded-full border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-white/50">
+                          soon
+                        </span>
+                      </span>
+                    </li>
+                  );
+                }
+                return (
+                  <li key={i.label}>
+                    {i.external ? (
+                      <a
+                        href={i.href}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="hover:text-white"
+                      >
+                        {i.label}
+                      </a>
+                    ) : (
+                      <Link href={i.href} className="hover:text-white">
+                        {i.label}
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         ))}
