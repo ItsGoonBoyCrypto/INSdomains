@@ -20,6 +20,8 @@ import { explorerAddr } from "@/lib/igra-chain";
 import {
   REGISTRY_ADDRESS, REGISTRY_ABI,
   REVERSE_RESOLVER_ADDRESS, REVERSE_RESOLVER_ABI,
+  REGISTRY_ADDRESSES, REVERSE_RESOLVER_ADDRESSES,
+  TLDS, LIVE_TLDS, isTldLive, tldSuffix, type Tld,
 } from "@/lib/contracts";
 
 const REGISTRY_LIVE = REGISTRY_ADDRESS !== "0x0000000000000000000000000000000000000000";
@@ -29,6 +31,7 @@ type OwnedName = {
   tokenId: bigint;
   label: string;
   target: `0x${string}`;
+  tld: Tld;
 };
 
 export default function DomainsPage() {
@@ -66,14 +69,21 @@ function NotConnected() {
 function Dashboard({ address }: { address: `0x${string}` }) {
   const owned = useOwnedNames(address);
 
-  const { data: primaryTokenIdRaw, refetch: refetchPrimary } = useReadContract({
-    address: REVERSE_RESOLVER_ADDRESS,
-    abi: REVERSE_RESOLVER_ABI,
-    functionName: "primaryTokenId",
-    args: [address],
-    query: { enabled: REVERSE_LIVE },
+  // Primary token id is per-TLD (one reverse resolver per Registry).
+  const primaryReads = useReadContracts({
+    contracts: TLDS.filter(isTldLive).map((tld) => ({
+      address: REVERSE_RESOLVER_ADDRESSES[tld],
+      abi: REVERSE_RESOLVER_ABI,
+      functionName: "primaryTokenId",
+      args: [address],
+    } as const)),
+    query: { enabled: LIVE_TLDS.length > 0 },
   });
-  const primaryTokenId = primaryTokenIdRaw as bigint | undefined;
+  const primaryTokenIdByTld: Partial<Record<Tld, bigint>> = {};
+  LIVE_TLDS.forEach((tld, i) => {
+    const r = primaryReads.data?.[i];
+    if (r?.status === "success") primaryTokenIdByTld[tld] = r.result as bigint;
+  });
 
   return (
     <>
@@ -82,7 +92,7 @@ function Dashboard({ address }: { address: `0x${string}` }) {
           <h1 className="text-4xl font-black tracking-tight sm:text-5xl">My domains</h1>
           <p className="mt-2 text-sm text-white/60">
             {REGISTRY_LIVE
-              ? `${owned.list.length} .ins name${owned.list.length === 1 ? "" : "s"} owned`
+              ? `${owned.list.length} name${owned.list.length === 1 ? "" : "s"} owned across .ins / .igra / .ikas`
               : `${DEMO_OWNED.length} demo names shown`}
             <span className="mx-2 text-white/30">·</span>
             <a
@@ -108,7 +118,7 @@ function Dashboard({ address }: { address: `0x${string}` }) {
 
       {!owned.loading && REGISTRY_LIVE && owned.list.length === 0 && (
         <div className="mt-10 rounded-3xl border border-white/10 bg-white/[0.02] p-12 text-center">
-          <p className="text-white/70">You don&apos;t own any .ins names yet.</p>
+          <p className="text-white/70">You don&apos;t own any names yet.</p>
           <Link href="/app" className="btn-primary mt-5 inline-flex">
             <Plus className="mr-1 inline h-4 w-4" /> Register your first
           </Link>
@@ -119,12 +129,12 @@ function Dashboard({ address }: { address: `0x${string}` }) {
         {REGISTRY_LIVE
           ? owned.list.map((d) => (
               <LiveDomainCard
-                key={d.tokenId.toString()}
+                key={`${d.tld}-${d.tokenId.toString()}`}
                 name={d}
                 owner={address}
-                primaryTokenId={primaryTokenId}
+                primaryTokenId={primaryTokenIdByTld[d.tld]}
                 onChainUpdate={owned.refetch}
-                onPrimaryChange={refetchPrimary}
+                onPrimaryChange={() => primaryReads.refetch()}
               />
             ))
           : DEMO_OWNED.map((d) => <DemoDomainCard key={d.label} domain={d} />)}
@@ -143,42 +153,70 @@ function Dashboard({ address }: { address: `0x${string}` }) {
 }
 
 function useOwnedNames(address: `0x${string}`) {
-  const { data: supply } = useReadContract({
-    address: REGISTRY_ADDRESS,
-    abi: REGISTRY_ABI,
-    functionName: "totalSupply",
-    query: { enabled: REGISTRY_LIVE },
+  // 1. Read totalSupply on every live Registry in parallel.
+  const supplyReads = useReadContracts({
+    contracts: TLDS.filter(isTldLive).map((tld) => ({
+      address: REGISTRY_ADDRESSES[tld],
+      abi: REGISTRY_ABI,
+      functionName: "totalSupply",
+    } as const)),
+    query: { enabled: LIVE_TLDS.length > 0 },
   });
 
-  const total = Number((supply as bigint | undefined) ?? 0n);
-  const ids = useMemo(() => {
-    const arr: bigint[] = [];
-    for (let i = 1; i <= total; i++) arr.push(BigInt(i));
-    return arr;
-  }, [total]);
+  const supplyByTld: Record<Tld, number> = { ins: 0, igra: 0, ikas: 0 };
+  LIVE_TLDS.forEach((tld, i) => {
+    const r = supplyReads.data?.[i];
+    if (r?.status === "success") supplyByTld[tld] = Number(r.result as bigint);
+  });
+
+  // 2. Build the full (tld, tokenId) × {ownerOf, labelOf, targetOf} grid and
+  //    batch it in one useReadContracts call so viem multicall coalesces it.
+  const tokenGrid = useMemo(() => {
+    const grid: Array<{ tld: Tld; tokenId: bigint }> = [];
+    for (const tld of LIVE_TLDS) {
+      for (let i = 1; i <= supplyByTld[tld]; i++) {
+        grid.push({ tld, tokenId: BigInt(i) });
+      }
+    }
+    return grid;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supplyByTld.ins, supplyByTld.igra, supplyByTld.ikas]);
 
   const { data: batched, isLoading, refetch } = useReadContracts({
-    contracts: ids.flatMap((id) => [
-      { address: REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: "ownerOf", args: [id] },
-      { address: REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: "labelOf", args: [id] },
-      { address: REGISTRY_ADDRESS, abi: REGISTRY_ABI, functionName: "targetOf", args: [id] },
+    contracts: tokenGrid.flatMap(({ tld, tokenId }) => [
+      { address: REGISTRY_ADDRESSES[tld], abi: REGISTRY_ABI, functionName: "ownerOf",  args: [tokenId] } as const,
+      { address: REGISTRY_ADDRESSES[tld], abi: REGISTRY_ABI, functionName: "labelOf",  args: [tokenId] } as const,
+      { address: REGISTRY_ADDRESSES[tld], abi: REGISTRY_ABI, functionName: "targetOf", args: [tokenId] } as const,
     ]),
-    query: { enabled: REGISTRY_LIVE && ids.length > 0 },
+    query: { enabled: LIVE_TLDS.length > 0 && tokenGrid.length > 0 },
   });
 
   const list: OwnedName[] = [];
   if (batched) {
-    for (let i = 0; i < ids.length; i++) {
+    for (let i = 0; i < tokenGrid.length; i++) {
+      const { tld, tokenId } = tokenGrid[i];
       const o = batched[i * 3]?.result as `0x${string}` | undefined;
       const label = batched[i * 3 + 1]?.result as string | undefined;
       const target = batched[i * 3 + 2]?.result as `0x${string}` | undefined;
       if (o && label && target && o.toLowerCase() === address.toLowerCase()) {
-        list.push({ tokenId: ids[i], label, target });
+        list.push({ tokenId, label, target, tld });
       }
     }
   }
 
-  return { list, loading: isLoading, refetch };
+  // Sort by TLD order, then tokenId ascending.
+  list.sort((a, b) => {
+    const aIdx = TLDS.indexOf(a.tld);
+    const bIdx = TLDS.indexOf(b.tld);
+    if (aIdx !== bIdx) return aIdx - bIdx;
+    return a.tokenId < b.tokenId ? -1 : 1;
+  });
+
+  return {
+    list,
+    loading: supplyReads.isLoading || isLoading,
+    refetch: () => { supplyReads.refetch(); refetch(); },
+  };
 }
 
 function LiveDomainCard({
@@ -222,20 +260,24 @@ function LiveDomainCard({
     if (primaryConfirmed && onPrimaryChange) onPrimaryChange();
   }, [primaryConfirmed, onPrimaryChange]);
 
+  const tldRegistry = REGISTRY_ADDRESSES[name.tld];
+  const tldReverseResolver = REVERSE_RESOLVER_ADDRESSES[name.tld];
+  const tldReverseLive = tldReverseResolver !== "0x0000000000000000000000000000000000000000";
+
   const isPrimary =
-    REVERSE_LIVE && primaryTokenId !== undefined && primaryTokenId === name.tokenId;
+    tldReverseLive && primaryTokenId !== undefined && primaryTokenId === name.tokenId;
   const primaryBusy = primaryPending || primaryConfirming;
 
   const onTogglePrimary = () => {
     if (isPrimary) {
       writePrimary({
-        address: REVERSE_RESOLVER_ADDRESS,
+        address: tldReverseResolver,
         abi: REVERSE_RESOLVER_ABI,
         functionName: "clearPrimary",
       });
     } else {
       writePrimary({
-        address: REVERSE_RESOLVER_ADDRESS,
+        address: tldReverseResolver,
         abi: REVERSE_RESOLVER_ABI,
         functionName: "setPrimary",
         args: [name.tokenId],
@@ -246,7 +288,7 @@ function LiveDomainCard({
   const onSave = () => {
     if (!isAddress(target)) return;
     writeContract({
-      address: REGISTRY_ADDRESS,
+      address: tldRegistry,
       abi: REGISTRY_ABI,
       functionName: "setTarget",
       args: [name.label, target as `0x${string}`],
@@ -260,12 +302,20 @@ function LiveDomainCard({
 
   const onFixTarget = () => {
     writeContract({
-      address: REGISTRY_ADDRESS,
+      address: tldRegistry,
       abi: REGISTRY_ABI,
       functionName: "setTarget",
       args: [name.label, owner],
     });
   };
+
+  // Per-TLD visual accents
+  const tldAccent: Record<Tld, { text: string; border: string; bg: string }> = {
+    ins:  { text: "text-cyan",          border: "border-cyan/30",          bg: "bg-cyan/10" },
+    igra: { text: "text-plum",          border: "border-plum/30",          bg: "bg-plum/10" },
+    ikas: { text: "text-emerald-300",   border: "border-emerald-500/30",   bg: "bg-emerald-500/10" },
+  };
+  const accent = tldAccent[name.tld];
 
   return (
     <div className="group relative overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.03] p-6 transition hover:border-cyan/30">
@@ -276,6 +326,12 @@ function LiveDomainCard({
           {name.label[0]?.toUpperCase() ?? "?"}
         </div>
         <div className="flex flex-col items-end gap-1.5">
+          <span
+            title={`${name.label}${tldSuffix(name.tld)} registry`}
+            className={`inline-flex items-center gap-1 rounded-full border ${accent.border} ${accent.bg} px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${accent.text}`}
+          >
+            {tldSuffix(name.tld)}
+          </span>
           {isPrimary ? (
             <span className="inline-flex items-center gap-1 rounded-full border border-cyan/30 bg-cyan/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-cyan">
               <Star className="h-3 w-3 fill-cyan" /> Primary
@@ -289,14 +345,14 @@ function LiveDomainCard({
             title="ERC-721 token ID"
             className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-[10px] font-semibold text-white/60"
           >
-            INS #{name.tokenId.toString()}
+            #{name.tokenId.toString()}
           </span>
         </div>
       </div>
 
       <h3 className="relative mt-5 text-2xl font-bold">
         <span className="ins-gradient-text">{name.label}</span>
-        <span className="text-white/30">.ins</span>
+        <span className={accent.text}>{tldSuffix(name.tld)}</span>
       </h3>
 
       <div className="relative mt-3 flex items-center gap-2 text-xs text-white/50">
@@ -319,8 +375,8 @@ function LiveDomainCard({
               <p className="mt-1 text-amber-100/70">
                 This name still resolves to the previous owner&rsquo;s address
                 (<span className="font-mono">{shortAddr(name.target)}</span>). Anyone sending crypto
-                to <span className="font-mono">{name.label}.ins</span> right now will land there,
-                not at your wallet. Point it at yourself:
+                to <span className="font-mono">{name.label}{tldSuffix(name.tld)}</span> right now
+                will land there, not at your wallet. Point it at yourself:
               </p>
               <button
                 onClick={onFixTarget}
@@ -339,11 +395,11 @@ function LiveDomainCard({
       )}
 
       <div className="relative mt-5 flex flex-wrap gap-2">
-        {REVERSE_LIVE && (
+        {tldReverseLive && (
           <button
             onClick={onTogglePrimary}
             disabled={primaryBusy}
-            title={isPrimary ? "Clear primary reverse name" : "Use this as your primary reverse name"}
+            title={isPrimary ? `Clear primary ${tldSuffix(name.tld)} name` : `Use this as your primary ${tldSuffix(name.tld)} name`}
             className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition disabled:opacity-50 ${
               isPrimary
                 ? "border-cyan/40 bg-cyan/10 text-cyan hover:bg-cyan/20"
@@ -361,7 +417,7 @@ function LiveDomainCard({
         )}
         <IconBtn title="Edit target" icon={<Settings2 className="h-3.5 w-3.5" />} onClick={() => setExpanded(!expanded)} />
         <IconBtn title="History" icon={<History className="h-3.5 w-3.5" />} onClick={() => setShowHistory(!showHistory)} />
-        <ListForSaleButton tokenId={name.tokenId} label={name.label} />
+        <ListForSaleButton tokenId={name.tokenId} label={name.label} tld={name.tld} />
         <a
           href={explorerAddr(name.target)}
           target="_blank"

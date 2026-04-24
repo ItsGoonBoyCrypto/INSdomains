@@ -1,16 +1,62 @@
 import type { Address } from "viem";
 
-export const REGISTRY_ADDRESS = (process.env.NEXT_PUBLIC_INS_REGISTRY ??
-  "0x0000000000000000000000000000000000000000") as Address;
+const ZERO = "0x0000000000000000000000000000000000000000" as Address;
+
+/* ──────────────────── Multi-TLD address registry ──────────────────── */
+/**
+ * INS supports three TLDs that share identical contract logic but live at
+ * independent addresses on Igra mainnet: `.ins`, `.igra`, `.ikas`. Each
+ * has its own Registry + Marketplace + (optional) ReverseResolver. The
+ * frontend fans out reads across all three and lets users pick the TLD
+ * they want to register / list / manage.
+ */
+export const TLDS = ["ins", "igra", "ikas"] as const;
+export type Tld = (typeof TLDS)[number];
+
+export const REGISTRY_ADDRESSES: Record<Tld, Address> = {
+  ins:  (process.env.NEXT_PUBLIC_INS_REGISTRY       ?? ZERO) as Address,
+  igra: (process.env.NEXT_PUBLIC_INS_REGISTRY_IGRA  ?? ZERO) as Address,
+  ikas: (process.env.NEXT_PUBLIC_INS_REGISTRY_IKAS  ?? ZERO) as Address,
+};
+
+export const MARKETPLACE_ADDRESSES: Record<Tld, Address> = {
+  ins:  (process.env.NEXT_PUBLIC_INS_MARKETPLACE       ?? ZERO) as Address,
+  igra: (process.env.NEXT_PUBLIC_INS_MARKETPLACE_IGRA  ?? ZERO) as Address,
+  ikas: (process.env.NEXT_PUBLIC_INS_MARKETPLACE_IKAS  ?? ZERO) as Address,
+};
+
+export const REVERSE_RESOLVER_ADDRESSES: Record<Tld, Address> = {
+  ins:  (process.env.NEXT_PUBLIC_INS_REVERSE_RESOLVER       ?? ZERO) as Address,
+  igra: (process.env.NEXT_PUBLIC_INS_REVERSE_RESOLVER_IGRA  ?? ZERO) as Address,
+  ikas: (process.env.NEXT_PUBLIC_INS_REVERSE_RESOLVER_IKAS  ?? ZERO) as Address,
+};
+
+/** True when a TLD has all three contracts deployed + env-wired. */
+export function isTldLive(tld: Tld): boolean {
+  return (
+    REGISTRY_ADDRESSES[tld] !== ZERO &&
+    MARKETPLACE_ADDRESSES[tld] !== ZERO
+  );
+}
+
+/** All TLDs that are fully deployed + env-wired on this build. */
+export const LIVE_TLDS: readonly Tld[] = TLDS.filter(isTldLive);
+
+/** Pretty suffix for display, e.g. "ins" → ".ins". */
+export function tldSuffix(tld: Tld): string {
+  return "." + tld;
+}
+
+/* ──────────────────── Legacy single-TLD aliases (.ins) ───────────────
+ * Kept so the dozens of existing imports keep working without a big-bang
+ * rename. New multi-TLD code should prefer REGISTRY_ADDRESSES[tld] etc.
+ */
+export const REGISTRY_ADDRESS         = REGISTRY_ADDRESSES.ins;
+export const MARKETPLACE_ADDRESS      = MARKETPLACE_ADDRESSES.ins;
+export const REVERSE_RESOLVER_ADDRESS = REVERSE_RESOLVER_ADDRESSES.ins;
 
 export const RESOLVER_ADDRESS = (process.env.NEXT_PUBLIC_INS_RESOLVER ??
-  "0x0000000000000000000000000000000000000000") as Address;
-
-export const REVERSE_RESOLVER_ADDRESS = (process.env.NEXT_PUBLIC_INS_REVERSE_RESOLVER ??
-  "0x0000000000000000000000000000000000000000") as Address;
-
-export const MARKETPLACE_ADDRESS = (process.env.NEXT_PUBLIC_INS_MARKETPLACE ??
-  "0x0000000000000000000000000000000000000000") as Address;
+  ZERO) as Address;
 
 /** Base tier price (5-32 char) in iKAS — kept for backwards-compat display. */
 export const BASE_PRICE_IKAS = Number(process.env.NEXT_PUBLIC_BASE_PRICE_IKAS ?? 10);

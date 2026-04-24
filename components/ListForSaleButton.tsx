@@ -12,12 +12,14 @@ import {
   Tag, Star, Loader2, Check, X, AlertCircle,
 } from "lucide-react";
 import {
-  REGISTRY_ADDRESS, REGISTRY_ABI,
-  MARKETPLACE_ADDRESS, MARKETPLACE_ABI,
+  REGISTRY_ABI,
+  MARKETPLACE_ABI,
+  REGISTRY_ADDRESSES,
+  MARKETPLACE_ADDRESSES,
+  isTldLive,
+  tldSuffix,
+  type Tld,
 } from "@/lib/contracts";
-
-const MARKETPLACE_LIVE =
-  MARKETPLACE_ADDRESS !== "0x0000000000000000000000000000000000000000";
 
 const DURATIONS: { label: string; days: number }[] = [
   { label: "1 day",   days: 1 },
@@ -35,17 +37,21 @@ type Listing = {
 };
 
 export function ListForSaleButton({
-  tokenId, label, onChange,
-}: { tokenId: bigint; label: string; onChange?: () => void }) {
+  tokenId, label, tld, onChange,
+}: { tokenId: bigint; label: string; tld: Tld; onChange?: () => void }) {
   const { address } = useAccount();
   const [open, setOpen] = useState(false);
 
+  const marketplaceAddr = MARKETPLACE_ADDRESSES[tld];
+  const registryAddr = REGISTRY_ADDRESSES[tld];
+  const tldLive = isTldLive(tld);
+
   const { data: listingRaw, refetch: refetchListing } = useReadContract({
-    address: MARKETPLACE_ADDRESS,
+    address: marketplaceAddr,
     abi: MARKETPLACE_ABI,
     functionName: "getActiveListing",
     args: [tokenId],
-    query: { enabled: MARKETPLACE_LIVE },
+    query: { enabled: tldLive },
   });
 
   const listing = listingRaw as Listing | undefined;
@@ -56,7 +62,7 @@ export function ListForSaleButton({
     if (onChange) onChange();
   };
 
-  if (!MARKETPLACE_LIVE) return null;
+  if (!tldLive) return null;
   if (!address) return null;
 
   return (
@@ -68,7 +74,7 @@ export function ListForSaleButton({
             ? "border-cyan/40 bg-cyan/10 text-cyan hover:bg-cyan/20"
             : "border-white/10 bg-white/[0.03] text-white/70 hover:border-cyan/30 hover:text-white"
         }`}
-        title={isListed ? "Manage your listing" : "List this name for sale"}
+        title={isListed ? `Manage your ${tldSuffix(tld)} listing` : `List this ${tldSuffix(tld)} name for sale`}
       >
         <Tag className="h-3.5 w-3.5" />
         {isListed ? "Listed" : "List for sale"}
@@ -78,6 +84,9 @@ export function ListForSaleButton({
         <ListingModal
           tokenId={tokenId}
           label={label}
+          tld={tld}
+          marketplaceAddr={marketplaceAddr}
+          registryAddr={registryAddr}
           currentListing={listing}
           seller={address}
           onClose={() => setOpen(false)}
@@ -91,10 +100,13 @@ export function ListForSaleButton({
 /* ─────────────────────────── Modal ─────────────────────────── */
 
 function ListingModal({
-  tokenId, label, currentListing, seller, onClose, onChange,
+  tokenId, label, tld, marketplaceAddr, registryAddr, currentListing, seller, onClose, onChange,
 }: {
   tokenId: bigint;
   label: string;
+  tld: Tld;
+  marketplaceAddr: `0x${string}`;
+  registryAddr: `0x${string}`;
   currentListing: Listing | undefined;
   seller: `0x${string}`;
   onClose: () => void;
@@ -105,27 +117,27 @@ function ListingModal({
   const [featured, setFeatured] = useState(false);
 
   const { data: approvedForAll, refetch: refetchApproval } = useReadContract({
-    address: REGISTRY_ADDRESS,
+    address: registryAddr,
     abi: REGISTRY_ABI,
     functionName: "isApprovedForAll",
-    args: [seller, MARKETPLACE_ADDRESS],
+    args: [seller, marketplaceAddr],
   });
   const isApproved = approvedForAll === true;
 
   const { data: featureFeeBps } = useReadContract({
-    address: MARKETPLACE_ADDRESS,
+    address: marketplaceAddr,
     abi: MARKETPLACE_ABI,
     functionName: "featureFeeBps",
   });
   const { data: saleFeeBps } = useReadContract({
-    address: MARKETPLACE_ADDRESS,
+    address: marketplaceAddr,
     abi: MARKETPLACE_ABI,
     functionName: "saleFeeBps",
   });
 
   // Emergency pause — surfaced in UI, CTAs suppressed when true.
   const { data: mktPaused } = useReadContract({
-    address: MARKETPLACE_ADDRESS,
+    address: marketplaceAddr,
     abi: MARKETPLACE_ABI,
     functionName: "paused",
   });
@@ -147,7 +159,7 @@ function ListingModal({
   // List. Previous version derived the fee from a cached bps + client math
   // which could revert on-chain if bps was bumped.
   const { data: featureFeeFromContract, isLoading: feeLoading } = useReadContract({
-    address: MARKETPLACE_ADDRESS,
+    address: marketplaceAddr,
     abi: MARKETPLACE_ABI,
     functionName: "featureFeeOn",
     args: priceWei !== null ? [priceWei] : undefined,
@@ -200,10 +212,10 @@ function ListingModal({
   const onApprove = () => {
     setActiveStep("approve");
     writeContract({
-      address: REGISTRY_ADDRESS,
+      address: registryAddr,
       abi: REGISTRY_ABI,
       functionName: "setApprovalForAll",
-      args: [MARKETPLACE_ADDRESS, true],
+      args: [marketplaceAddr, true],
     });
   };
 
@@ -212,7 +224,7 @@ function ListingModal({
     setActiveStep("list");
     const expiry = BigInt(Math.floor(Date.now() / 1000) + days * 86400);
     writeContract({
-      address: MARKETPLACE_ADDRESS,
+      address: marketplaceAddr,
       abi: MARKETPLACE_ABI,
       functionName: "createListing",
       args: [tokenId, priceWei, expiry, featured],
@@ -223,7 +235,7 @@ function ListingModal({
   const onCancel = () => {
     setActiveStep("cancel");
     writeContract({
-      address: MARKETPLACE_ADDRESS,
+      address: marketplaceAddr,
       abi: MARKETPLACE_ABI,
       functionName: "cancelListing",
       args: [tokenId],
@@ -259,7 +271,7 @@ function ListingModal({
             </div>
             <h2 className="text-xl font-bold">
               <span className="ins-gradient-text">{label}</span>
-              <span className="text-white/30">.ins</span>
+              <span className="text-white/30">{tldSuffix(tld)}</span>
             </h2>
           </div>
         </div>

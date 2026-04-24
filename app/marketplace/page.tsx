@@ -20,16 +20,17 @@ import { Footer } from "@/components/Footer";
 import { shortAddr } from "@/lib/names";
 import { explorerAddr } from "@/lib/igra-chain";
 import {
-  REGISTRY_ADDRESS, REGISTRY_ABI,
-  MARKETPLACE_ADDRESS, MARKETPLACE_ABI,
+  REGISTRY_ABI,
+  MARKETPLACE_ABI,
+  REGISTRY_ADDRESSES, MARKETPLACE_ADDRESSES,
+  TLDS, LIVE_TLDS, isTldLive, tldSuffix,
+  type Tld,
 } from "@/lib/contracts";
 
-const MARKETPLACE_LIVE =
-  MARKETPLACE_ADDRESS !== "0x0000000000000000000000000000000000000000";
-const REGISTRY_LIVE =
-  REGISTRY_ADDRESS !== "0x0000000000000000000000000000000000000000";
+const ANY_TLD_LIVE = LIVE_TLDS.length > 0;
 
 type ActiveListing = {
+  tld: Tld;
   tokenId: bigint;
   label: string;
   seller: `0x${string}`;
@@ -43,7 +44,7 @@ export default function MarketplacePage() {
     <>
       <Navbar />
       <main className="mx-auto max-w-7xl px-6 pt-16 pb-24">
-        {MARKETPLACE_LIVE && REGISTRY_LIVE ? <Browse /> : <ComingSoon />}
+        {ANY_TLD_LIVE ? <Browse /> : <ComingSoon />}
       </main>
       <Footer />
     </>
@@ -54,17 +55,29 @@ export default function MarketplacePage() {
 
 function Browse() {
   const listings = useActiveListings();
+  // Fees + paused flag are set per-marketplace; in the launch config they're
+  // identical across TLDs, so we show the .ins value as the canonical banner.
+  // If a TLD differs it's surfaced per-card via the individual fee-on-price
+  // computation at buy time.
+  const primaryTld: Tld = LIVE_TLDS[0] ?? "ins";
   const { data: saleFeeBps } = useReadContract({
-    address: MARKETPLACE_ADDRESS,
+    address: MARKETPLACE_ADDRESSES[primaryTld],
     abi: MARKETPLACE_ABI,
     functionName: "saleFeeBps",
+    query: { enabled: LIVE_TLDS.length > 0 },
   });
-  // M4 fix — surface emergency pause so buyers know trades are disabled.
-  const { data: mktPaused } = useReadContract({
-    address: MARKETPLACE_ADDRESS,
-    abi: MARKETPLACE_ABI,
-    functionName: "paused",
+  // Pause is per-marketplace; aggregate across all live TLDs.
+  const pausedReads = useReadContracts({
+    contracts: LIVE_TLDS.map((tld) => ({
+      address: MARKETPLACE_ADDRESSES[tld],
+      abi: MARKETPLACE_ABI,
+      functionName: "paused",
+    } as const)),
+    query: { enabled: LIVE_TLDS.length > 0 },
   });
+  // "paused" banner fires if ANY live marketplace is paused — safer UX
+  // than silent revert on that TLD's cards only.
+  const mktPaused = pausedReads.data?.some((r) => r?.status === "success" && r.result === true) ?? false;
 
   const featured = listings.list.filter((l) => l.featured);
   const regular = listings.list.filter((l) => !l.featured);
@@ -200,7 +213,7 @@ function ListingCard({
     setTxError(null);
     writeContract(
       {
-        address: MARKETPLACE_ADDRESS,
+        address: MARKETPLACE_ADDRESSES[listing.tld],
         abi: MARKETPLACE_ABI,
         functionName: "buyListing",
         args: [listing.tokenId],
@@ -250,17 +263,31 @@ function ListingCard({
             </span>
           )}
           <span
+            title={`Registry for ${tldSuffix(listing.tld)}`}
+            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
+              listing.tld === "ins"  ? "border-cyan/30 bg-cyan/10 text-cyan" :
+              listing.tld === "igra" ? "border-plum/30 bg-plum/10 text-plum" :
+                                       "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+            }`}
+          >
+            {tldSuffix(listing.tld)}
+          </span>
+          <span
             title="ERC-721 token ID"
             className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-[10px] font-semibold text-white/60"
           >
-            INS #{listing.tokenId.toString()}
+            #{listing.tokenId.toString()}
           </span>
         </div>
       </div>
 
       <h3 className="relative mt-5 text-2xl font-bold">
         <span className="ins-gradient-text">{listing.label}</span>
-        <span className="text-white/30">.ins</span>
+        <span className={`${
+          listing.tld === "ins"  ? "text-cyan/50" :
+          listing.tld === "igra" ? "text-plum/50" :
+                                   "text-emerald-300/50"
+        }`}>{tldSuffix(listing.tld)}</span>
       </h3>
 
       <div className="relative mt-4 flex items-baseline gap-2">
@@ -345,60 +372,73 @@ function ListingCard({
 /* ─────────────────────────── DATA HOOK ─────────────────────────── */
 
 function useActiveListings() {
-  const { data: supply } = useReadContract({
-    address: REGISTRY_ADDRESS,
-    abi: REGISTRY_ABI,
-    functionName: "totalSupply",
-    query: { enabled: MARKETPLACE_LIVE && REGISTRY_LIVE },
+  // 1. totalSupply on every live Registry in parallel.
+  const supplyReads = useReadContracts({
+    contracts: LIVE_TLDS.map((tld) => ({
+      address: REGISTRY_ADDRESSES[tld],
+      abi: REGISTRY_ABI,
+      functionName: "totalSupply",
+    } as const)),
+    query: { enabled: ANY_TLD_LIVE },
   });
 
-  const total = Number((supply as bigint | undefined) ?? 0n);
-  const ids = useMemo(() => {
-    const arr: bigint[] = [];
-    for (let i = 1; i <= total; i++) arr.push(BigInt(i));
-    return arr;
-  }, [total]);
+  const supplyByTld: Record<Tld, number> = { ins: 0, igra: 0, ikas: 0 };
+  LIVE_TLDS.forEach((tld, i) => {
+    const r = supplyReads.data?.[i];
+    if (r?.status === "success") supplyByTld[tld] = Number(r.result as bigint);
+  });
+
+  // 2. Build (tld, tokenId) grid so we can batch getActiveListing across all TLDs.
+  const grid = useMemo(() => {
+    const g: Array<{ tld: Tld; tokenId: bigint }> = [];
+    for (const tld of LIVE_TLDS) {
+      for (let i = 1; i <= supplyByTld[tld]; i++) {
+        g.push({ tld, tokenId: BigInt(i) });
+      }
+    }
+    return g;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supplyByTld.ins, supplyByTld.igra, supplyByTld.ikas]);
 
   const { data: listingData, isLoading: listingLoading, refetch: refetchListings } =
     useReadContracts({
-      contracts: ids.map((id) => ({
-        address: MARKETPLACE_ADDRESS,
+      contracts: grid.map(({ tld, tokenId }) => ({
+        address: MARKETPLACE_ADDRESSES[tld],
         abi: MARKETPLACE_ABI,
         functionName: "getActiveListing",
-        args: [id],
-      })),
-      query: { enabled: MARKETPLACE_LIVE && ids.length > 0 },
+        args: [tokenId],
+      } as const)),
+      query: { enabled: grid.length > 0 },
     });
 
-  const activeIds = useMemo(() => {
-    if (!listingData) return [] as bigint[];
-    const out: bigint[] = [];
-    for (let i = 0; i < ids.length; i++) {
-      const l = listingData[i]?.result as
-        | { seller: `0x${string}`; active: boolean }
-        | undefined;
-      if (l?.active) out.push(ids[i]);
+  // 3. Filter to active listings, collect labels from each TLD's Registry.
+  const activePositions = useMemo(() => {
+    if (!listingData) return [] as Array<{ gridIdx: number; tld: Tld; tokenId: bigint }>;
+    const out: Array<{ gridIdx: number; tld: Tld; tokenId: bigint }> = [];
+    for (let i = 0; i < grid.length; i++) {
+      const l = listingData[i]?.result as { active: boolean } | undefined;
+      if (l?.active) out.push({ gridIdx: i, tld: grid[i].tld, tokenId: grid[i].tokenId });
     }
     return out;
-  }, [listingData, ids]);
+  }, [listingData, grid]);
 
   const { data: labelData, isLoading: labelLoading, refetch: refetchLabels } =
     useReadContracts({
-      contracts: activeIds.map((id) => ({
-        address: REGISTRY_ADDRESS,
+      contracts: activePositions.map(({ tld, tokenId }) => ({
+        address: REGISTRY_ADDRESSES[tld],
         abi: REGISTRY_ABI,
         functionName: "labelOf",
-        args: [id],
-      })),
-      query: { enabled: activeIds.length > 0 },
+        args: [tokenId],
+      } as const)),
+      query: { enabled: activePositions.length > 0 },
     });
 
   const list: ActiveListing[] = useMemo(() => {
     if (!listingData) return [];
     const out: ActiveListing[] = [];
-    let labelIdx = 0;
-    for (let i = 0; i < ids.length; i++) {
-      const l = listingData[i]?.result as
+    for (let a = 0; a < activePositions.length; a++) {
+      const pos = activePositions[a];
+      const l = listingData[pos.gridIdx]?.result as
         | {
             seller: `0x${string}`;
             expiry: bigint;
@@ -408,10 +448,10 @@ function useActiveListings() {
           }
         | undefined;
       if (!l?.active) continue;
-      const label = (labelData?.[labelIdx]?.result as string | undefined) ?? "";
-      labelIdx++;
+      const label = (labelData?.[a]?.result as string | undefined) ?? "";
       out.push({
-        tokenId: ids[i],
+        tld: pos.tld,
+        tokenId: pos.tokenId,
         label,
         seller: l.seller,
         price: l.price,
@@ -423,12 +463,13 @@ function useActiveListings() {
       if (a.featured !== b.featured) return a.featured ? -1 : 1;
       return a.price < b.price ? -1 : a.price > b.price ? 1 : 0;
     });
-  }, [ids, listingData, labelData]);
+  }, [listingData, labelData, activePositions]);
 
   return {
     list,
-    loading: listingLoading || labelLoading,
+    loading: supplyReads.isLoading || listingLoading || labelLoading,
     refetch: () => {
+      supplyReads.refetch();
       refetchListings();
       refetchLabels();
     },

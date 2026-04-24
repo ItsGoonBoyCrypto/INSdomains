@@ -3,15 +3,18 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Check, X, Sparkles, Loader2, ArrowRight, Lock, Gem, ExternalLink } from "lucide-react";
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { Search, Check, X, Sparkles, Loader2, ArrowRight, Lock, Gem, ExternalLink, Layers } from "lucide-react";
+import { useAccount, useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { cleanLabel, isValidLabel } from "@/lib/names";
 import { mockAvailable, TAKEN_NAMES, RESERVED_NAMES } from "@/lib/mock-registry";
 import { rarityFor, tierLabel, formatPrice, type Rarity } from "@/lib/pricing";
-import { REGISTRY_ADDRESS, REGISTRY_ABI } from "@/lib/contracts";
+import {
+  REGISTRY_ADDRESS, REGISTRY_ABI,
+  REGISTRY_ADDRESSES, TLDS, LIVE_TLDS, isTldLive, tldSuffix, type Tld,
+} from "@/lib/contracts";
 import { cn } from "@/lib/cn";
 
 const REGISTRY_LIVE = REGISTRY_ADDRESS !== "0x0000000000000000000000000000000000000000";
@@ -50,18 +53,6 @@ function AppInner() {
 
   const label = useMemo(() => cleanLabel(raw), [raw]);
   const valid = isValidLabel(label);
-
-  // Live on-chain availability (active when registry is deployed); mocks in dev.
-  const { data: chainAvailable } = useReadContract({
-    address: REGISTRY_ADDRESS,
-    abi: REGISTRY_ABI,
-    functionName: "available",
-    args: valid ? [label] : undefined,
-    query: { enabled: REGISTRY_LIVE && valid },
-  });
-  const available = valid
-    ? (REGISTRY_LIVE ? (chainAvailable as boolean | undefined ?? null) : mockAvailable(label))
-    : null;
   const rarity = valid ? rarityFor(label, RESERVED_NAMES) : null;
 
   const suggestions = useMemo(() => genSuggestions(label), [label]);
@@ -69,10 +60,10 @@ function AppInner() {
   return (
     <main className="mx-auto max-w-4xl px-6 pt-16 pb-24">
       <h1 className="text-center text-4xl font-black tracking-tight sm:text-5xl">
-        Search the <span className="ins-gradient-text">.ins</span> registry
+        Search the <span className="ins-gradient-text">INS</span> registry
       </h1>
       <p className="mt-3 text-center text-white/60">
-        Mint once, own forever. Tiered pricing in iKAS — shorter names are rarer.
+        Mint once, own forever. One name, three TLDs — <span className="text-cyan">.ins</span> · <span className="text-plum">.igra</span> · <span className="text-emerald-300">.ikas</span>. Tiered pricing in iKAS.
       </p>
 
       {/* Search */}
@@ -94,9 +85,6 @@ function AppInner() {
             autoComplete="off"
             spellCheck={false}
           />
-          {valid && (
-            <span className="text-sm text-white/50 mr-2 hidden sm:inline">.ins</span>
-          )}
         </div>
       </div>
 
@@ -107,7 +95,7 @@ function AppInner() {
       {valid && rarity && (
         <>
           <div className="mt-10">
-            <NameResult label={label} available={available} owner={address} rarity={rarity} />
+            <MultiTldNameResult label={label} owner={address} rarity={rarity} />
           </div>
 
           {suggestions.length > 0 && (
@@ -180,85 +168,298 @@ function TierSample({
 function InvalidHint({ label }: { label: string }) {
   return (
     <div className="mt-10 rounded-3xl border border-amber-500/30 bg-amber-500/5 p-6 text-center text-sm text-amber-200">
-      <strong>"{label}"</strong> isn't a valid .ins name — use 3–32 lowercase letters, digits, or hyphens (no leading / trailing hyphen).
+      <strong>"{label}"</strong> isn't a valid name — use 3–32 lowercase letters, digits, or hyphens (no leading / trailing hyphen).
     </div>
   );
 }
 
-function NameResult({
-  label, available, owner, rarity,
-}: { label: string; available: boolean | null; owner?: `0x${string}`; rarity: Rarity }) {
-  if (available === null) return null;
-
+/**
+ * Renders one row per TLD (.ins / .igra / .ikas) showing per-TLD availability
+ * + price + register button, plus a batch "Register on all available" action
+ * at the top when ≥ 2 TLDs are still open.
+ */
+function MultiTldNameResult({
+  label, owner, rarity,
+}: { label: string; owner?: `0x${string}`; rarity: Rarity }) {
   const isReserved = rarity.kind === "reserved";
-  const price =
-    rarity.kind === "length" ? rarity.price :
-    rarity.kind === "premium" ? rarity.price : null;
+
+  // Batch all 3 TLDs' reads via useReadContracts (one RPC round-trip)
+  const contracts = TLDS.flatMap((tld) =>
+    isTldLive(tld)
+      ? [
+          { address: REGISTRY_ADDRESSES[tld], abi: REGISTRY_ABI, functionName: "available", args: [label] } as const,
+          { address: REGISTRY_ADDRESSES[tld], abi: REGISTRY_ABI, functionName: "priceFor",  args: [label] } as const,
+        ]
+      : []
+  );
+  const { data: reads, isLoading: readsLoading } = useReadContracts({
+    contracts,
+    query: { enabled: LIVE_TLDS.length > 0 && !isReserved },
+  });
+
+  // Pair up the batched results back to per-TLD status.
+  const perTld: Record<Tld, { available: boolean | null; price: bigint | null }> = {
+    ins:  { available: null, price: null },
+    igra: { available: null, price: null },
+    ikas: { available: null, price: null },
+  };
+  let cursor = 0;
+  for (const tld of TLDS) {
+    if (!isTldLive(tld)) {
+      perTld[tld] = {
+        available: REGISTRY_LIVE ? null : mockAvailable(label),
+        price: null,
+      };
+      continue;
+    }
+    if (!reads || reads.length <= cursor + 1) { cursor += 2; continue; }
+    const a = reads[cursor];
+    const p = reads[cursor + 1];
+    cursor += 2;
+    perTld[tld] = {
+      available: a?.status === "success" ? (a.result as boolean) : null,
+      price: p?.status === "success" ? (p.result as bigint) : null,
+    };
+  }
+
+  const availableTlds = TLDS.filter((t) => perTld[t].available === true && isTldLive(t));
+
+  return (
+    <div className="space-y-4">
+      {/* Batch register banner — visible when ≥ 2 TLDs are available */}
+      {owner && availableTlds.length >= 2 && !isReserved && (
+        <BatchRegisterBanner label={label} owner={owner} availableTlds={availableTlds} perTld={perTld} />
+      )}
+
+      {TLDS.map((tld) => (
+        <TldRow
+          key={tld}
+          tld={tld}
+          label={label}
+          rarity={rarity}
+          available={perTld[tld].available}
+          price={perTld[tld].price}
+          owner={owner}
+          loading={readsLoading && isTldLive(tld)}
+        />
+      ))}
+    </div>
+  );
+}
+
+function TldRow({
+  tld, label, rarity, available, price, owner, loading,
+}: {
+  tld: Tld;
+  label: string;
+  rarity: Rarity;
+  available: boolean | null;
+  price: bigint | null;
+  owner?: `0x${string}`;
+  loading: boolean;
+}) {
+  const isReserved = rarity.kind === "reserved";
+  const live = isTldLive(tld);
+  const tldAccent: Record<Tld, string> = {
+    ins:  "text-cyan",
+    igra: "text-plum",
+    ikas: "text-emerald-300",
+  };
+  const tldBorder: Record<Tld, string> = {
+    ins:  "border-cyan/30 bg-gradient-to-r from-cyan/[0.06] to-transparent",
+    igra: "border-plum/30 bg-gradient-to-r from-plum/[0.06] to-transparent",
+    ikas: "border-emerald-500/30 bg-gradient-to-r from-emerald-500/[0.06] to-transparent",
+  };
 
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-3xl border p-8 sm:p-10",
+        "relative overflow-hidden rounded-2xl border p-5",
         isReserved
-          ? "border-red-500/30 bg-red-500/[0.05]"
+          ? "border-red-500/30 bg-red-500/[0.04]"
           : available
-          ? "border-cyan/30 bg-gradient-to-r from-cyan/[0.08] to-plum/[0.08]"
+          ? tldBorder[tld]
           : "border-white/10 bg-white/[0.03]"
       )}
     >
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-ins-gradient text-2xl font-black text-black">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-ins-gradient text-lg font-black text-black">
             {label[0]?.toUpperCase() ?? "?"}
           </div>
           <div>
-            <div className="text-3xl font-bold">
-              <span className="ins-gradient-text">{label}</span>
-              <span className="text-white/30">.ins</span>
+            <div className="text-xl font-bold sm:text-2xl">
+              <span className="text-white">{label}</span>
+              <span className={cn("font-bold", tldAccent[tld])}>{tldSuffix(tld)}</span>
             </div>
-            <div className="mt-1 text-sm text-white/60">
+            <div className="mt-1 text-xs text-white/55">
               {isReserved ? (
                 <span className="inline-flex items-center gap-1.5 text-red-300">
-                  <Lock className="h-3.5 w-3.5" /> Reserved — not available for public mint
+                  <Lock className="h-3 w-3" /> Reserved — not available for public mint
                 </span>
-              ) : available ? (
-                <span className="inline-flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-400" />
-                  Available · forever
+              ) : !live ? (
+                <span className="inline-flex items-center gap-1.5 text-white/40">
+                  <X className="h-3 w-3" /> Registry not yet deployed for {tldSuffix(tld)}
+                </span>
+              ) : loading ? (
+                <span className="inline-flex items-center gap-1.5 text-white/50">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Checking chain…
+                </span>
+              ) : available === true ? (
+                <span className="inline-flex items-center gap-1.5 text-emerald-300">
+                  <Check className="h-3 w-3" /> Available · forever
+                </span>
+              ) : available === false ? (
+                <span className="inline-flex items-center gap-1.5 text-red-300">
+                  <X className="h-3 w-3" /> Taken
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 text-red-300">
-                  <X className="h-3.5 w-3.5" /> Taken — owned on-chain
-                </span>
+                <span className="text-white/40">—</span>
               )}
-            </div>
-            <div className="mt-2">
-              <RarityBadge rarity={rarity} />
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
           {isReserved ? (
-            <div className="text-right">
-              <div className="text-sm text-red-300">Not for sale</div>
-              <div className="text-xs text-white/40">Contact team for ecosystem allocation</div>
-            </div>
-          ) : available && price !== null ? (
+            <div className="text-right text-xs text-red-300">Not for sale</div>
+          ) : !live ? (
+            <div className="text-right text-xs text-white/40">Coming soon</div>
+          ) : available === true ? (
             <>
               <div className="text-right">
-                <div className="text-2xl font-black text-white">{formatPrice(price)}</div>
-                <div className="text-xs text-white/40">one-time, forever</div>
+                <div className="text-lg font-black text-white">{price != null ? formatPrice(Number(price / 10n ** 18n)) : "—"}</div>
+                <div className="text-[10px] uppercase tracking-wider text-white/40">one-time</div>
               </div>
-              <RegisterButton label={label} owner={owner} />
+              <RegisterButton label={label} tld={tld} owner={owner} priceHint={price} />
             </>
-          ) : (
-            <Link href={`/marketplace?name=${label}`} className="btn-ghost">
-              View on marketplace <ArrowRight className="ml-1 inline h-4 w-4" />
+          ) : available === false ? (
+            <Link href={`/marketplace?name=${label}`} className="btn-ghost text-xs">
+              Marketplace <ArrowRight className="ml-1 inline h-3 w-3" />
             </Link>
-          )}
+          ) : null}
         </div>
       </div>
+    </div>
+  );
+}
+
+function BatchRegisterBanner({
+  label, owner, availableTlds, perTld,
+}: {
+  label: string;
+  owner: `0x${string}`;
+  availableTlds: Tld[];
+  perTld: Record<Tld, { available: boolean | null; price: bigint | null }>;
+}) {
+  const totalPrice = availableTlds.reduce<bigint>((sum, t) => sum + (perTld[t].price ?? 0n), 0n);
+  return (
+    <div className="rounded-2xl border border-cyan/30 bg-gradient-to-r from-cyan/[0.08] via-plum/[0.06] to-emerald-500/[0.08] p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-ins-gradient text-black">
+            <Layers className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-sm font-bold text-white">
+              Claim <span className="ins-gradient-text">{label}</span> on all {availableTlds.length} TLDs
+            </div>
+            <div className="text-[11px] text-white/60">
+              {availableTlds.map((t) => `${label}${tldSuffix(t)}`).join(" · ")}
+              <span className="mx-2 text-white/30">·</span>
+              one sign per TLD
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <div className="text-lg font-black text-white">{formatPrice(Number(totalPrice / 10n ** 18n))}</div>
+            <div className="text-[10px] uppercase tracking-wider text-white/40">total</div>
+          </div>
+          <BatchRegisterAll label={label} owner={owner} availableTlds={availableTlds} perTld={perTld} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BatchRegisterAll({
+  label, owner, availableTlds, perTld,
+}: {
+  label: string;
+  owner: `0x${string}`;
+  availableTlds: Tld[];
+  perTld: Record<Tld, { available: boolean | null; price: bigint | null }>;
+}) {
+  const { writeContract, data: hash, error, reset, isPending } = useWriteContract();
+  const { isLoading: confirming, isSuccess: confirmed } = useWaitForTransactionReceipt({ hash });
+  const [idx, setIdx] = useState(0); // which TLD we're on (0..availableTlds.length)
+  const [started, setStarted] = useState(false);
+
+  // When a register tx confirms, advance to the next TLD
+  useEffect(() => {
+    if (!started) return;
+    if (!confirmed) return;
+    if (idx + 1 < availableTlds.length) {
+      const nextTld = availableTlds[idx + 1];
+      const nextPrice = perTld[nextTld].price;
+      if (nextPrice == null) return;
+      reset();
+      writeContract({
+        address: REGISTRY_ADDRESSES[nextTld],
+        abi: REGISTRY_ABI,
+        functionName: "register",
+        args: [label, owner],
+        value: nextPrice,
+      });
+      setIdx(idx + 1);
+    }
+  }, [confirmed, idx, availableTlds, perTld, started, label, owner, writeContract, reset]);
+
+  const onStart = () => {
+    setStarted(true);
+    setIdx(0);
+    const firstTld = availableTlds[0];
+    const firstPrice = perTld[firstTld].price;
+    if (firstPrice == null) return;
+    writeContract({
+      address: REGISTRY_ADDRESSES[firstTld],
+      abi: REGISTRY_ABI,
+      functionName: "register",
+      args: [label, owner],
+      value: firstPrice,
+    });
+  };
+
+  const allDone = started && confirmed && idx + 1 === availableTlds.length;
+  const busy = isPending || confirming;
+  const currentTld = availableTlds[idx];
+
+  if (allDone) {
+    return (
+      <Link href="/domains" className="btn-primary bg-emerald-400">
+        <Check className="mr-1 inline h-4 w-4" /> All {availableTlds.length} minted →
+      </Link>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <button onClick={onStart} disabled={started || busy} className="btn-primary">
+        {started ? (
+          <>
+            <Loader2 className="mr-1 inline h-4 w-4 animate-spin" />
+            {idx + 1}/{availableTlds.length} · {tldSuffix(currentTld)}
+          </>
+        ) : (
+          <>Register all {availableTlds.length} →</>
+        )}
+      </button>
+      {error && (
+        <button onClick={() => { setStarted(false); reset(); }} className="text-[10px] text-red-300 hover:text-red-200" title={error.message}>
+          {error.message.split("\n")[0] || "Tx failed"} — retry
+        </button>
+      )}
     </div>
   );
 }
@@ -294,16 +495,18 @@ function RarityBadge({ rarity }: { rarity: Rarity }) {
 }
 
 function RegisterButton({
-  label, owner,
-}: { label: string; owner?: `0x${string}` }) {
-  // Pull the exact on-chain price so we send the right msg.value (falls back to
-  // the tier price when the registry isn't deployed).
+  label, tld, owner, priceHint,
+}: { label: string; tld: Tld; owner?: `0x${string}`; priceHint?: bigint | null }) {
+  const registryAddr = REGISTRY_ADDRESSES[tld];
+  const tldLive = isTldLive(tld);
+
+  // Pull the exact on-chain price again (defence — priceHint may be stale)
   const { data: onchainPrice } = useReadContract({
-    address: REGISTRY_ADDRESS,
+    address: registryAddr,
     abi: REGISTRY_ABI,
     functionName: "priceFor",
     args: [label],
-    query: { enabled: REGISTRY_LIVE && !!label },
+    query: { enabled: tldLive && !!label },
   });
 
   const { writeContract, data: hash, error: writeError, isPending, reset } = useWriteContract();
@@ -311,125 +514,100 @@ function RegisterButton({
     hash,
   });
 
-  // Stub mode status — used when the registry is not deployed.
-  const [stubStatus, setStubStatus] = useState<"idle" | "confirm" | "minting" | "done">("idle");
-
   if (!owner) {
     return (
-      <div className="flex flex-col items-end gap-2">
-        <span className="text-xs text-white/40">Connect wallet to register</span>
-        <ConnectButton.Custom>
-          {({ openConnectModal }) => (
-            <button onClick={openConnectModal} className="btn-primary">
-              Connect & Register
-            </button>
-          )}
-        </ConnectButton.Custom>
-      </div>
+      <ConnectButton.Custom>
+        {({ openConnectModal }) => (
+          <button onClick={openConnectModal} className="btn-primary text-xs">
+            Connect
+          </button>
+        )}
+      </ConnectButton.Custom>
     );
   }
 
-  // Stub flow while Registry.sol isn't deployed yet.
-  if (!REGISTRY_LIVE) {
-    const onStubMint = async () => {
-      setStubStatus("confirm");
-      await new Promise((r) => setTimeout(r, 700));
-      setStubStatus("minting");
-      await new Promise((r) => setTimeout(r, 1400));
-      setStubStatus("done");
-    };
-    if (stubStatus === "done") {
-      return (
-        <Link href="/domains" className="btn-primary bg-emerald-400">
-          <Check className="mr-1 inline h-4 w-4" />
-          Minted (demo)! View →
-        </Link>
-      );
-    }
+  // If the TLD isn't live yet (no env address), show a disabled hint.
+  if (!tldLive) {
     return (
-      <button onClick={onStubMint} disabled={stubStatus !== "idle"} className="btn-primary">
-        {stubStatus === "confirm" ? (
-          <><Loader2 className="mr-1 inline h-4 w-4 animate-spin" />Confirm in wallet…</>
-        ) : stubStatus === "minting" ? (
-          <><Loader2 className="mr-1 inline h-4 w-4 animate-spin" />Inscribing…</>
-        ) : (
-          <>Register forever →</>
-        )}
+      <button disabled className="btn-primary opacity-50 cursor-not-allowed text-xs">
+        Coming soon
       </button>
     );
   }
 
   // On-chain flow.
   if (isConfirmed && hash) {
-    return <MintedSuccess label={label} hash={hash} />;
+    return <MintedSuccess label={label} tld={tld} hash={hash} />;
   }
 
+  const priceToUse = (onchainPrice as bigint | undefined) ?? priceHint ?? null;
+
   const onMint = () => {
-    if (!onchainPrice) return;
+    if (priceToUse == null) return;
     writeContract({
-      address: REGISTRY_ADDRESS,
+      address: registryAddr,
       abi: REGISTRY_ABI,
       functionName: "register",
       args: [label, owner],
-      value: onchainPrice as bigint,
+      value: priceToUse,
     });
   };
 
-  const label2 = isPending
-    ? <><Loader2 className="mr-1 inline h-4 w-4 animate-spin" />Confirm in wallet…</>
-    : isConfirming
-    ? <><Loader2 className="mr-1 inline h-4 w-4 animate-spin" />Inscribing…</>
-    : <>Register forever →</>;
-
   return (
-    <div className="flex flex-col items-end gap-2">
+    <div className="flex flex-col items-end gap-1">
       <button
         onClick={onMint}
-        disabled={isPending || isConfirming || !onchainPrice}
-        className="btn-primary"
+        disabled={isPending || isConfirming || priceToUse == null}
+        className="btn-primary text-xs"
       >
-        {label2}
+        {isPending ? (
+          <><Loader2 className="mr-1 inline h-3 w-3 animate-spin" />Confirm…</>
+        ) : isConfirming ? (
+          <><Loader2 className="mr-1 inline h-3 w-3 animate-spin" />Minting…</>
+        ) : (
+          <>Register</>
+        )}
       </button>
       {writeError && (
         <button
           onClick={() => reset()}
-          className="max-w-[240px] truncate text-right text-[11px] text-red-300 hover:text-red-200"
+          className="max-w-[180px] truncate text-right text-[10px] text-red-300 hover:text-red-200"
           title={writeError.message}
         >
-          {writeError.message.split("\n")[0] || "Transaction failed"} — retry
+          {writeError.message.split("\n")[0] || "Tx failed"} — retry
         </button>
       )}
     </div>
   );
 }
 
-function MintedSuccess({ label, hash }: { label: string; hash: `0x${string}` }) {
+function MintedSuccess({ label, tld, hash }: { label: string; tld: Tld; hash: `0x${string}` }) {
   const { data: tokenId } = useReadContract({
-    address: REGISTRY_ADDRESS,
+    address: REGISTRY_ADDRESSES[tld],
     abi: REGISTRY_ABI,
     functionName: "tokenIdOf",
     args: [label],
-    query: { enabled: REGISTRY_LIVE && !!label },
+    query: { enabled: isTldLive(tld) && !!label },
   });
 
   return (
-    <div className="flex flex-col items-end gap-2">
-      <Link href="/domains" className="btn-primary bg-emerald-400">
-        <Check className="mr-1 inline h-4 w-4" />
-        Minted! View →
+    <div className="flex flex-col items-end gap-1">
+      <Link href="/domains" className="btn-primary bg-emerald-400 text-xs">
+        <Check className="mr-1 inline h-3 w-3" />
+        Minted! →
       </Link>
       {typeof tokenId === "bigint" && tokenId > 0n && (
-        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-[11px] font-semibold text-white/70">
-          INS #{tokenId.toString()}
+        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 font-mono text-[10px] font-semibold text-white/70">
+          #{tokenId.toString()}
         </span>
       )}
       <a
         href={`${IGRA_EXPLORER}/tx/${hash}`}
         target="_blank"
         rel="noreferrer"
-        className="text-[11px] text-white/50 hover:text-cyan"
+        className="text-[10px] text-white/50 hover:text-cyan"
       >
-        View tx <ExternalLink className="inline h-3 w-3" />
+        Tx <ExternalLink className="inline h-3 w-3" />
       </a>
     </div>
   );
