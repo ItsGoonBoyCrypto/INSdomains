@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ShieldCheck, Lock, Gift, Tag, Gem, ArrowRight, Loader2,
   Check, Plus, Trash2, Wallet, AlertTriangle, Settings2, ExternalLink,
-  ClipboardList, X,
+  ClipboardList, X, Store, Pause, Play,
 } from "lucide-react";
 import {
   useAccount,
@@ -19,13 +19,15 @@ import { formatEther, parseEther } from "viem";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ADMIN_WALLET, isAdmin } from "@/lib/admin";
-import { REGISTRY_ADDRESS, REGISTRY_ABI } from "@/lib/contracts";
+import { REGISTRY_ADDRESS, REGISTRY_ABI, MARKETPLACE_ADDRESS, MARKETPLACE_ABI } from "@/lib/contracts";
 import { cleanLabel, isValidLabel, shortAddr } from "@/lib/names";
 import { RESERVED_NAMES } from "@/lib/mock-registry";
 import { formatPrice, TIER_RESERVED } from "@/lib/pricing";
 
 const REGISTRY_LIVE =
   REGISTRY_ADDRESS !== "0x0000000000000000000000000000000000000000";
+const MARKETPLACE_LIVE =
+  MARKETPLACE_ADDRESS !== "0x0000000000000000000000000000000000000000";
 const IGRA_EXPLORER = process.env.NEXT_PUBLIC_IGRA_EXPLORER ?? "https://explorer.igralabs.com";
 
 export default function AdminPage() {
@@ -154,6 +156,7 @@ function AdminDashboard() {
       <TierPricingCard />
       <PremiumOverridesCard />
       <TreasuryCard />
+      <MarketplaceCard />
       <OwnershipCard />
     </div>
   );
@@ -1222,6 +1225,246 @@ function TreasuryCard() {
         <TxError message={error?.message} onReset={reset} />
         <TxLink hash={hash} />
       </div>
+    </Card>
+  );
+}
+
+/* ── Marketplace ────────────────────────────────────────── */
+function MarketplaceCard() {
+  const { data: balance, refetch: refetchBalance } = useBalance({
+    address: MARKETPLACE_ADDRESS,
+    query: { enabled: MARKETPLACE_LIVE },
+  });
+  const { data: saleFeeBps, refetch: refetchSaleFee } = useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MARKETPLACE_ABI,
+    functionName: "saleFeeBps",
+    query: { enabled: MARKETPLACE_LIVE },
+  });
+  const { data: featureFeeBps, refetch: refetchFeatureFee } = useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MARKETPLACE_ABI,
+    functionName: "featureFeeBps",
+    query: { enabled: MARKETPLACE_LIVE },
+  });
+  const { data: treasury, refetch: refetchTreasury } = useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MARKETPLACE_ABI,
+    functionName: "treasury",
+    query: { enabled: MARKETPLACE_LIVE },
+  });
+  const { data: paused, refetch: refetchPaused } = useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MARKETPLACE_ABI,
+    functionName: "paused",
+    query: { enabled: MARKETPLACE_LIVE },
+  });
+  const { data: mktOwner } = useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MARKETPLACE_ABI,
+    functionName: "owner",
+    query: { enabled: MARKETPLACE_LIVE },
+  });
+
+  const { writeContract, data: hash, isPending, error, reset } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
+  const busy = isPending || isConfirming;
+
+  const [saleBpsInput, setSaleBpsInput] = useState("");
+  const [featureBpsInput, setFeatureBpsInput] = useState("");
+  const [treasuryInput, setTreasuryInput] = useState("");
+
+  useEffect(() => {
+    if (isConfirmed) {
+      refetchBalance();
+      refetchSaleFee();
+      refetchFeatureFee();
+      refetchTreasury();
+      refetchPaused();
+      setSaleBpsInput("");
+      setFeatureBpsInput("");
+      setTreasuryInput("");
+      const t = setTimeout(reset, 1200);
+      return () => clearTimeout(t);
+    }
+  }, [isConfirmed, refetchBalance, refetchSaleFee, refetchFeatureFee, refetchTreasury, refetchPaused, reset]);
+
+  const saleBps = Number(saleFeeBps ?? 0);
+  const featureBps = Number(featureFeeBps ?? 0);
+  const displayBal = balance ? `${Number(balance.formatted).toFixed(4)} iKAS` : "0 iKAS";
+
+  const saleBpsNum = Number(saleBpsInput);
+  const saleValid = Number.isFinite(saleBpsNum) && saleBpsNum >= 0 && saleBpsNum <= 500 && saleBpsInput !== "";
+  const featBpsNum = Number(featureBpsInput);
+  const featValid = Number.isFinite(featBpsNum) && featBpsNum >= 0 && featBpsNum <= 500 && featureBpsInput !== "";
+  const treasuryValid = /^0x[a-fA-F0-9]{40}$/.test(treasuryInput.trim());
+
+  const onSetSaleFee = () => {
+    if (!saleValid) return;
+    writeContract({
+      address: MARKETPLACE_ADDRESS,
+      abi: MARKETPLACE_ABI,
+      functionName: "setSaleFeeBps",
+      args: [saleBpsNum],
+    });
+  };
+  const onSetFeatureFee = () => {
+    if (!featValid) return;
+    writeContract({
+      address: MARKETPLACE_ADDRESS,
+      abi: MARKETPLACE_ABI,
+      functionName: "setFeatureFeeBps",
+      args: [featBpsNum],
+    });
+  };
+  const onSetTreasury = () => {
+    if (!treasuryValid) return;
+    writeContract({
+      address: MARKETPLACE_ADDRESS,
+      abi: MARKETPLACE_ABI,
+      functionName: "setTreasury",
+      args: [treasuryInput.trim() as `0x${string}`],
+    });
+  };
+  const onTogglePause = () => {
+    writeContract({
+      address: MARKETPLACE_ADDRESS,
+      abi: MARKETPLACE_ABI,
+      functionName: "setPaused",
+      args: [!paused],
+    });
+  };
+
+  return (
+    <Card
+      icon={<Store className="h-5 w-5 text-cyan" />}
+      title="Marketplace"
+      subtitle={
+        MARKETPLACE_LIVE
+          ? `${saleBps / 100}% seller fee · ${featureBps / 100}% featured · ${paused ? "paused" : "live"}`
+          : "contract not deployed"
+      }
+    >
+      {!MARKETPLACE_LIVE ? (
+        <p className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-xs text-white/60">
+          Set <code className="rounded bg-black/40 px-1 py-0.5 font-mono text-[10px]">NEXT_PUBLIC_INS_MARKETPLACE</code>{" "}
+          after deploying INSMarketplace.sol.
+        </p>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+              <div className="text-[10px] uppercase tracking-wider text-white/40">Treasury balance</div>
+              <div className="mt-0.5 text-lg font-black ins-gradient-text">{displayBal}</div>
+              <div className="mt-0.5 text-[10px] text-white/30">contract holds nothing — fees forward on each tx</div>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+              <div className="text-[10px] uppercase tracking-wider text-white/40">State</div>
+              <div className="mt-0.5 flex items-center gap-2">
+                <span
+                  className={`inline-flex h-2 w-2 rounded-full ${paused ? "bg-amber-400" : "bg-emerald-400"}`}
+                />
+                <span className="text-sm font-bold">{paused ? "Paused" : "Live"}</span>
+              </div>
+              <button
+                onClick={onTogglePause}
+                disabled={busy}
+                className={`mt-2 inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-semibold transition disabled:opacity-40 ${
+                  paused
+                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
+                    : "border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
+                }`}
+              >
+                {paused ? <><Play className="h-3 w-3" /> Resume</> : <><Pause className="h-3 w-3" /> Pause</>}
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            <div>
+              <div className="mb-1 flex items-baseline justify-between">
+                <label className="text-[11px] uppercase tracking-wider text-white/50">Seller fee (bps · max 500)</label>
+                <span className="text-[10px] text-white/40">current {saleBps} ({saleBps / 100}%)</span>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  value={saleBpsInput}
+                  onChange={(e) => setSaleBpsInput(e.target.value.replace(/[^\d]/g, ""))}
+                  placeholder={String(saleBps)}
+                  className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 font-mono text-sm placeholder:text-white/30 focus:border-cyan/40 focus:outline-none"
+                  spellCheck={false}
+                />
+                <button
+                  onClick={onSetSaleFee}
+                  disabled={!saleValid || busy}
+                  className="inline-flex items-center gap-1 rounded-xl border border-cyan/30 bg-cyan/10 px-3 text-xs font-semibold text-cyan transition hover:bg-cyan/20 disabled:opacity-40"
+                >
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-1 flex items-baseline justify-between">
+                <label className="text-[11px] uppercase tracking-wider text-white/50">Featured fee (bps · max 500)</label>
+                <span className="text-[10px] text-white/40">current {featureBps} ({featureBps / 100}%)</span>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  value={featureBpsInput}
+                  onChange={(e) => setFeatureBpsInput(e.target.value.replace(/[^\d]/g, ""))}
+                  placeholder={String(featureBps)}
+                  className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 font-mono text-sm placeholder:text-white/30 focus:border-cyan/40 focus:outline-none"
+                  spellCheck={false}
+                />
+                <button
+                  onClick={onSetFeatureFee}
+                  disabled={!featValid || busy}
+                  className="inline-flex items-center gap-1 rounded-xl border border-cyan/30 bg-cyan/10 px-3 text-xs font-semibold text-cyan transition hover:bg-cyan/20 disabled:opacity-40"
+                >
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-1 flex items-baseline justify-between">
+                <label className="text-[11px] uppercase tracking-wider text-white/50">Treasury address</label>
+                <span className="font-mono text-[10px] text-white/40">
+                  {treasury ? shortAddr(treasury as `0x${string}`) : "…"}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  value={treasuryInput}
+                  onChange={(e) => setTreasuryInput(e.target.value)}
+                  placeholder="0x… new treasury"
+                  className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 font-mono text-sm placeholder:text-white/30 focus:border-cyan/40 focus:outline-none"
+                  spellCheck={false}
+                />
+                <button
+                  onClick={onSetTreasury}
+                  disabled={!treasuryValid || busy}
+                  className="inline-flex items-center gap-1 rounded-xl border border-cyan/30 bg-cyan/10 px-3 text-xs font-semibold text-cyan transition hover:bg-cyan/20 disabled:opacity-40"
+                >
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 flex items-center justify-between">
+            <TxError message={error?.message} onReset={reset} />
+            <TxLink hash={hash} />
+          </div>
+
+          <p className="mt-4 border-t border-white/5 pt-3 text-[10px] text-white/40">
+            Owner: <span className="font-mono">{mktOwner ? shortAddr(mktOwner as `0x${string}`) : "…"}</span>
+            <span className="mx-1.5 text-white/20">·</span>
+            Contract: <span className="font-mono">{shortAddr(MARKETPLACE_ADDRESS)}</span>
+          </p>
+        </>
+      )}
     </Card>
   );
 }

@@ -1,79 +1,511 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Tag, Hammer, Sparkles, ArrowRight } from "lucide-react";
+import {
+  useAccount,
+  useReadContract,
+  useReadContracts,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { formatEther } from "viem";
+import {
+  Tag, Hammer, Sparkles, ArrowRight,
+  Loader2, Star, Clock, ExternalLink, ShoppingCart, Check,
+} from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { shortAddr } from "@/lib/names";
+import { explorerAddr } from "@/lib/igra-chain";
+import {
+  REGISTRY_ADDRESS, REGISTRY_ABI,
+  MARKETPLACE_ADDRESS, MARKETPLACE_ABI,
+} from "@/lib/contracts";
+
+const MARKETPLACE_LIVE =
+  MARKETPLACE_ADDRESS !== "0x0000000000000000000000000000000000000000";
+const REGISTRY_LIVE =
+  REGISTRY_ADDRESS !== "0x0000000000000000000000000000000000000000";
+
+type ActiveListing = {
+  tokenId: bigint;
+  label: string;
+  seller: `0x${string}`;
+  price: bigint;
+  expiry: bigint;
+  featured: boolean;
+};
 
 export default function MarketplacePage() {
   return (
     <>
       <Navbar />
-      <main className="mx-auto max-w-5xl px-6 pt-20 pb-24">
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-cyan/[0.08] via-transparent to-plum/[0.08] p-10 sm:p-14">
-          <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-cyan/20 blur-[120px]" />
-          <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-plum/20 blur-[120px]" />
-
-          <div className="relative">
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan/30 bg-cyan/10 px-3 py-1 text-xs font-medium text-cyan">
-              <Hammer className="h-3.5 w-3.5" /> Coming Soon
-            </div>
-
-            <h1 className="mt-5 text-4xl font-black tracking-tight sm:text-6xl">
-              INS <span className="ins-gradient-text">Marketplace</span>
-            </h1>
-
-            <p className="mt-4 max-w-2xl text-lg text-white/70">
-              Trustless secondary market for .ins names — settle in iKAS on Igra L2.
-              Since every .ins is a standard ERC-721, your names are already tradable on any
-              Igra-compatible marketplace today. Our native venue is under construction.
-            </p>
-
-            <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              <Pillar
-                title="Fixed-price + auctions"
-                body="List for a set price or run a timed Dutch/English auction. Offers supported either way."
-              />
-              <Pillar
-                title="Zero-custody escrow"
-                body="Names stay in your wallet until sale — no approvals to third-party custodians."
-              />
-              <Pillar
-                title="On-chain fee split"
-                body="A small marketplace fee on every trade funds the INS treasury. Seller + royalty flows baked in."
-              />
-            </div>
-
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/app"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan to-plum px-5 py-3 text-sm font-bold text-black transition hover:brightness-110"
-              >
-                <Sparkles className="h-4 w-4" /> Register a name now
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link
-                href="/domains"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white/80 transition hover:border-white/20 hover:bg-white/[0.06]"
-              >
-                <Tag className="h-4 w-4" /> My domains
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-12 grid gap-4 sm:grid-cols-2">
-          <InfoCard
-            title="Want to trade today?"
-            body="Every .ins name is an ERC-721 NFT. You can list, sell, or gift it through any Igra-compatible NFT marketplace, or transfer directly wallet-to-wallet from /domains."
-          />
-          <InfoCard
-            title="Want to be notified when we launch?"
-            body="Follow the project on X — we'll announce mainnet marketplace deployment and the fee schedule there. All listings will be on-chain and auditable."
-          />
-        </div>
+      <main className="mx-auto max-w-7xl px-6 pt-16 pb-24">
+        {MARKETPLACE_LIVE && REGISTRY_LIVE ? <Browse /> : <ComingSoon />}
       </main>
       <Footer />
+    </>
+  );
+}
+
+/* ─────────────────────────── LIVE BROWSE ─────────────────────────── */
+
+function Browse() {
+  const listings = useActiveListings();
+  const { data: saleFeeBps } = useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MARKETPLACE_ABI,
+    functionName: "saleFeeBps",
+  });
+  // M4 fix — surface emergency pause so buyers know trades are disabled.
+  const { data: mktPaused } = useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MARKETPLACE_ABI,
+    functionName: "paused",
+  });
+
+  const featured = listings.list.filter((l) => l.featured);
+  const regular = listings.list.filter((l) => !l.featured);
+
+  return (
+    <>
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div
+            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
+              mktPaused
+                ? "border-amber-500/40 bg-amber-500/10 text-amber-300"
+                : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+            }`}
+          >
+            <span className="relative flex h-1.5 w-1.5">
+              <span
+                className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-70 ${
+                  mktPaused ? "bg-amber-400" : "bg-emerald-400"
+                }`}
+              />
+              <span
+                className={`relative inline-flex h-1.5 w-1.5 rounded-full ${
+                  mktPaused ? "bg-amber-400" : "bg-emerald-400"
+                }`}
+              />
+            </span>
+            {mktPaused ? "Paused by admin" : "Live on Igra mainnet"}
+          </div>
+          <h1 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl">
+            INS <span className="ins-gradient-text">Marketplace</span>
+          </h1>
+          <p className="mt-2 text-sm text-white/60">
+            {listings.loading
+              ? "Loading listings from Igra…"
+              : `${listings.list.length} name${listings.list.length === 1 ? "" : "s"} listed`}
+            <span className="mx-2 text-white/30">·</span>
+            <span>
+              {saleFeeBps !== undefined
+                ? `${Number(saleFeeBps) / 100}% seller fee`
+                : "2% seller fee"}
+              {" "}· 0% buyer fee
+            </span>
+          </p>
+        </div>
+        <Link href="/domains" className="btn-primary self-start sm:self-auto">
+          <Tag className="mr-1 inline h-4 w-4" /> List a name
+        </Link>
+      </header>
+
+      {listings.loading && (
+        <div className="mt-12 flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.02] p-10 text-white/50">
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading listings…
+        </div>
+      )}
+
+      {!listings.loading && listings.list.length === 0 && (
+        <div className="mt-12 rounded-3xl border border-white/10 bg-white/[0.02] p-14 text-center">
+          <h2 className="text-lg font-bold">No names listed yet</h2>
+          <p className="mt-2 text-sm text-white/60">
+            Be the first to list — head to your domains and put one up for sale.
+          </p>
+          <Link href="/domains" className="btn-primary mt-5 inline-flex">
+            <Tag className="mr-1 inline h-4 w-4" /> Go to my domains
+          </Link>
+        </div>
+      )}
+
+      {featured.length > 0 && (
+        <section className="mt-10">
+          <SectionHeader
+            icon={<Star className="h-4 w-4 fill-cyan text-cyan" />}
+            title="Featured"
+            subtitle="Promoted listings · updated on every block"
+          />
+          <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {featured.map((l) => (
+              <ListingCard key={l.tokenId.toString()} listing={l} onBought={listings.refetch} paused={Boolean(mktPaused)} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {regular.length > 0 && (
+        <section className="mt-12">
+          <SectionHeader
+            icon={<Tag className="h-4 w-4 text-white/60" />}
+            title="All listings"
+            subtitle={featured.length > 0 ? "Remaining on the market" : undefined}
+          />
+          <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {regular.map((l) => (
+              <ListingCard key={l.tokenId.toString()} listing={l} onBought={listings.refetch} paused={Boolean(mktPaused)} />
+            ))}
+          </div>
+        </section>
+      )}
+    </>
+  );
+}
+
+function SectionHeader({
+  icon, title, subtitle,
+}: { icon: React.ReactNode; title: string; subtitle?: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.04]">
+        {icon}
+      </div>
+      <div>
+        <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-white/80">{title}</h2>
+        {subtitle && <p className="text-xs text-white/40">{subtitle}</p>}
+      </div>
+    </div>
+  );
+}
+
+function ListingCard({
+  listing, onBought, paused,
+}: { listing: ActiveListing; onBought?: () => void; paused?: boolean }) {
+  const { address, isConnected } = useAccount();
+  const [txError, setTxError] = useState<string | null>(null);
+
+  const { writeContract, data: hash, isPending, reset } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({ hash });
+
+  useEffect(() => {
+    if (isConfirmed && onBought) onBought();
+  }, [isConfirmed, onBought]);
+
+  const onBuy = () => {
+    setTxError(null);
+    writeContract(
+      {
+        address: MARKETPLACE_ADDRESS,
+        abi: MARKETPLACE_ABI,
+        functionName: "buyListing",
+        args: [listing.tokenId],
+        value: listing.price,
+      },
+      {
+        onError: (e) => {
+          setTxError(e.message.split("\n")[0] || "Tx failed");
+          // H2 fix — if the seller updated the price or cancelled in the
+          // interim, the cached price is stale. Refetch so the card shows
+          // the current state instead of silently letting the buyer retry
+          // at a bad value.
+          if (onBought) onBought();
+        },
+      },
+    );
+  };
+
+  const busy = isPending || isConfirming;
+  const isSelf =
+    isConnected && address && listing.seller.toLowerCase() === address.toLowerCase();
+
+  const now = Math.floor(Date.now() / 1000);
+  const secondsLeft = Number(listing.expiry) - now;
+  const timeLeft = formatTimeLeft(secondsLeft);
+
+  return (
+    <div
+      className={`group relative overflow-hidden rounded-3xl border p-6 transition ${
+        listing.featured
+          ? "border-cyan/40 bg-gradient-to-br from-cyan/[0.06] to-transparent hover:border-cyan/70"
+          : "border-white/[0.08] bg-white/[0.03] hover:border-cyan/30"
+      }`}
+    >
+      {listing.featured && (
+        <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-cyan/15 blur-3xl" />
+      )}
+
+      <div className="relative flex items-start justify-between">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-ins-gradient text-xl font-black text-black">
+          {listing.label[0]?.toUpperCase() ?? "?"}
+        </div>
+        <div className="flex flex-col items-end gap-1.5">
+          {listing.featured && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-cyan/40 bg-cyan/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-cyan">
+              <Star className="h-3 w-3 fill-cyan" /> Featured
+            </span>
+          )}
+          <span
+            title="ERC-721 token ID"
+            className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-[10px] font-semibold text-white/60"
+          >
+            INS #{listing.tokenId.toString()}
+          </span>
+        </div>
+      </div>
+
+      <h3 className="relative mt-5 text-2xl font-bold">
+        <span className="ins-gradient-text">{listing.label}</span>
+        <span className="text-white/30">.ins</span>
+      </h3>
+
+      <div className="relative mt-4 flex items-baseline gap-2">
+        <span className="text-3xl font-black tracking-tight">{formatPrice(listing.price)}</span>
+        <span className="text-sm font-semibold text-white/60">iKAS</span>
+      </div>
+
+      <div className="relative mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/50">
+        <span className="inline-flex items-center gap-1">
+          <Clock className="h-3 w-3" /> {timeLeft}
+        </span>
+        <a
+          href={explorerAddr(listing.seller)}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 font-mono underline decoration-dotted hover:text-white"
+        >
+          seller {shortAddr(listing.seller)}
+          <ExternalLink className="h-3 w-3" />
+        </a>
+      </div>
+
+      <div className="relative mt-5">
+        {!isConnected ? (
+          <div className="flex items-center justify-center">
+            <ConnectButton.Custom>
+              {({ openConnectModal }) => (
+                <button
+                  onClick={openConnectModal}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-2.5 text-sm font-bold text-white/80 transition hover:border-cyan/40 hover:bg-cyan/10 hover:text-white"
+                >
+                  Connect to buy
+                </button>
+              )}
+            </ConnectButton.Custom>
+          </div>
+        ) : isSelf ? (
+          <button
+            disabled
+            className="w-full cursor-not-allowed rounded-xl border border-white/10 bg-white/[0.02] px-4 py-2.5 text-sm font-semibold text-white/40"
+            title="This is your listing"
+          >
+            Your listing
+          </button>
+        ) : paused ? (
+          <button
+            disabled
+            className="w-full cursor-not-allowed rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-amber-200"
+            title="Trading paused by admin"
+          >
+            Trading paused
+          </button>
+        ) : (
+          <button
+            onClick={onBuy}
+            disabled={busy || isConfirmed}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ins-gradient px-4 py-2.5 text-sm font-black text-black transition hover:brightness-110 disabled:opacity-50"
+          >
+            {busy ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Buying…</>
+            ) : isConfirmed ? (
+              <><Check className="h-4 w-4" /> Bought</>
+            ) : (
+              <><ShoppingCart className="h-4 w-4" /> Buy for {formatPrice(listing.price)} iKAS</>
+            )}
+          </button>
+        )}
+        {txError && (
+          <button
+            onClick={() => { reset(); setTxError(null); }}
+            className="mt-2 block w-full text-left text-[10px] text-red-300 hover:text-red-200"
+            title={txError}
+          >
+            {txError} — dismiss
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────── DATA HOOK ─────────────────────────── */
+
+function useActiveListings() {
+  const { data: supply } = useReadContract({
+    address: REGISTRY_ADDRESS,
+    abi: REGISTRY_ABI,
+    functionName: "totalSupply",
+    query: { enabled: MARKETPLACE_LIVE && REGISTRY_LIVE },
+  });
+
+  const total = Number((supply as bigint | undefined) ?? 0n);
+  const ids = useMemo(() => {
+    const arr: bigint[] = [];
+    for (let i = 1; i <= total; i++) arr.push(BigInt(i));
+    return arr;
+  }, [total]);
+
+  const { data: listingData, isLoading: listingLoading, refetch: refetchListings } =
+    useReadContracts({
+      contracts: ids.map((id) => ({
+        address: MARKETPLACE_ADDRESS,
+        abi: MARKETPLACE_ABI,
+        functionName: "getActiveListing",
+        args: [id],
+      })),
+      query: { enabled: MARKETPLACE_LIVE && ids.length > 0 },
+    });
+
+  const activeIds = useMemo(() => {
+    if (!listingData) return [] as bigint[];
+    const out: bigint[] = [];
+    for (let i = 0; i < ids.length; i++) {
+      const l = listingData[i]?.result as
+        | { seller: `0x${string}`; active: boolean }
+        | undefined;
+      if (l?.active) out.push(ids[i]);
+    }
+    return out;
+  }, [listingData, ids]);
+
+  const { data: labelData, isLoading: labelLoading, refetch: refetchLabels } =
+    useReadContracts({
+      contracts: activeIds.map((id) => ({
+        address: REGISTRY_ADDRESS,
+        abi: REGISTRY_ABI,
+        functionName: "labelOf",
+        args: [id],
+      })),
+      query: { enabled: activeIds.length > 0 },
+    });
+
+  const list: ActiveListing[] = useMemo(() => {
+    if (!listingData) return [];
+    const out: ActiveListing[] = [];
+    let labelIdx = 0;
+    for (let i = 0; i < ids.length; i++) {
+      const l = listingData[i]?.result as
+        | {
+            seller: `0x${string}`;
+            expiry: bigint;
+            featured: boolean;
+            active: boolean;
+            price: bigint;
+          }
+        | undefined;
+      if (!l?.active) continue;
+      const label = (labelData?.[labelIdx]?.result as string | undefined) ?? "";
+      labelIdx++;
+      out.push({
+        tokenId: ids[i],
+        label,
+        seller: l.seller,
+        price: l.price,
+        expiry: l.expiry,
+        featured: l.featured,
+      });
+    }
+    return out.sort((a, b) => {
+      if (a.featured !== b.featured) return a.featured ? -1 : 1;
+      return a.price < b.price ? -1 : a.price > b.price ? 1 : 0;
+    });
+  }, [ids, listingData, labelData]);
+
+  return {
+    list,
+    loading: listingLoading || labelLoading,
+    refetch: () => {
+      refetchListings();
+      refetchLabels();
+    },
+  };
+}
+
+/* ─────────────────────────── UTILS ─────────────────────────── */
+
+function formatPrice(wei: bigint): string {
+  const eth = Number(formatEther(wei));
+  if (eth >= 1000) return eth.toLocaleString("en", { maximumFractionDigits: 0 });
+  if (eth >= 10) return eth.toLocaleString("en", { maximumFractionDigits: 2 });
+  if (eth >= 1) return eth.toLocaleString("en", { maximumFractionDigits: 3 });
+  return eth.toLocaleString("en", { maximumFractionDigits: 5 });
+}
+
+function formatTimeLeft(seconds: number): string {
+  if (seconds <= 0) return "expired";
+  const d = Math.floor(seconds / 86400);
+  if (d >= 1) return `${d}d left`;
+  const h = Math.floor(seconds / 3600);
+  if (h >= 1) return `${h}h left`;
+  const m = Math.max(1, Math.floor(seconds / 60));
+  return `${m}m left`;
+}
+
+/* ─────────────────────────── COMING SOON (fallback) ─────────────────────────── */
+
+function ComingSoon() {
+  return (
+    <>
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-cyan/[0.08] via-transparent to-plum/[0.08] p-10 sm:p-14">
+        <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-cyan/20 blur-[120px]" />
+        <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-plum/20 blur-[120px]" />
+
+        <div className="relative">
+          <div className="inline-flex items-center gap-2 rounded-full border border-cyan/30 bg-cyan/10 px-3 py-1 text-xs font-medium text-cyan">
+            <Hammer className="h-3.5 w-3.5" /> Coming Soon
+          </div>
+
+          <h1 className="mt-5 text-4xl font-black tracking-tight sm:text-6xl">
+            INS <span className="ins-gradient-text">Marketplace</span>
+          </h1>
+
+          <p className="mt-4 max-w-2xl text-lg text-white/70">
+            Trustless secondary market for .ins names — settle in iKAS on Igra L2.
+            Contract is deployed; we&rsquo;re wiring up the browse UI now.
+          </p>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            <Pillar
+              title="Zero-custody listings"
+              body="Names stay in your wallet until sale. Approve once, list as many names as you want."
+            />
+            <Pillar
+              title="2% seller fee"
+              body="Seller pays 2% on sale; buyer pays 0%. No creator royalties, no hidden cuts."
+            />
+            <Pillar
+              title="1% featured boost"
+              body="Optional upfront 1% to promote a listing to the Featured section. Non-refundable."
+            />
+          </div>
+
+          <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+            <Link href="/app" className="btn-primary">
+              <Sparkles className="mr-1 inline h-4 w-4" /> Register a name <ArrowRight className="ml-1 inline h-4 w-4" />
+            </Link>
+            <Link
+              href="/domains"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white/80 transition hover:border-white/20 hover:bg-white/[0.06]"
+            >
+              <Tag className="h-4 w-4" /> My domains
+            </Link>
+          </div>
+        </div>
+      </div>
     </>
   );
 }
@@ -83,15 +515,6 @@ function Pillar({ title, body }: { title: string; body: string }) {
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
       <div className="text-sm font-bold text-white">{title}</div>
       <p className="mt-1.5 text-sm leading-relaxed text-white/60">{body}</p>
-    </div>
-  );
-}
-
-function InfoCard({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-      <div className="text-base font-bold text-white">{title}</div>
-      <p className="mt-2 text-sm leading-relaxed text-white/60">{body}</p>
     </div>
   );
 }

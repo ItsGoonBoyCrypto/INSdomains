@@ -9,6 +9,9 @@ export const RESOLVER_ADDRESS = (process.env.NEXT_PUBLIC_INS_RESOLVER ??
 export const REVERSE_RESOLVER_ADDRESS = (process.env.NEXT_PUBLIC_INS_REVERSE_RESOLVER ??
   "0x0000000000000000000000000000000000000000") as Address;
 
+export const MARKETPLACE_ADDRESS = (process.env.NEXT_PUBLIC_INS_MARKETPLACE ??
+  "0x0000000000000000000000000000000000000000") as Address;
+
 /** Base tier price (5-32 char) in iKAS — kept for backwards-compat display. */
 export const BASE_PRICE_IKAS = Number(process.env.NEXT_PUBLIC_BASE_PRICE_IKAS ?? 10);
 
@@ -132,6 +135,34 @@ export const REGISTRY_ABI = [
       { name: "target", type: "address" },
     ],
     outputs: [],
+  },
+  // ── ERC-721 approval (for marketplace listing) ────────
+  {
+    type: "function",
+    name: "isApprovedForAll",
+    stateMutability: "view",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "operator", type: "address" },
+    ],
+    outputs: [{ type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "setApprovalForAll",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "operator", type: "address" },
+      { name: "approved", type: "bool" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "getApproved",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [{ type: "address" }],
   },
   // ── admin ─────────────────────────────────────────────
   {
@@ -262,6 +293,156 @@ export const RESOLVER_ABI = [
       { name: "key", type: "string" },
     ],
     outputs: [{ type: "string" }],
+  },
+] as const;
+
+export const MARKETPLACE_ABI = [
+  // ── reads ──────────────────────────────
+  {
+    type: "function",
+    name: "listings",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [
+      { name: "seller", type: "address" },
+      { name: "expiry", type: "uint64" },
+      { name: "featured", type: "bool" },
+      { name: "active", type: "bool" },
+      { name: "price", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
+    name: "getActiveListing",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [
+      {
+        name: "",
+        type: "tuple",
+        components: [
+          { name: "seller", type: "address" },
+          { name: "expiry", type: "uint64" },
+          { name: "featured", type: "bool" },
+          { name: "active", type: "bool" },
+          { name: "price", type: "uint256" },
+        ],
+      },
+    ],
+  },
+  {
+    type: "function",
+    name: "saleFeeOn",
+    stateMutability: "view",
+    inputs: [{ name: "price", type: "uint256" }],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "featureFeeOn",
+    stateMutability: "view",
+    inputs: [{ name: "price", type: "uint256" }],
+    outputs: [{ type: "uint256" }],
+  },
+  { type: "function", name: "saleFeeBps",    stateMutability: "view", inputs: [], outputs: [{ type: "uint16" }]  },
+  { type: "function", name: "featureFeeBps", stateMutability: "view", inputs: [], outputs: [{ type: "uint16" }]  },
+  { type: "function", name: "treasury",      stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
+  { type: "function", name: "owner",         stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
+  { type: "function", name: "paused",        stateMutability: "view", inputs: [], outputs: [{ type: "bool" }]    },
+  { type: "function", name: "registry",      stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
+  // ── writes ─────────────────────────────
+  {
+    type: "function",
+    name: "createListing",
+    stateMutability: "payable",
+    inputs: [
+      { name: "tokenId",  type: "uint256" },
+      { name: "price",    type: "uint256" },
+      { name: "expiry",   type: "uint64"  },
+      { name: "featured", type: "bool"    },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "updateListing",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "tokenId",   type: "uint256" },
+      { name: "newPrice",  type: "uint256" },
+      { name: "newExpiry", type: "uint64"  },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "cancelListing",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "buyListing",
+    stateMutability: "payable",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [],
+  },
+  // ── admin ──────────────────────────────
+  { type: "function", name: "setTreasury",      stateMutability: "nonpayable", inputs: [{ name: "newTreasury", type: "address" }], outputs: [] },
+  { type: "function", name: "setSaleFeeBps",    stateMutability: "nonpayable", inputs: [{ name: "newBps",      type: "uint16"  }], outputs: [] },
+  { type: "function", name: "setFeatureFeeBps", stateMutability: "nonpayable", inputs: [{ name: "newBps",      type: "uint16"  }], outputs: [] },
+  { type: "function", name: "setPaused",        stateMutability: "nonpayable", inputs: [{ name: "v",           type: "bool"    }], outputs: [] },
+  { type: "function", name: "transferOwnership",stateMutability: "nonpayable", inputs: [{ name: "newOwner",    type: "address" }], outputs: [] },
+  // ── events ─────────────────────────────
+  {
+    type: "event",
+    name: "ListingCreated",
+    inputs: [
+      { name: "tokenId",  type: "uint256", indexed: true },
+      { name: "seller",   type: "address", indexed: true },
+      { name: "price",    type: "uint256", indexed: false },
+      { name: "expiry",   type: "uint64",  indexed: false },
+      { name: "featured", type: "bool",    indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "ListingSold",
+    inputs: [
+      { name: "tokenId", type: "uint256", indexed: true },
+      { name: "seller",  type: "address", indexed: true },
+      { name: "buyer",   type: "address", indexed: true },
+      { name: "price",   type: "uint256", indexed: false },
+      { name: "fee",     type: "uint256", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "ListingCancelled",
+    inputs: [
+      { name: "tokenId", type: "uint256", indexed: true },
+      { name: "seller",  type: "address", indexed: true },
+    ],
+  },
+  {
+    type: "event",
+    name: "ListingUpdated",
+    inputs: [
+      { name: "tokenId",   type: "uint256", indexed: true },
+      { name: "seller",    type: "address", indexed: true },
+      { name: "newPrice",  type: "uint256", indexed: false },
+      { name: "newExpiry", type: "uint64",  indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "ListingFeatured",
+    inputs: [
+      { name: "tokenId", type: "uint256", indexed: true },
+      { name: "seller",  type: "address", indexed: true },
+      { name: "feePaid", type: "uint256", indexed: false },
+    ],
   },
 ] as const;
 

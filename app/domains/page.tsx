@@ -13,6 +13,7 @@ import {
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { NameHistory } from "@/components/NameHistory";
+import { ListForSaleButton } from "@/components/ListForSaleButton";
 import { DEMO_OWNED } from "@/lib/mock-registry";
 import { shortAddr } from "@/lib/names";
 import { explorerAddr } from "@/lib/igra-chain";
@@ -360,6 +361,7 @@ function LiveDomainCard({
         )}
         <IconBtn title="Edit target" icon={<Settings2 className="h-3.5 w-3.5" />} onClick={() => setExpanded(!expanded)} />
         <IconBtn title="History" icon={<History className="h-3.5 w-3.5" />} onClick={() => setShowHistory(!showHistory)} />
+        <ListForSaleButton tokenId={name.tokenId} label={name.label} />
         <a
           href={explorerAddr(name.target)}
           target="_blank"

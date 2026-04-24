@@ -18,11 +18,14 @@ Built with Next.js 15, React 19, Tailwind v3, wagmi 2 + RainbowKit, viem, Claude
   | 5–32   | 10 iKAS    | standard    |
 - **On-chain SVG artwork** (Base64 data URI — no IPFS dependency)
 - **Reserved names** for ecosystem partners (26-name seed list + admin batch-set)
+- **Reverse resolution** — opt-in `setPrimary(tokenId)` lets wallets + explorers render `foo.ins` for an address
+- **Zero-custody marketplace** — `setApprovalForAll` once, NFT stays in your wallet; 2% seller fee + optional 1% featured promotion; buyer pays 0%
 - **Admin dashboard** (`/admin`) — wallet-gated via `NEXT_PUBLIC_ADMIN_WALLET`
   - Gift names (`adminMint` — bypasses payment + reservation)
   - Reserve / unreserve names
   - Tune length-tier prices and per-name premium overrides
   - Treasury withdraw + ownership transfer
+  - Marketplace controls (fee bps, treasury, pause kill-switch)
 - **Kaspa-native wallets first-class** — MetaMask, Rabby, **KasWare**, **Kastle**, WalletConnect (plus 9 more in "More")
 - **AI name suggestions** (`/api/suggest`) via Claude Haiku 4.5
 
@@ -47,23 +50,31 @@ npm run dev  # http://localhost:3000
 
 - `/` — hero + live availability search + tiered-pricing feature cards
 - `/app` — search & register (tier-aware rarity pill + AI suggestions)
-- `/domains` — wallet dashboard (owned names, edit resolver target, activity)
-- `/marketplace` — secondary-market listings
-- `/admin` — wallet-gated registry console (all 6 admin cards wired via wagmi)
+- `/domains` — wallet dashboard (owned names, edit resolver target, set primary, list for sale, per-name history)
+- `/marketplace` — zero-custody browse + buy, featured + regular sections, 2% seller fee
+- `/admin` — wallet-gated registry + marketplace console (7 cards, wagmi-wired)
 - `/about` — mission, tiered pricing explainer, stack, contract registry, roadmap
 - `/api/suggest` — POST `{seed}` → JSON `{names: string[]}`
+- `/api/reserved-labels` — walks on-chain `Reserved` events to return the full admin-set labels
 
 ## Contracts
 
-Foundry project under `contracts/`.
+Foundry project under `contracts/`. Four contracts:
+
+1. **`INSRegistry.sol`** — ERC-721, native-iKAS payment, tiered pricing, reserved names, on-chain SVG tokenURI.
+2. **`INSResolver.sol`** — namehash-keyed ENS-compatible `addr(bytes32)` + `text(bytes32, string)`.
+3. **`INSReverseResolver.sol`** — opt-in `setPrimary(tokenId)` + stale-safe `primaryName(address)`.
+4. **`INSMarketplace.sol`** — zero-custody listings, 2% seller fee + 1% featured upfront, pause kill-switch, fee-cap 500 bps, nonReentrant-guarded.
 
 ```bash
 cd contracts
-forge test           # 55 tests, incl. 256-run fuzz
-forge script script/Deploy.s.sol --rpc-url $IGRA_RPC --broadcast
+forge test                    # 110 tests across 3 suites, 3 fuzz × 256 runs, 0 failures
+forge script script/Deploy.s.sol           --rpc-url $IGRA_RPC --broadcast   # Registry + Resolver
+forge script script/DeployReverseResolver.s.sol --rpc-url $IGRA_RPC --broadcast
+forge script script/DeployMarketplace.s.sol     --rpc-url $IGRA_RPC --broadcast
 ```
 
-See `contracts/README.md` for deploy steps + pricing / admin surface detail.
+See `contracts/README.md` for the per-contract surface + deploy order.
 
 ## Deploy the dApp
 
@@ -92,6 +103,23 @@ insdomains.org, www.insdomains.org, ins.178-104-105-0.sslip.io {
 ## Env vars
 
 See `.env.example`. `NEXT_PUBLIC_*` are baked in at build time — always rebuild after an env change.
+
+## Security & review
+
+Internal audit passes ahead of mainnet:
+
+- **INSRegistry** — 55 Foundry tests (incl. fuzz), standalone deploy verified on-chain 2026-04-23.
+- **INSReverseResolver** — 12 Foundry tests, deployed 2026-04-23, stale-safe reads.
+- **INSMarketplace** — 43 Foundry tests (3 fuzz × 256 runs) covering happy + sad paths on every external, plus:
+  - `nonReentrant` guard on `createListing` + `buyListing` (defence-in-depth vs. a future Registry with receiver hooks)
+  - Seller-revokes-approval after listing → fill reverts cleanly
+  - Buyer is a contract without `onERC721Received` → fill reverts (+ test for the receiver happy path)
+  - `cancelListing` must stay available while paused (tested)
+  - Nested-reentry attack via `onERC721Received` → guard fires (tested)
+  - Revert-path featured-fee rollback → refund guaranteed by EVM, locked in by test
+  - Fee math fuzzed across bps + price ranges
+- **Admin blast radius** is capped: fee bps hard-ceiling 500 (5%), zero-custody (no user funds ever held), pausing doesn't trap seller positions.
+- All three core addresses are (or will be) owned by the [Igra Safe](https://safe.igralabs.com/), so every admin action requires multisig consent.
 
 ## License
 
