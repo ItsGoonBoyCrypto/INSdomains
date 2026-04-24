@@ -1,8 +1,8 @@
 # INS — Igra Name Service
 
-**Permanent `.ins` names on the Igra Network.** Pay once, own forever. No renewals.
+**Permanent `.ins` · `.igra` · `.ikas` names on the Igra Network.** Pay once, own forever. **0 renewal fees, ever.**
 
-Live at **[insdomains.org](https://insdomains.org)** (DNS-propagating) · [sslip fallback](https://ins.178-104-105-0.sslip.io)
+Live at **[insdomains.org](https://insdomains.org)** · [sslip fallback](https://ins.178-104-105-0.sslip.io)
 
 Built with Next.js 15, React 19, Tailwind v3, wagmi 2 + RainbowKit, viem, Claude Haiku 4.5, Solidity 0.8.24 (Foundry).
 
