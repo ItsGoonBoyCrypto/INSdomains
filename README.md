@@ -116,6 +116,17 @@ insdomains.org, www.insdomains.org, ins.178-104-105-0.sslip.io {
 
 See `.env.example`. `NEXT_PUBLIC_*` are baked in at build time — always rebuild after an env change.
 
+## Public resolver API
+
+Open, CORS-enabled HTTP endpoints for resolving names without reading contracts yourself. Full guide in [`docs/API.md`](./docs/API.md).
+
+```bash
+curl https://insdomains.org/api/resolve?name=alice.ins
+curl https://insdomains.org/api/reverse?address=0xF9d065b70C9357098dc7854D7A28B1498f6d125c
+```
+
+Returns JSON with the resolved address / primary name. Integrators needing name resolution in wallets, explorers, or dApps can wire it up with a single `fetch()` — no on-chain-read plumbing required.
+
 ## Security & review
 
 Internal audit passes ahead of mainnet:
