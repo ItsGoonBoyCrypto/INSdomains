@@ -1,4 +1,3 @@
-import { Infinity as InfinityIcon } from "lucide-react";
 import { STATS } from "@/lib/mock-registry";
 
 export function StatsRow() {
@@ -8,7 +7,7 @@ export function StatsRow() {
         <Stat value={STATS.registered.toLocaleString()} label="domains registered" />
         <Stat value={STATS.owners.toLocaleString()} label="unique owners" />
         <Stat value={String(STATS.dapps)} label="dApps integrated" />
-        <Stat value={<InfinityIcon className="mx-auto h-14 w-14" strokeWidth={2.5} />} label="renewal fees, ever" />
+        <Stat value="0" label="renewal fees, ever" />
       </div>
     </section>
   );
