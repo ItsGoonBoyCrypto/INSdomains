@@ -66,7 +66,9 @@ function Browse() {
     functionName: "saleFeeBps",
     query: { enabled: LIVE_TLDS.length > 0 },
   });
-  // Pause is per-marketplace; aggregate across all live TLDs.
+  // Pause is per-marketplace — read all live ones and build a per-TLD map
+  // so cards can show pause state only on the affected TLD. The global
+  // banner summarises which TLDs (if any) are paused.
   const pausedReads = useReadContracts({
     contracts: LIVE_TLDS.map((tld) => ({
       address: MARKETPLACE_ADDRESSES[tld],
@@ -75,9 +77,13 @@ function Browse() {
     } as const)),
     query: { enabled: LIVE_TLDS.length > 0 },
   });
-  // "paused" banner fires if ANY live marketplace is paused — safer UX
-  // than silent revert on that TLD's cards only.
-  const mktPaused = pausedReads.data?.some((r) => r?.status === "success" && r.result === true) ?? false;
+  const pausedByTld: Partial<Record<Tld, boolean>> = {};
+  LIVE_TLDS.forEach((tld, i) => {
+    const r = pausedReads.data?.[i];
+    if (r?.status === "success") pausedByTld[tld] = r.result === true;
+  });
+  const pausedTlds = (Object.keys(pausedByTld) as Tld[]).filter((t) => pausedByTld[t]);
+  const anyPaused = pausedTlds.length > 0;
 
   const featured = listings.list.filter((l) => l.featured);
   const regular = listings.list.filter((l) => !l.featured);
@@ -88,7 +94,7 @@ function Browse() {
         <div>
           <div
             className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
-              mktPaused
+              anyPaused
                 ? "border-amber-500/40 bg-amber-500/10 text-amber-300"
                 : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
             }`}
@@ -96,16 +102,16 @@ function Browse() {
             <span className="relative flex h-1.5 w-1.5">
               <span
                 className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-70 ${
-                  mktPaused ? "bg-amber-400" : "bg-emerald-400"
+                  anyPaused ? "bg-amber-400" : "bg-emerald-400"
                 }`}
               />
               <span
                 className={`relative inline-flex h-1.5 w-1.5 rounded-full ${
-                  mktPaused ? "bg-amber-400" : "bg-emerald-400"
+                  anyPaused ? "bg-amber-400" : "bg-emerald-400"
                 }`}
               />
             </span>
-            {mktPaused ? "Paused by admin" : "Live on Igra mainnet"}
+            {anyPaused ? `Paused: ${pausedTlds.map(tldSuffix).join(", ")}` : "Live on Igra mainnet"}
           </div>
           <h1 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl">
             INS <span className="ins-gradient-text">Marketplace</span>
@@ -155,7 +161,7 @@ function Browse() {
           />
           <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {featured.map((l) => (
-              <ListingCard key={l.tokenId.toString()} listing={l} onBought={listings.refetch} paused={Boolean(mktPaused)} />
+              <ListingCard key={l.tokenId.toString()} listing={l} onBought={listings.refetch} paused={Boolean(pausedByTld[l.tld])} />
             ))}
           </div>
         </section>
@@ -170,7 +176,7 @@ function Browse() {
           />
           <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {regular.map((l) => (
-              <ListingCard key={l.tokenId.toString()} listing={l} onBought={listings.refetch} paused={Boolean(mktPaused)} />
+              <ListingCard key={l.tokenId.toString()} listing={l} onBought={listings.refetch} paused={Boolean(pausedByTld[l.tld])} />
             ))}
           </div>
         </section>
@@ -515,7 +521,7 @@ function ComingSoon() {
           </h1>
 
           <p className="mt-4 max-w-2xl text-lg text-white/70">
-            Trustless secondary market for .ins names — settle in iKAS on Igra L2.
+            Trustless secondary market for INS names (.ins / .igra / .ikas) — settle in iKAS on Igra L2.
             Contract is deployed; we&rsquo;re wiring up the browse UI now.
           </p>
 

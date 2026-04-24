@@ -21,14 +21,17 @@ export default function Home() {
         {/* Headline */}
         <h1 className="mx-auto max-w-4xl text-5xl font-black leading-[0.95] tracking-[-0.04em] sm:text-7xl lg:text-[96px] animate-fade-up">
           Your forever{" "}
-          <span className="ins-gradient-text">.ins</span>{" "}
+          <span className="ins-gradient-text">.ins · .igra · .ikas</span>{" "}
           name on Igra
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-lg text-white/60 sm:text-xl animate-fade-up">
-          Permanent on-chain identities. No renewals. No expiry. Send crypto to{" "}
-          <span className="font-medium text-cyan">alice.ins</span> instead of{" "}
-          <span className="font-mono text-white/50">0x71C4…f3a2</span>.
+          Permanent on-chain identities across three TLDs. No renewals. No expiry.
+          Send crypto to{" "}
+          <span className="font-medium text-cyan">alice.ins</span> /{" "}
+          <span className="font-medium text-plum">alice.igra</span> /{" "}
+          <span className="font-medium text-emerald-300">alice.ikas</span>{" "}
+          instead of <span className="font-mono text-white/50">0x71C4…f3a2</span>.
         </p>
 
         <HeroSearch />
@@ -50,7 +53,7 @@ export default function Home() {
             icon={<Search className="h-6 w-6" />}
             tint="cyan"
             title="Search"
-            body="Find any .ins name instantly. Check availability across the Igra registry in milliseconds."
+            body="Find any INS name instantly across all three TLDs. Check availability on the Igra registry in milliseconds."
             href="/app"
           />
           <FeatureCard
@@ -92,7 +95,7 @@ export default function Home() {
         {/* CTA row */}
         <div className="mt-24 flex w-full flex-col items-center justify-center gap-4 sm:flex-row">
           <Link href="/app" className="btn-primary text-base px-7 py-3.5">
-            Get your .ins name →
+            Get your INS name →
           </Link>
           <Link href="/about" className="btn-ghost text-base px-7 py-3.5">
             About INS

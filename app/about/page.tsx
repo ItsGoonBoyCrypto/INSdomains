@@ -6,10 +6,18 @@ import {
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
-const REGISTRY = "0x535ff4A6710C2b0d087c5afF01b16fE10bC34D46";
-const RESOLVER = "0x451D84002cE0eCFd4cc622c72FA40849a8Bb5f2A";
-const OWNER_SAFE = "0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1";
-const EXPLORER = "https://explorer.igralabs.com";
+const REGISTRY_INS  = "0x535ff4A6710C2b0d087c5afF01b16fE10bC34D46";
+const REGISTRY_IGRA = "0x42c2f5AA0c4aACfD07e5fBe65B898212c1c2879c";
+const REGISTRY_IKAS = "0xe705e38DeF4970e23617d30D9774062FEeEBA610";
+const RESOLVER       = "0x451D84002cE0eCFd4cc622c72FA40849a8Bb5f2A";
+const REVERSE_INS   = "0x9afb263be198c35159FafDafa0729Fc8B13562DA";
+const REVERSE_IGRA  = "0x1bbd46aec04330a90832faf1da91889dee67d931";
+const REVERSE_IKAS  = "0x9963aa24327f513b4cd5ce8118027a1da2fe76b5";
+const MARKET_INS    = "0xf9e41e0a6fa04B641F6Cf8C92562C551034Af9F7";
+const MARKET_IGRA   = "0xde8df276e93394c0e5dd9fe7a7ff6fd144a3642a";
+const MARKET_IKAS   = "0x7ec22c238e7392adcc367f332f301629e9f4ec33";
+const OWNER_SAFE    = "0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1";
+const EXPLORER      = "https://explorer.igralabs.com";
 
 export default function AboutPage() {
   return (
@@ -26,8 +34,10 @@ export default function AboutPage() {
         </h1>
         <p className="mt-4 text-lg text-white/60">
           INS gives every wallet, contract and community on the Igra Network a
-          human-readable identity. Pay once in native iKAS, own forever. No
-          renewals, no squatters&rsquo; auctions, no rent-seeking.
+          human-readable identity across three TLDs — <span className="text-cyan">.ins</span>,{" "}
+          <span className="text-plum">.igra</span>, <span className="text-emerald-300">.ikas</span>.
+          Pay once in native iKAS, own forever. No renewals, no squatters&rsquo; auctions,
+          no rent-seeking.
         </p>
 
         {/* Hero card — reuses the /opengraph-image route */}
@@ -51,7 +61,7 @@ export default function AboutPage() {
           <Stat
             icon={<Layers className="h-5 w-5 text-plum" />}
             title="On-chain art"
-            body="Every .ins is a Base64 SVG NFT. No IPFS pins, no dead links."
+            body="Every INS name is a Base64 SVG NFT with the correct TLD suffix baked into the artwork. No IPFS pins, no dead links."
           />
           <Stat
             icon={<ShieldCheck className="h-5 w-5 text-emerald-400" />}
@@ -99,8 +109,8 @@ export default function AboutPage() {
           <h2 className="text-2xl font-bold">The stack</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <StackRow
-              title="Registry + Resolver"
-              body="Solidity 0.8.24 · Foundry · 55 tests (incl. 256-run fuzz). Deployed atomically and ownership transferred to the treasury Safe in a single broadcast."
+              title="Registry + Resolver + Marketplace"
+              body="Solidity 0.8.24 · Foundry · 116 tests across 4 suites (incl. 3 × 256-run fuzz) covering all 3 TLDs. Each contract deployed atomically with ownership transferred to the treasury Safe in the same broadcast — deployer EOA never retained control."
             />
             <StackRow
               title="Frontend"
@@ -124,9 +134,17 @@ export default function AboutPage() {
             explorer.
           </p>
           <div className="mt-4 space-y-2">
-            <ContractRow label="INSRegistry"   addr={REGISTRY} />
-            <ContractRow label="INSResolver"   addr={RESOLVER} />
-            <ContractRow label="Treasury Safe" addr={OWNER_SAFE} />
+            <ContractRow label="Registry (.ins)"         addr={REGISTRY_INS} />
+            <ContractRow label="Registry (.igra)"        addr={REGISTRY_IGRA} />
+            <ContractRow label="Registry (.ikas)"        addr={REGISTRY_IKAS} />
+            <ContractRow label="Marketplace (.ins)"      addr={MARKET_INS} />
+            <ContractRow label="Marketplace (.igra)"     addr={MARKET_IGRA} />
+            <ContractRow label="Marketplace (.ikas)"     addr={MARKET_IKAS} />
+            <ContractRow label="ReverseResolver (.ins)"  addr={REVERSE_INS} />
+            <ContractRow label="ReverseResolver (.igra)" addr={REVERSE_IGRA} />
+            <ContractRow label="ReverseResolver (.ikas)" addr={REVERSE_IKAS} />
+            <ContractRow label="Resolver (shared)"       addr={RESOLVER} />
+            <ContractRow label="Treasury Safe"           addr={OWNER_SAFE} />
           </div>
         </section>
 
@@ -135,8 +153,10 @@ export default function AboutPage() {
           <ol className="mt-4 space-y-3 text-sm text-white/70">
             <Milestone done title="Mainnet launch" body="Registry + Resolver live on Igra, on-chain SVG art, Safe-owned admin surface." />
             <Milestone done title="Kaspa-native wallets" body="KasWare + Kastle first-class alongside MetaMask, Rabby, WalletConnect." />
-            <Milestone title="Reverse resolution" body="primaryName(address) so block explorers, bots and dApps can render .ins next to addresses." />
-            <Milestone title="Secondary marketplace" body="Fixed-price + auctions with a protocol fee on every trade, funding the treasury." />
+            <Milestone done title="Reverse resolution" body="primaryName(address) so block explorers, bots and dApps can render a name next to an address. Live per-TLD." />
+            <Milestone done title="Multi-TLD: .ins, .igra, .ikas" body="Three sister Registries + Marketplaces + ReverseResolvers. Claim any name on one, two, or all three with a single batch flow on /app." />
+            <Milestone done title="Zero-custody marketplace" body="Fixed-price listings, 2% seller fee + 1% optional featured promotion. Buyer pays 0%. Aggregated across all three TLDs on /marketplace." />
+            <Milestone title="Admin across all TLDs" body="First-class TLD switcher on /admin so reservations + pricing + pause can be tuned per-TLD from the UI (currently .ins-only in the UI; Safe can call directly)." />
             <Milestone title="Subnames" body="Zero-cost subdomains — alice.ins can mint pay.alice.ins, vault.alice.ins, etc." />
             <Milestone title="DAO handover" body="Governance takes the Safe keys; the team burns its own signer." />
           </ol>

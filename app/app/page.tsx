@@ -125,13 +125,22 @@ function EmptyHint() {
         Type a name to check availability. Names are lowercase letters, digits, and hyphens — 3–32 chars.
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-        {["vitalik", "satoshi", "grok", "kaspa", "igra", "alice"].map((s) => (
+        {(
+          [
+            { s: "vitalik", tld: "ins",  colour: "text-cyan" },
+            { s: "satoshi", tld: "ikas", colour: "text-emerald-300" },
+            { s: "grok",    tld: "igra", colour: "text-plum" },
+            { s: "kaspa",   tld: "ins",  colour: "text-cyan" },
+            { s: "zeal",    tld: "igra", colour: "text-plum" },
+            { s: "alice",   tld: "ikas", colour: "text-emerald-300" },
+          ] as const
+        ).map((x) => (
           <Link
-            key={s}
-            href={`/app?q=${s}`}
+            key={x.s + x.tld}
+            href={`/app?q=${x.s}`}
             className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 text-xs text-white/70 transition hover:border-cyan/30 hover:text-white"
           >
-            {s}.ins →
+            {x.s}<span className={x.colour}>.{x.tld}</span> →
           </Link>
         ))}
       </div>
@@ -383,6 +392,23 @@ function BatchRegisterBanner({
   );
 }
 
+/**
+ * Per-TLD status in the batch-register flow.
+ *   pending   — not yet attempted (will be tried once the queue reaches it)
+ *   signing   — writeContract submitted, waiting for wallet + inclusion
+ *   mined     — tx confirmed on-chain (name is minted for this TLD)
+ *   failed    — the tx reverted or the wallet rejected; user can retry JUST this TLD
+ */
+type TldStatus = "pending" | "signing" | "mined" | "failed";
+
+/**
+ * Partial-failure-safe batch register.
+ * - Never re-fires a TLD that's already mined (guards against double-charge).
+ * - A single tx failure marks just that TLD failed; already-mined TLDs stay
+ *   mined; remaining pending TLDs can still be attempted.
+ * - Ignores double-clicks while a tx is in flight.
+ * - Retry restarts the queue from the first pending/failed TLD, skipping mined ones.
+ */
 function BatchRegisterAll({
   label, owner, availableTlds, perTld,
 }: {
@@ -393,47 +419,67 @@ function BatchRegisterAll({
 }) {
   const { writeContract, data: hash, error, reset, isPending } = useWriteContract();
   const { isLoading: confirming, isSuccess: confirmed } = useWaitForTransactionReceipt({ hash });
-  const [idx, setIdx] = useState(0); // which TLD we're on (0..availableTlds.length)
-  const [started, setStarted] = useState(false);
 
-  // When a register tx confirms, advance to the next TLD
-  useEffect(() => {
-    if (!started) return;
-    if (!confirmed) return;
-    if (idx + 1 < availableTlds.length) {
-      const nextTld = availableTlds[idx + 1];
-      const nextPrice = perTld[nextTld].price;
-      if (nextPrice == null) return;
-      reset();
-      writeContract({
-        address: REGISTRY_ADDRESSES[nextTld],
-        abi: REGISTRY_ABI,
-        functionName: "register",
-        args: [label, owner],
-        value: nextPrice,
-      });
-      setIdx(idx + 1);
-    }
-  }, [confirmed, idx, availableTlds, perTld, started, label, owner, writeContract, reset]);
+  // Per-TLD status; initialised to pending each mount. Mined TLDs never regress.
+  const [statuses, setStatuses] = useState<Record<Tld, TldStatus>>(() => {
+    const init: Record<Tld, TldStatus> = { ins: "pending", igra: "pending", ikas: "pending" };
+    return init;
+  });
+  // Which TLD the current writeContract is for; null means nothing in flight.
+  const [activeTld, setActiveTld] = useState<Tld | null>(null);
+  // True once the user has clicked "Register all" at least once; gates the auto-advance.
+  const [running, setRunning] = useState(false);
 
-  const onStart = () => {
-    setStarted(true);
-    setIdx(0);
-    const firstTld = availableTlds[0];
-    const firstPrice = perTld[firstTld].price;
-    if (firstPrice == null) return;
+  const fireForTld = (tld: Tld) => {
+    const price = perTld[tld].price;
+    if (price == null) return;
+    reset();
+    setStatuses((s) => ({ ...s, [tld]: "signing" }));
+    setActiveTld(tld);
     writeContract({
-      address: REGISTRY_ADDRESSES[firstTld],
+      address: REGISTRY_ADDRESSES[tld],
       abi: REGISTRY_ABI,
       functionName: "register",
       args: [label, owner],
-      value: firstPrice,
+      value: price,
     });
   };
 
-  const allDone = started && confirmed && idx + 1 === availableTlds.length;
+  // On tx confirm, mark the active TLD mined and fire the next pending.
+  useEffect(() => {
+    if (!running || !confirmed || !activeTld) return;
+    setStatuses((s) => ({ ...s, [activeTld]: "mined" }));
+    setActiveTld(null);
+  }, [confirmed, activeTld, running]);
+
+  // On tx error, mark active TLD failed. Do NOT auto-advance — user picks.
+  useEffect(() => {
+    if (!running || !error || !activeTld) return;
+    setStatuses((s) => ({ ...s, [activeTld]: "failed" }));
+    setActiveTld(null);
+    setRunning(false); // pause the queue; user clicks "Continue" to retry
+  }, [error, activeTld, running]);
+
+  // When a TLD is marked mined AND we're still running, advance to next pending.
+  useEffect(() => {
+    if (!running || activeTld) return;
+    const next = availableTlds.find((t) => statuses[t] === "pending");
+    if (next) fireForTld(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statuses, running, activeTld, availableTlds]);
+
+  const startedAny = availableTlds.some((t) => statuses[t] !== "pending");
+  const minedCount = availableTlds.filter((t) => statuses[t] === "mined").length;
+  const failedCount = availableTlds.filter((t) => statuses[t] === "failed").length;
+  const allDone = availableTlds.every((t) => statuses[t] === "mined");
   const busy = isPending || confirming;
-  const currentTld = availableTlds[idx];
+
+  const onStart = () => {
+    if (busy || running) return; // double-click guard
+    setRunning(true);
+    const first = availableTlds.find((t) => statuses[t] !== "mined");
+    if (first) fireForTld(first);
+  };
 
   if (allDone) {
     return (
@@ -445,20 +491,51 @@ function BatchRegisterAll({
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <button onClick={onStart} disabled={started || busy} className="btn-primary">
-        {started ? (
+      {/* Per-TLD progress chips — unambiguous about which already minted vs failed */}
+      {startedAny && (
+        <div className="flex gap-1.5">
+          {availableTlds.map((t) => {
+            const s = statuses[t];
+            const cls =
+              s === "mined"   ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300" :
+              s === "signing" ? "border-cyan/40 bg-cyan/10 text-cyan" :
+              s === "failed"  ? "border-red-500/40 bg-red-500/10 text-red-300" :
+                                "border-white/10 bg-white/[0.03] text-white/60";
+            return (
+              <span key={t} className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${cls}`}>
+                {s === "signing" && <Loader2 className="h-2.5 w-2.5 animate-spin" />}
+                {s === "mined"   && <Check className="h-2.5 w-2.5" />}
+                {tldSuffix(t)}
+              </span>
+            );
+          })}
+        </div>
+      )}
+      <button
+        onClick={onStart}
+        disabled={busy || running || allDone}
+        className="btn-primary"
+      >
+        {busy ? (
           <>
             <Loader2 className="mr-1 inline h-4 w-4 animate-spin" />
-            {idx + 1}/{availableTlds.length} · {tldSuffix(currentTld)}
+            {activeTld ? `Minting ${tldSuffix(activeTld)}…` : "Confirming…"}
           </>
+        ) : failedCount > 0 ? (
+          <>Continue ({availableTlds.length - minedCount} left) →</>
+        ) : minedCount > 0 && !allDone ? (
+          <>Continue ({availableTlds.length - minedCount} left) →</>
         ) : (
           <>Register all {availableTlds.length} →</>
         )}
       </button>
-      {error && (
-        <button onClick={() => { setStarted(false); reset(); }} className="text-[10px] text-red-300 hover:text-red-200" title={error.message}>
-          {error.message.split("\n")[0] || "Tx failed"} — retry
-        </button>
+      <p className="max-w-[280px] text-right text-[10px] text-white/40">
+        {availableTlds.length} separate signatures. If one fails, minted TLDs stay minted — retry only the failed/remaining TLDs.
+      </p>
+      {error && activeTld === null && (
+        <div className="max-w-[240px] text-right text-[10px] text-red-300" title={error.message}>
+          {error.message.split("\n")[0] || "Tx failed"}
+        </div>
       )}
     </div>
   );
@@ -630,7 +707,8 @@ function NameRow({ label }: { label: string }) {
           {label[0]?.toUpperCase()}
         </div>
         <span className="font-mono text-base">
-          {label}<span className="text-white/40">.ins</span>
+          {label}
+          <span className="ml-1 text-[10px] uppercase tracking-wider text-white/35">all TLDs</span>
         </span>
       </div>
       <div className="flex items-center gap-3">
@@ -715,7 +793,6 @@ function AiSuggestSection({ seed }: { seed: string }) {
               className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm transition hover:border-cyan/30"
             >
               <span className="font-mono">{i}</span>
-              <span className="text-white/40">.ins</span>
             </Link>
           ))}
         </div>

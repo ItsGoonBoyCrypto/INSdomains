@@ -30,7 +30,7 @@ export function HeroSearch() {
           <input
             value={raw}
             onChange={(e) => setRaw(e.target.value)}
-            placeholder="Search for yourname.ins"
+            placeholder="Search .ins · .igra · .ikas"
             className="w-full bg-transparent px-3 py-4 text-lg text-white placeholder:text-white/30 focus:outline-none"
             autoComplete="off"
             spellCheck={false}
@@ -79,14 +79,22 @@ export function HeroSearch() {
       </div>
 
       <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-        {["alice", "grok", "vitalik", "rooftop", "kaspa"].map((s) => (
+        {(
+          [
+            { label: "alice",   tld: "ins",  colour: "text-cyan/80" },
+            { label: "grok",    tld: "igra", colour: "text-plum/80" },
+            { label: "vitalik", tld: "ikas", colour: "text-emerald-300/80" },
+            { label: "rooftop", tld: "ins",  colour: "text-cyan/80" },
+            { label: "kaspa",   tld: "igra", colour: "text-plum/80" },
+          ] as const
+        ).map((s) => (
           <button
-            key={s}
+            key={s.label + s.tld}
             type="button"
-            onClick={() => setRaw(s)}
+            onClick={() => setRaw(s.label)}
             className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-white/60 transition hover:border-cyan/30 hover:text-white"
           >
-            {s}.ins
+            {s.label}<span className={s.colour}>.{s.tld}</span>
           </button>
         ))}
       </div>

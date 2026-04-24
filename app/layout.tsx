@@ -6,11 +6,11 @@ import { Providers } from "./providers";
 export const metadata: Metadata = {
   title: "INS — Igra Name Service",
   description:
-    "Your forever .ins name on Igra. Permanent on-chain identities. No renewals. Native to Igra L2, secured by Kaspa.",
+    "Your forever INS name on Igra — claim .ins, .igra, or .ikas. Permanent on-chain identities. No renewals. Native to Igra L2, secured by Kaspa.",
   metadataBase: new URL("https://insdomains.org"),
   openGraph: {
     title: "Igra Name Service",
-    description: "Permanent .ins names on Igra. Forever on-chain.",
+    description: "Permanent .ins · .igra · .ikas names on Igra. Forever on-chain.",
     type: "website",
     url: "https://insdomains.org",
   },

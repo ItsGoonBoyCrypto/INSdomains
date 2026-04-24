@@ -271,7 +271,11 @@ function ListingModal({
             </div>
             <h2 className="text-xl font-bold">
               <span className="ins-gradient-text">{label}</span>
-              <span className="text-white/30">{tldSuffix(tld)}</span>
+              <span className={
+                tld === "ins"  ? "text-cyan/70" :
+                tld === "igra" ? "text-plum/70" :
+                                 "text-emerald-300/70"
+              }>{tldSuffix(tld)}</span>
             </h2>
           </div>
         </div>

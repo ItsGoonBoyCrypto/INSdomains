@@ -56,8 +56,9 @@ function NotConnected() {
       </div>
       <h1 className="mt-6 text-3xl font-black">Connect to see your names</h1>
       <p className="mt-3 text-white/60">
-        Your .ins names are NFTs held in your wallet. Connect to manage resolver
-        records, set a primary name, and mint subnames.
+        Your INS names (.ins / .igra / .ikas) are NFTs held in your wallet.
+        Connect to manage resolver records, set a primary name per TLD, and
+        list names for sale.
       </p>
       <div className="mt-8 flex justify-center">
         <ConnectButton />
@@ -333,8 +334,11 @@ function LiveDomainCard({
             {tldSuffix(name.tld)}
           </span>
           {isPrimary ? (
-            <span className="inline-flex items-center gap-1 rounded-full border border-cyan/30 bg-cyan/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-cyan">
-              <Star className="h-3 w-3 fill-cyan" /> Primary
+            <span
+              title={`Primary name for your address on ${tldSuffix(name.tld)} reverse resolver`}
+              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${accent.border} ${accent.bg} ${accent.text}`}
+            >
+              <Star className={`h-3 w-3 ${accent.text}`} style={{ fill: "currentColor" }} /> Primary {tldSuffix(name.tld)}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
@@ -417,7 +421,7 @@ function LiveDomainCard({
         )}
         <IconBtn title="Edit target" icon={<Settings2 className="h-3.5 w-3.5" />} onClick={() => setExpanded(!expanded)} />
         <IconBtn title="History" icon={<History className="h-3.5 w-3.5" />} onClick={() => setShowHistory(!showHistory)} />
-        <ListForSaleButton tokenId={name.tokenId} label={name.label} tld={name.tld} />
+        <ListForSaleButton tokenId={name.tokenId} label={name.label} tld={name.tld} onChange={onChainUpdate} />
         <a
           href={explorerAddr(name.target)}
           target="_blank"
@@ -446,7 +450,7 @@ function LiveDomainCard({
           <div className="text-[10px] font-semibold uppercase tracking-widest text-white/40">
             On-chain history
           </div>
-          <NameHistory tokenId={name.tokenId} />
+          <NameHistory tokenId={name.tokenId} tld={name.tld} />
         </div>
       )}
 

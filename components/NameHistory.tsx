@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePublicClient } from "wagmi";
 import { parseAbiItem } from "viem";
 import { ArrowRight, ExternalLink, History, Loader2, Sparkles } from "lucide-react";
-import { REGISTRY_ADDRESS } from "@/lib/contracts";
+import { REGISTRY_ADDRESSES, type Tld } from "@/lib/contracts";
 import { explorerTx } from "@/lib/igra-chain";
 import { shortAddr } from "@/lib/names";
 
@@ -27,7 +27,7 @@ type Entry = {
   target?: `0x${string}`;
 };
 
-export function NameHistory({ tokenId }: { tokenId: bigint }) {
+export function NameHistory({ tokenId, tld = "ins" }: { tokenId: bigint; tld?: Tld }) {
   const client = usePublicClient();
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,6 +36,7 @@ export function NameHistory({ tokenId }: { tokenId: bigint }) {
   useEffect(() => {
     if (!client) return;
     let cancelled = false;
+    const registry = REGISTRY_ADDRESSES[tld];
 
     (async () => {
       try {
@@ -44,14 +45,14 @@ export function NameHistory({ tokenId }: { tokenId: bigint }) {
 
         const [transferLogs, targetLogs] = await Promise.all([
           client.getLogs({
-            address: REGISTRY_ADDRESS,
+            address: registry,
             event: TRANSFER_EVENT,
             args: { tokenId },
             fromBlock: 0n,
             toBlock: "latest",
           }),
           client.getLogs({
-            address: REGISTRY_ADDRESS,
+            address: registry,
             event: TARGET_SET_EVENT,
             args: { tokenId },
             fromBlock: 0n,
@@ -108,7 +109,7 @@ export function NameHistory({ tokenId }: { tokenId: bigint }) {
     return () => {
       cancelled = true;
     };
-  }, [client, tokenId]);
+  }, [client, tokenId, tld]);
 
   if (loading) {
     return (
