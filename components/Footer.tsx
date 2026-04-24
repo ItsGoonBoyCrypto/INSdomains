@@ -24,7 +24,6 @@ const COLS: { title: string; items: FooterItem[] }[] = [
       { label: "Telegram", href: "https://t.me/IgraNameService", external: true },
       { label: "X / Twitter", href: "#", comingSoon: true },
       { label: "GitHub", href: "https://github.com/ItsGoonBoyCrypto/INSdomains", external: true },
-      { label: "DAO", href: "/dao" },
     ],
   },
 ];

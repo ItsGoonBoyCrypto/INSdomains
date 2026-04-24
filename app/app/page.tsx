@@ -149,7 +149,14 @@ function EmptyHint() {
         <TierSample color="amber"   label="3-char"  price="500 iKAS"   tag="rare" />
         <TierSample color="cyan"    label="4-char"  price="50 iKAS"    tag="uncommon" />
         <TierSample color="emerald" label="5–32"    price="10 iKAS"    tag="standard" />
-        <TierSample color="red"     label="1-char"  price="reserved"   tag="DAO auction" />
+        <TierSample color="red"     label="1-char"  price="reserved"   tag="ecosystem only" />
+      </div>
+      <div className="mt-4 flex items-center justify-center gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.04] px-4 py-2.5 text-xs text-emerald-200">
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-[10px] font-black">0</span>
+        <span>
+          <span className="font-bold text-emerald-300">Renewal fee: 0 iKAS</span>
+          <span className="text-emerald-200/70"> · every tier, every TLD, forever. Pay once — no expiry.</span>
+        </span>
       </div>
     </div>
   );

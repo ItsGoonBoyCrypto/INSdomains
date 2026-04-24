@@ -90,7 +90,7 @@ contract INSRegistryIgra {
     constructor() {
         owner = msg.sender;
         // Default tier prices in wei (18 decimals on Igra).
-        lengthPrice[1] = TIER_RESERVED;      // 1-char: auction / DAO
+        lengthPrice[1] = TIER_RESERVED;      // 1-char: ecosystem allocation only
         lengthPrice[2] = 5000 ether;         // 2-char: 5,000 iKAS
         lengthPrice[3] = 500 ether;          // 3-char: 500 iKAS
         lengthPrice[4] = 50 ether;           // 4-char: 50 iKAS

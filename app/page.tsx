@@ -36,6 +36,23 @@ export default function Home() {
 
         <HeroSearch />
 
+        {/* Zero-renewal callout — the product's core promise */}
+        <div className="mx-auto mt-10 inline-flex max-w-xl items-center gap-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.06] px-5 py-4 text-left shadow-[0_0_40px_rgba(52,211,153,0.08)]">
+          <div className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-emerald-500/15 text-2xl font-black text-emerald-300">
+            0
+          </div>
+          <div>
+            <div className="text-sm font-bold text-white">
+              0 iKAS renewal fee · forever
+            </div>
+            <p className="mt-0.5 text-xs text-white/60">
+              Pay once. No annual rent, no expiry, no grace-period auctions.
+              The Registry has no renewal function — your name can&rsquo;t
+              lapse.
+            </p>
+          </div>
+        </div>
+
         {/* Trust row */}
         <div className="mt-14 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[11px] uppercase tracking-[0.2em] text-white/40">
           <span>Powered by Igra EVM</span>
@@ -45,6 +62,8 @@ export default function Home() {
           <span>Sub-second finality</span>
           <span className="dot-sep" />
           <span>Kaspa-secured</span>
+          <span className="dot-sep" />
+          <span className="text-emerald-300">0 renewal · forever</span>
         </div>
 
         {/* Feature cards */}
@@ -60,7 +79,7 @@ export default function Home() {
             icon={<Sparkles className="h-6 w-6" />}
             tint="plum"
             title="Register"
-            body="Mint your name forever. Pay once, own for life — no renewals, no expiry, no hidden fees."
+            body="Mint your name forever. Pay once in iKAS, own for life. 0 renewal fees — ever. No expiry, no grace-period auctions, no hidden costs."
             href="/app"
           />
           <FeatureCard

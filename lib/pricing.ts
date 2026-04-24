@@ -9,7 +9,7 @@ import { TAKEN_NAMES } from "./mock-registry";
 export const TIER_RESERVED = Number.MAX_SAFE_INTEGER;
 
 export const LENGTH_PRICE: Record<number, number> = {
-  1: TIER_RESERVED,   // reserved / DAO auction
+  1: TIER_RESERVED,   // reserved / ecosystem allocation only
   2: 5000,
   3: 500,
   4: 50,

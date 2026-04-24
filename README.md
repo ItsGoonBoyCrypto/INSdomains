@@ -20,9 +20,9 @@ Built with Next.js 15, React 19, Tailwind v3, wagmi 2 + RainbowKit, viem, Claude
 ## Highlights
 
 - **Tiered pricing** in native iKAS — baked into the contract:
-  | Length | Price      | Tag         |
-  |--------|------------|-------------|
-  | 1-char | reserved   | DAO auction |
+  | Length | Price      | Tag              |
+  |--------|------------|------------------|
+  | 1-char | reserved   | ecosystem only   |
   | 2-char | 5,000 iKAS | ultra-rare  |
   | 3-char | 500 iKAS   | rare        |
   | 4-char | 50 iKAS    | uncommon    |

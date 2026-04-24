@@ -87,17 +87,50 @@ export default function AboutPage() {
               to sell it.
             </p>
           </div>
+
+          {/* Renewal-fee comparison callout */}
+          <div className="mt-8 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-red-500/25 bg-red-500/[0.04] p-5">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-red-300/70">
+                ENS (the old way)
+              </div>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-3xl font-black text-red-300">$5+</span>
+                <span className="text-xs text-white/50">/year, every year</span>
+              </div>
+              <ul className="mt-3 space-y-1.5 text-xs text-white/55">
+                <li className="flex items-start gap-2"><span className="mt-1 h-1 w-1 flex-none rounded-full bg-red-400/60" /> annual rent, denominated in USD</li>
+                <li className="flex items-start gap-2"><span className="mt-1 h-1 w-1 flex-none rounded-full bg-red-400/60" /> 90-day grace period then auction</li>
+                <li className="flex items-start gap-2"><span className="mt-1 h-1 w-1 flex-none rounded-full bg-red-400/60" /> miss a renewal → lose your identity</li>
+              </ul>
+            </div>
+            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.05] p-5 shadow-[0_0_40px_rgba(52,211,153,0.06)]">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
+                INS (forever)
+              </div>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-3xl font-black text-emerald-300">0 iKAS</span>
+                <span className="text-xs text-white/50">/year, forever</span>
+              </div>
+              <ul className="mt-3 space-y-1.5 text-xs text-white/65">
+                <li className="flex items-start gap-2"><span className="mt-1 h-1 w-1 flex-none rounded-full bg-emerald-400" /> zero renewal fees — no function to charge them</li>
+                <li className="flex items-start gap-2"><span className="mt-1 h-1 w-1 flex-none rounded-full bg-emerald-400" /> no expiry, no grace period, no auction</li>
+                <li className="flex items-start gap-2"><span className="mt-1 h-1 w-1 flex-none rounded-full bg-emerald-400" /> your name is yours until you sell it</li>
+              </ul>
+            </div>
+          </div>
         </section>
 
         <section className="mt-16">
           <h2 className="text-2xl font-bold">How the pricing works</h2>
           <p className="mt-3 text-white/60">
             Tiered iKAS pricing, baked into the contract. Shorter names are
-            rarer, so they cost more. The fee stream funds the treasury Safe —
-            future governance decides how it gets spent.
+            rarer, so they cost more. The fee stream funds the treasury Safe,
+            deployed into grants, liquidity, and ecosystem spend under
+            transparent multisig control.
           </p>
           <div className="mt-5 grid gap-3 sm:grid-cols-5">
-            <TierChip color="red"     len="1-char"  price="Reserved" tag="DAO auction" />
+            <TierChip color="red"     len="1-char"  price="Reserved" tag="ecosystem only" />
             <TierChip color="plum"    len="2-char"  price="5,000 iKAS" tag="ultra-rare" />
             <TierChip color="amber"   len="3-char"  price="500 iKAS"   tag="rare" />
             <TierChip color="cyan"    len="4-char"  price="50 iKAS"    tag="uncommon" />
@@ -158,7 +191,8 @@ export default function AboutPage() {
             <Milestone done title="Zero-custody marketplace" body="Fixed-price listings, 2% seller fee + 1% optional featured promotion. Buyer pays 0%. Aggregated across all three TLDs on /marketplace." />
             <Milestone title="Admin across all TLDs" body="First-class TLD switcher on /admin so reservations + pricing + pause can be tuned per-TLD from the UI (currently .ins-only in the UI; Safe can call directly)." />
             <Milestone title="Subnames" body="Zero-cost subdomains — alice.ins can mint pay.alice.ins, vault.alice.ins, etc." />
-            <Milestone title="DAO handover" body="Governance takes the Safe keys; the team burns its own signer." />
+            <Milestone title="Cross-chain reverse resolution" body="Explorer + wallet integrations to render INS names natively across Kaspa L1 + Igra L2 + other EVMs that bridge to Igra." />
+            <Milestone title="Renounce admin on parameter knobs" body="Once tier pricing + marketplace fees prove out, renounce the admin ability to change them. The Safe keeps emergency pause; the rest becomes immutable." />
           </ol>
         </section>
 
