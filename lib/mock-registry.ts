@@ -60,8 +60,5 @@ export const TRENDING = [
   "wagmi.ikas",  "gm.ins",       "ngmi.igra",   "ser.ikas",
 ];
 
-export const STATS = {
-  registered: 14328,
-  owners: 8912,
-  dapps: 42,
-};
+// Former mock STATS export removed 2026-04-24 — homepage StatsRow now reads
+// live values on-chain (totalSupply / unique owners / active listings).
