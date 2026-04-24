@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://insdomains.org"),
   openGraph: {
     title: "Igra Name Service",
-    description: "Permanent .ins · .igra · .ikas names on Igra. Forever on-chain.",
+    description: "Permanent .igra / .ikas / .ins names on Igra. Forever on-chain.",
     type: "website",
     url: "https://insdomains.org",
   },

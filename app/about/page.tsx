@@ -34,8 +34,8 @@ export default function AboutPage() {
         </h1>
         <p className="mt-4 text-lg text-white/60">
           INS gives every wallet, contract and community on the Igra Network a
-          human-readable identity across three TLDs — <span className="text-cyan">.ins</span>,{" "}
-          <span className="text-plum">.igra</span>, <span className="text-emerald-300">.ikas</span>.
+          human-readable identity across three TLDs — <span className="text-plum">.igra</span> /{" "}
+          <span className="text-emerald-300">.ikas</span> / <span className="text-cyan">.ins</span>.
           Pay once in native iKAS, own forever. No renewals, no squatters&rsquo; auctions,
           no rent-seeking.
         </p>

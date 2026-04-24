@@ -20,8 +20,12 @@ export default function Home() {
 
         {/* Headline */}
         <h1 className="mx-auto max-w-4xl text-5xl font-black leading-[0.95] tracking-[-0.04em] sm:text-7xl lg:text-[96px] animate-fade-up">
-          Your forever{" "}
-          <span className="ins-gradient-text">.ins · .igra · .ikas</span>{" "}
+          Your forever domain{" "}
+          <span className="text-plum">.igra</span>
+          <span className="text-white/30">/</span>{" "}
+          <span className="text-emerald-300">.ikas</span>
+          <span className="text-white/30">/</span>{" "}
+          <span className="text-cyan">.ins</span>{" "}
           name on Igra
         </h1>
 
