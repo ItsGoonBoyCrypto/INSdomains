@@ -2788,12 +2788,16 @@ function PreLaunchListingsCard({ tld }: { tld: Tld }) {
     : [tld];
 
   // Pre-flight reads — 4 reads × N TLDs in one batch. Auto-refreshes on input.
+  // The `address` non-null guard is critical: isApprovedForAll's first arg must
+  // be a real address. We gate via `enabled` AND default to a sentinel zero
+  // address only when address is briefly undefined during a remount.
   const enabledReads = labelValid && targetTlds.length > 0 && !!address;
+  const safeAddr: `0x${string}` = address ?? "0x0000000000000000000000000000000000000000";
   const { data: reads1, refetch: refetchReads1 } = useReadContracts({
     contracts: targetTlds.flatMap((t) => [
       { address: REGISTRY_ADDRESSES[t], abi: REGISTRY_ABI, functionName: "reserved" as const, args: [cleanedLabel] as const },
       { address: REGISTRY_ADDRESSES[t], abi: REGISTRY_ABI, functionName: "tokenIdOf" as const, args: [cleanedLabel] as const },
-      { address: REGISTRY_ADDRESSES[t], abi: REGISTRY_ABI, functionName: "isApprovedForAll" as const, args: [address ?? "0x0", MARKETPLACE_ADDRESSES[t]] as const },
+      { address: REGISTRY_ADDRESSES[t], abi: REGISTRY_ABI, functionName: "isApprovedForAll" as const, args: [safeAddr, MARKETPLACE_ADDRESSES[t]] as const },
       { address: MARKETPLACE_ADDRESSES[t], abi: MARKETPLACE_ABI, functionName: "featureFeeBps" as const, args: [] as const },
     ]),
     query: { enabled: enabledReads },
