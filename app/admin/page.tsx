@@ -319,6 +319,7 @@ function AdminMintCard({ tld }: { tld: Tld }) {
   const [batchStatuses, setBatchStatuses] = useState<Record<Tld, BatchTldStatus>>({
     ins: "pending", igra: "pending", ikas: "pending",
   });
+  const [batchTxHashes, setBatchTxHashes] = useState<Partial<Record<Tld, `0x${string}`>>>({});
 
   const fireNextInBatch = (op: BatchOp, idx: number) => {
     if (idx >= op.tlds.length) return;
@@ -337,6 +338,7 @@ function AdminMintCard({ tld }: { tld: Tld }) {
   const startBatch = (op: BatchOp) => {
     if (busy || batchOp) return;
     setBatchStatuses({ ins: "pending", igra: "pending", ikas: "pending" });
+    setBatchTxHashes({});
     setBatchOp(op);
     setBatchIdx(0);
     fireNextInBatch(op, 0);
@@ -346,6 +348,7 @@ function AdminMintCard({ tld }: { tld: Tld }) {
     if (!batchOp || !isConfirmed) return;
     const currentTld = batchOp.tlds[batchIdx];
     setBatchStatuses((s) => ({ ...s, [currentTld]: "mined" }));
+    if (hash) setBatchTxHashes((m) => ({ ...m, [currentTld]: hash }));
     if (batchIdx + 1 < batchOp.tlds.length) {
       const nextIdx = batchIdx + 1;
       setBatchIdx(nextIdx);
@@ -353,10 +356,11 @@ function AdminMintCard({ tld }: { tld: Tld }) {
     } else {
       const t = setTimeout(() => {
         setBatchOp(null);
+        setBatchTxHashes({});
         setLabel("");
         setTarget("");
         reset();
-      }, 1500);
+      }, 3000);
       return () => clearTimeout(t);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -383,6 +387,7 @@ function AdminMintCard({ tld }: { tld: Tld }) {
     setBatchOp(null);
     setBatchIdx(0);
     setBatchStatuses({ ins: "pending", igra: "pending", ikas: "pending" });
+    setBatchTxHashes({});
     reset();
   };
 
@@ -436,8 +441,8 @@ function AdminMintCard({ tld }: { tld: Tld }) {
         <MultiTldBatchProgress
           op={batchOp}
           statuses={batchStatuses}
+          txHashes={batchTxHashes}
           activeIdx={batchIdx}
-          hash={hash}
           error={error}
           onRetry={retryBatchFromFailed}
           onCancel={cancelBatch}
@@ -577,6 +582,10 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
   const [batchStatuses, setBatchStatuses] = useState<Record<Tld, BatchTldStatus>>({
     ins: "pending", igra: "pending", ikas: "pending",
   });
+  /** Captures each TLD's mined-tx hash so the per-chip explorer link stays
+   *  valid after the batch advances to the next TLD (which would otherwise
+   *  overwrite the single shared `hash` from useWriteContract). */
+  const [batchTxHashes, setBatchTxHashes] = useState<Partial<Record<Tld, `0x${string}`>>>({});
 
   // Candidate pool is seeded from: the in-code RESERVED_NAMES list + whatever is cached in
   // localStorage + whatever /api/reserved-labels discovers on-chain (auto-populated).
@@ -724,29 +733,34 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
       ins: "pending", igra: "pending", ikas: "pending",
     };
     setBatchStatuses(fresh);
+    setBatchTxHashes({});
     setBatchOp(op);
     setBatchIdx(0);
     fireNextInBatch(op, 0);
   };
 
-  // On tx confirm during a batch, mark mined + advance to next TLD.
+  // On tx confirm during a batch, mark mined + capture this TLD's hash for
+  // per-chip explorer linking, then advance to next TLD.
   useEffect(() => {
     if (!batchOp || !isConfirmed) return;
     const currentTld = batchOp.tlds[batchIdx];
     setBatchStatuses((s) => ({ ...s, [currentTld]: "mined" }));
+    if (hash) setBatchTxHashes((m) => ({ ...m, [currentTld]: hash }));
     if (batchIdx + 1 < batchOp.tlds.length) {
       const nextIdx = batchIdx + 1;
       setBatchIdx(nextIdx);
       fireNextInBatch(batchOp, nextIdx);
     } else {
-      // Batch complete — refresh chain state, clear queue.
+      // Batch complete — refresh chain state, linger green strip ~3s
+      // so operator sees the win + clicks per-TLD chips for receipts.
       refetchReserved();
       fetchChainLabels();
       setNewLabel("");
       const t = setTimeout(() => {
         setBatchOp(null);
+        setBatchTxHashes({});
         reset();
-      }, 1500);
+      }, 3000);
       return () => clearTimeout(t);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -775,6 +789,7 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
     setBatchOp(null);
     setBatchIdx(0);
     setBatchStatuses({ ins: "pending", igra: "pending", ikas: "pending" });
+    setBatchTxHashes({});
     reset();
   };
 
@@ -974,8 +989,8 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
         <MultiTldBatchProgress
           op={batchOp}
           statuses={batchStatuses}
+          txHashes={batchTxHashes}
           activeIdx={batchIdx}
-          hash={hash}
           error={error}
           onRetry={retryBatchFromFailed}
           onCancel={cancelBatch}
@@ -2193,47 +2208,74 @@ function SyncReservationsRow({
 /** Visual progress strip while a multi-TLD batch is in flight.
  *  Per-TLD chips: pending / signing / mined / failed. */
 function MultiTldBatchProgress({
-  op, statuses, activeIdx, hash, error, onRetry, onCancel,
+  op, statuses, txHashes, activeIdx, error, onRetry, onCancel,
 }: {
   op: BatchOp;
   statuses: Record<Tld, BatchTldStatus>;
+  /** hash of each TLD's confirmed tx (set as each step mines) */
+  txHashes: Partial<Record<Tld, `0x${string}`>>;
   activeIdx: number;
-  hash?: `0x${string}`;
   error: { message: string } | null;
   onRetry: () => void;
   onCancel: () => void;
 }) {
   const failed = op.tlds.find((t) => statuses[t] === "failed");
+  const allMined = op.tlds.every((t) => statuses[t] === "mined");
   return (
-    <div className={`mb-3 rounded-xl border p-3 ${
-      failed ? "border-red-500/40 bg-red-500/[0.04]" : "border-cyan/40 bg-cyan/[0.04]"
+    <div className={`mb-3 rounded-xl border p-3 transition ${
+      failed   ? "border-red-500/40 bg-red-500/[0.04]" :
+      allMined ? "border-emerald-500/40 bg-emerald-500/[0.05]" :
+                 "border-cyan/40 bg-cyan/[0.04]"
     }`}>
       <div className="flex items-center justify-between gap-3">
-        <div className="flex-1">
-          <div className="text-xs font-bold text-white">{op.label}</div>
-          <div className="mt-0.5 text-[11px] text-white/55">
-            Step {Math.min(activeIdx + 1, op.tlds.length)} of {op.tlds.length}
+        <div className="min-w-0 flex-1">
+          <div className="text-xs font-bold text-white">
+            {allMined ? <><Check className="mr-1 inline h-3 w-3 text-emerald-300" />{op.label} — done</> : op.label}
           </div>
+          {!allMined && !failed && (
+            <div className="mt-0.5 text-[11px] text-white/55">
+              Step {Math.min(activeIdx + 1, op.tlds.length)} of {op.tlds.length}
+            </div>
+          )}
+          {allMined && (
+            <div className="mt-0.5 text-[11px] text-emerald-200/80">
+              All {op.tlds.length} TLDs confirmed on-chain.
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-1.5">
           {op.tlds.map((t) => {
             const s = statuses[t];
             const cls =
-              s === "mined"   ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300" :
+              s === "mined"   ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20" :
               s === "signing" ? "border-cyan/40 bg-cyan/15 text-cyan" :
               s === "failed"  ? "border-red-500/40 bg-red-500/10 text-red-300" :
                                 "border-white/15 bg-white/[0.04] text-white/55";
-            return (
-              <span key={t} className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${cls}`}>
+            const hash = txHashes[t];
+            const inner = (
+              <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${cls}`}>
                 {s === "signing" && <Loader2 className="h-2.5 w-2.5 animate-spin" />}
                 {s === "mined"   && <Check className="h-2.5 w-2.5" />}
                 {tldSuffix(t)}
               </span>
             );
+            return s === "mined" && hash ? (
+              <a
+                key={t}
+                href={`${IGRA_EXPLORER}/tx/${hash}`}
+                target="_blank"
+                rel="noreferrer"
+                title={`View ${tldSuffix(t)} tx on Igra explorer`}
+                className="transition hover:opacity-90"
+              >
+                {inner}
+              </a>
+            ) : (
+              <span key={t}>{inner}</span>
+            );
           })}
         </div>
       </div>
-      {hash && <div className="mt-2"><TxLink hash={hash} /></div>}
       {failed && (
         <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-red-300">
           <span className="truncate" title={error?.message}>

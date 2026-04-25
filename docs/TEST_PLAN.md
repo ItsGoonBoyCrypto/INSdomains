@@ -205,12 +205,56 @@
 - [ ] adminMint tx on `.ikas` Registry → bypasses payment + reservation
 - [ ] Recipient gets NFT; `/domains` on recipient wallet shows it
 
-### 5b. Reserved names
+### 5b. Reserved names (per-TLD)
 - [ ] On `.igra` tab → candidates list loads from `/api/reserved-labels?tld=igra`
 - [ ] Add single reserved label → setReserved tx → row turns red (reserved)
 - [ ] Unreserve → row turns green
 - [ ] Bulk reserve: paste 3 labels → chunks submitted as setReservedBatch txs
 - [ ] Verify chain state with `cast call <registry> reserved("<label>")`
+
+### 5b.bis — Apply-to-all-TLDs toggle + Sync (NEW 2026-04-25)
+
+**Toggle on Reserved Names card:**
+- [ ] Toggle starts OFF on first ever load
+- [ ] Toggle "Apply to all 3 TLDs" ON → button copy updates: "Reserve" → "Reserve × 3", "Unreserve" → "Unreserve × 3", "Batch-reserve…" → "× 3 TLDs"
+- [ ] Toggle persists: refresh page, toggle still ON
+- [ ] Toggle persists across TLD switch (.ins → .igra → .ikas tabs)
+- [ ] Reserve a fresh label `apptest1` with toggle ON → 3 wallet prompts in sequence
+- [ ] Three TLD chips appear: `.ins` cyan-signing → green-mined → `.igra` cyan-signing → green-mined → `.ikas` cyan-signing → green-mined
+- [ ] After all 3 confirmed: success state shows ~3s, then auto-clears
+- [ ] Verify on chain: `apptest1` is reserved on all 3 Registries (`cast call ... reserved("apptest1")`)
+- [ ] Per-row Unreserve `apptest1` with toggle ON → 3 sequential setReserved(label, false) txs → all 3 chains return false
+
+**Toggle on Gift card:**
+- [ ] Toggle "Mint on all 3 TLDs to same recipient" ON → button copy updates: "Mint & send → " → "Mint & send × 3 →"
+- [ ] Label suffix preview updates: ".ins" → "× 3 TLDs"
+- [ ] Will-mint preview reads "labelname.ins + 2 other TLDs to 0xshort..."
+- [ ] Gift `multitest` to a wallet → 3 sequential adminMint txs
+- [ ] Recipient owns `multitest.ins` + `multitest.igra` + `multitest.ikas` (verify on `/domains` for that wallet)
+
+**Sync flow (one-shot backfill):**
+- [ ] Reserve a label only on `.ins` (toggle off)
+- [ ] Click "Compute diff" on the plum Sync row → shows "1 label to add" for `.igra`, "1 label to add" for `.ikas`
+- [ ] Click "Apply diff" → 2 sequential `setReservedBatch` txs (one per missing TLD) — chips: `.igra` signing → mined, `.ikas` signing → mined
+- [ ] Sync row shows green success message: "Synced 1 label to .igra, .ikas."
+- [ ] Verify chain: label now reserved on all 3 Registries
+- [ ] Click "Compute diff" again → "All reserved labels already mirrored on the other TLDs. Nothing to sync." amber message → Dismiss button works
+
+**Failure recovery:**
+- [ ] Start a 3-TLD batch, REJECT the 2nd wallet prompt → 1st chip stays green, 2nd turns red "failed", 3rd stays grey "pending"
+- [ ] **Retry** button appears → click → batch resumes from the failed step (signs 2nd again, then 3rd)
+- [ ] Alternative: **Cancel** button → batch state clears, 1st TLD's mint persists (intentional — already on chain), 2nd + 3rd not attempted
+- [ ] After Cancel: toggle is still on, can start a new batch
+
+**Per-TLD tx hash receipts (after polish 2026-04-25):**
+- [ ] During / after each TLD's mined tx, the green chip is clickable → opens that exact tx on the Igra explorer
+
+**Visual sanity:**
+- [ ] Toggle has clear ON/OFF visual states (cyan vs neutral, thumb slides)
+- [ ] Reserve / Mint buttons disabled while batch in flight (no double-fire)
+- [ ] Per-row Unreserve buttons disabled while batch in flight
+- [ ] Cancel/Retry buttons appear ONLY on failure
+- [ ] Success state is clearly distinguishable from failure state
 
 ### 5c. Tier pricing
 - [ ] On `.ikas` tab, change 5-char tier from 10 → 20 iKAS
