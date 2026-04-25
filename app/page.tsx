@@ -6,6 +6,7 @@ import { HeroSearch } from "@/components/HeroSearch";
 import { FeatureCard } from "@/components/FeatureCard";
 import { DomainMarquee } from "@/components/DomainMarquee";
 import { StatsRow } from "@/components/StatsRow";
+import { IntegrationsRow } from "@/components/IntegrationsRow";
 
 export default function Home() {
   return (
@@ -96,6 +97,10 @@ export default function Home() {
         </div>
 
         <StatsRow />
+
+        {/* Wallet / explorer / dApp integration logos — auto-renders when
+            lib/integrations.ts has at least one entry, otherwise null */}
+        <IntegrationsRow />
 
         {/* Domain marquee */}
         <div className="mt-24 w-full">
