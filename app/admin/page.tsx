@@ -531,6 +531,7 @@ function AdminMintCard({ tld }: { tld: Tld }) {
 
 /* ── Reserved names ─────────────────────────────────────── */
 const RESERVED_LS_KEY = "ins-reserved-candidates-v1";
+const RESERVED_BLOCKLIST_LS_KEY = "ins-reserved-blocklist-v1";
 
 function loadCandidates(): string[] {
   if (typeof window === "undefined") return [];
@@ -548,6 +549,30 @@ function saveCandidates(labels: string[]) {
     window.localStorage.setItem(RESERVED_LS_KEY, JSON.stringify(labels));
   } catch {
     /* quota exceeded — silently skip */
+  }
+}
+
+/** Persistent blocklist of labels the operator manually untracked. Anything
+ *  in this set is filtered out of every API merge + the in-code seed list,
+ *  so the row stays gone across TLD switches and page reloads. Kept
+ *  separate from `candidates` because candidates is rebuilt from multiple
+ *  sources every render cycle. */
+function loadBlocklist(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(RESERVED_BLOCKLIST_LS_KEY);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveBlocklist(labels: string[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(RESERVED_BLOCKLIST_LS_KEY, JSON.stringify(labels));
+  } catch {
+    /* noop */
   }
 }
 
@@ -610,12 +635,24 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
    *  and don't re-process the same one. */
   const processedHashRef = useRef<`0x${string}` | null>(null);
 
+  // Persistent set of labels the operator manually untracked. Filtered out
+  // of every API merge + the in-code seed so untrack STAYS gone across TLD
+  // switches and reloads.
+  const [blocklist, setBlocklist] = useState<Set<string>>(() => new Set(loadBlocklist()));
+  useEffect(() => {
+    saveBlocklist(Array.from(blocklist));
+  }, [blocklist]);
+
   // Candidate pool is seeded from: the in-code RESERVED_NAMES list + whatever is cached in
   // localStorage + whatever /api/reserved-labels discovers on-chain (auto-populated).
   // On-chain `reserved(label)` is still the source of truth per row.
-  const [candidates, setCandidates] = useState<string[]>(() =>
-    Array.from(new Set([...Array.from(RESERVED_NAMES), ...loadCandidates()])).sort(),
-  );
+  // Anything in `blocklist` is filtered out of the seed so a previous-session
+  // untrack persists.
+  const [candidates, setCandidates] = useState<string[]>(() => {
+    const block = new Set(loadBlocklist());
+    const seed = [...Array.from(RESERVED_NAMES), ...loadCandidates()];
+    return Array.from(new Set(seed.filter((l) => !block.has(l)))).sort();
+  });
   const [chainScanLoading, setChainScanLoading] = useState(false);
   const [chainScanError, setChainScanError] = useState<string | null>(null);
   useEffect(() => {
@@ -623,7 +660,8 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
   }, [candidates]);
 
   // Auto-fetch the active TLD's on-chain reserved labels whenever the TLD
-  // changes, so switching from .ins → .igra re-seeds candidates correctly.
+  // changes (or the blocklist updates), so switching from .ins → .igra
+  // re-seeds candidates correctly while still respecting the blocklist.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -632,12 +670,13 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
         const data = (await res.json()) as { labels?: string[] };
         if (cancelled) return;
         if (Array.isArray(data.labels) && data.labels.length > 0) {
-          setCandidates((prev) => Array.from(new Set([...prev, ...data.labels!])).sort());
+          const fresh = data.labels.filter((l) => !blocklist.has(l));
+          setCandidates((prev) => Array.from(new Set([...prev, ...fresh])).sort());
         }
       } catch { /* non-fatal; user can still use manual refresh */ }
     })();
     return () => { cancelled = true; };
-  }, [tld]);
+  }, [tld, blocklist]);
 
   // Auto-discover all reserved labels from chain history (parses setReserved* call data
   // from every tx that emitted a Reserved event, including Safe-wrapped execTransaction).
@@ -649,8 +688,9 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
       const data = (await res.json()) as { labels?: string[]; error?: string };
       if (data.error) throw new Error(data.error);
       if (Array.isArray(data.labels) && data.labels.length > 0) {
+        const fresh = data.labels.filter((l) => !blocklist.has(l));
         setCandidates((prev) =>
-          Array.from(new Set([...prev, ...data.labels!])).sort(),
+          Array.from(new Set([...prev, ...fresh])).sort(),
         );
       }
     } catch (e) {
@@ -891,7 +931,14 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
   };
 
   const onUntrack = (label: string) => {
-    // Remove from local candidate pool only — does NOT unreserve on-chain.
+    // Remove from local candidate pool AND add to persistent blocklist so
+    // it doesn't get re-merged from /api/reserved-labels on TLD switch or
+    // batch-completion auto-refresh. Does NOT unreserve on-chain.
+    setBlocklist((prev) => {
+      const next = new Set(prev);
+      next.add(label);
+      return next;
+    });
     setCandidates((prev) => prev.filter((x) => x !== label));
   };
 
@@ -1048,6 +1095,19 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
         </button>
       </div>
 
+      {blocklist.size > 0 && (
+        <div className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-1.5 text-[11px] text-white/45">
+          <span>{blocklist.size} label{blocklist.size === 1 ? "" : "s"} untracked.</span>
+          <button
+            onClick={() => setBlocklist(new Set())}
+            className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] text-white/60 hover:border-cyan/30 hover:text-cyan"
+            title="Clear the untrack blocklist — labels will reappear on next API refresh"
+          >
+            Restore untracked
+          </button>
+        </div>
+      )}
+
       <div className="mt-3 flex items-center justify-between">
         <button
           onClick={onBatchSeed}
@@ -1167,7 +1227,7 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
                   <button
                     onClick={() => onUntrack(label)}
                     className="inline-flex items-center gap-1 rounded-full border border-white/5 bg-white/[0.02] px-2 py-0.5 text-[10px] text-white/40 transition hover:border-white/20 hover:text-white/70"
-                    title="Remove from local tracking list (does not touch chain)"
+                    title="Remove from tracking list (persists across TLD switches + reloads). Does not touch chain. To restore, click Restore untracked."
                   >
                     <X className="h-3 w-3" /> untrack
                   </button>
