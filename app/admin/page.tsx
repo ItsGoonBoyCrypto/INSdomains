@@ -586,7 +586,7 @@ type BatchTldStatus = "pending" | "signing" | "mined" | "failed";
 
 type BatchOp = {
   /** Which contract function to call on each TLD's Registry. */
-  fn: "setReserved" | "setReservedBatch" | "adminMint";
+  fn: "setReserved" | "setReservedBatch" | "adminMint" | "setLengthPrice" | "setPremiumPrice";
   /** Arg builder per TLD. Most ops use the same args for every TLD;
    *  the Sync flow uses per-TLD diffs and so receives a builder. */
   argsForTld: (tld: Tld) => readonly unknown[];
@@ -1507,6 +1507,25 @@ function BulkReserveSection({
 }
 
 /* ── Tier pricing ───────────────────────────────────────── */
+/** Canonical length-tier schedule. Defined in iKAS (whole units). The Sync
+ *  flow reads each live TLD's on-chain values and queues setLengthPrice
+ *  writes for any tier that doesn't match. */
+const CANONICAL_TIER_SCHEDULE = [
+  { bucket: 1 as const, priceIkas: 1000 },
+  { bucket: 2 as const, priceIkas: 500 },
+  { bucket: 3 as const, priceIkas: 250 },
+  { bucket: 4 as const, priceIkas: 50 },
+  { bucket: 5 as const, priceIkas: 30 },
+] as const;
+
+/** One write in the Sync queue — set a single (TLD, bucket) to a price. */
+type TierSyncStep = {
+  tld: Tld;
+  bucket: number;
+  fromIkas: number | "RESERVED" | null;
+  toIkas: number;
+};
+
 function TierPricingCard({ tld }: { tld: Tld }) {
   const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
   const REGISTRY_LIVE = isTldLive(tld);
@@ -1518,7 +1537,23 @@ function TierPricingCard({ tld }: { tld: Tld }) {
     { bucket: 5, label: "5–32", hint: "standard" },
   ] as const;
 
-  // Read all 5 buckets in one batch (reads are always enabled to reflect on-chain state).
+  // "Apply to all live TLDs" toggle — when ON, every row's Save fans out
+  // to .ins → .igra → .ikas in sequence. Persisted across sessions.
+  const [applyAllTlds, setApplyAllTlds] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = typeof window !== "undefined"
+        ? window.localStorage.getItem("ins:tierApplyAll")
+        : null;
+      if (saved === "true") setApplyAllTlds(true);
+    } catch { /* noop */ }
+  }, []);
+  const onToggleApplyAll = (v: boolean) => {
+    setApplyAllTlds(v);
+    try { window.localStorage.setItem("ins:tierApplyAll", String(v)); } catch { /* noop */ }
+  };
+
+  // Read all 5 buckets from active TLD (for the rows).
   const { data: prices, refetch } = useReadContracts({
     contracts: tiers.map((t) => ({
       address: REGISTRY_ADDRESS,
@@ -1529,12 +1564,285 @@ function TierPricingCard({ tld }: { tld: Tld }) {
     query: { enabled: REGISTRY_LIVE },
   });
 
+  // Read all 5 buckets from EVERY live TLD — feeds the canonical Sync diff.
+  // Order: LIVE_TLDS × CANONICAL_TIER_SCHEDULE (5-step stride).
+  const { data: allTldPrices, refetch: refetchAllTlds } = useReadContracts({
+    contracts: LIVE_TLDS.flatMap((t) =>
+      CANONICAL_TIER_SCHEDULE.map((tier) => ({
+        address: REGISTRY_ADDRESSES[t],
+        abi: REGISTRY_ABI,
+        functionName: "lengthPrice" as const,
+        args: [tier.bucket] as const,
+      })),
+    ),
+    query: { enabled: LIVE_TLDS.length > 1 },
+  });
+
+  const decode = (raw: bigint | undefined): number | "RESERVED" | null => {
+    if (raw === undefined) return null;
+    if (raw === BigInt(TIER_RESERVED) || raw > 10n ** 30n) return "RESERVED";
+    return Number(formatEther(raw));
+  };
+
+  // Compute the diff vs canonical for every (live TLD × bucket).
+  // null = still loading; [] = all in sync; non-empty = needs sync.
+  const canonicalDiff = useMemo<TierSyncStep[] | null>(() => {
+    if (LIVE_TLDS.length < 2) return null;
+    if (!allTldPrices || allTldPrices.length === 0) return null;
+    const stride = CANONICAL_TIER_SCHEDULE.length;
+    const out: TierSyncStep[] = [];
+    for (let ti = 0; ti < LIVE_TLDS.length; ti++) {
+      const t = LIVE_TLDS[ti];
+      for (let bi = 0; bi < stride; bi++) {
+        const idx = ti * stride + bi;
+        const raw = allTldPrices[idx]?.result as bigint | undefined;
+        const cur = decode(raw);
+        if (cur === null) return null; // still loading at least one cell
+        const tier = CANONICAL_TIER_SCHEDULE[bi];
+        if (cur === "RESERVED" || cur !== tier.priceIkas) {
+          out.push({ tld: t, bucket: tier.bucket, fromIkas: cur, toIkas: tier.priceIkas });
+        }
+      }
+    }
+    return out;
+  }, [allTldPrices]);
+
+  /* ── Multi-TLD batch (per-row Save fan-out) ───────────────── */
+  const [batchOp, setBatchOp] = useState<BatchOp | null>(null);
+  const [batchIdx, setBatchIdx] = useState(0);
+  const [batchStatuses, setBatchStatuses] = useState<Record<Tld, BatchTldStatus>>({
+    ins: "pending", igra: "pending", ikas: "pending",
+  });
+  const [batchTxHashes, setBatchTxHashes] = useState<Partial<Record<Tld, `0x${string}`>>>({});
+  const processedHashRef = useRef<`0x${string}` | null>(null);
+
+  const { writeContract: writeBatch, data: batchHash, isPending: batchPending, error: batchError, reset: batchReset } = useWriteContract();
+  const { isLoading: batchConfirming, isSuccess: batchConfirmed } = useWaitForTransactionReceipt({ hash: batchHash });
+
+  const fireNextInBatch = (op: BatchOp, idx: number) => {
+    if (idx >= op.tlds.length) return;
+    const nextTld = op.tlds[idx];
+    setBatchStatuses((s) => ({ ...s, [nextTld]: "signing" }));
+    batchReset();
+    writeBatch({
+      address: REGISTRY_ADDRESSES[nextTld],
+      abi: REGISTRY_ABI,
+      functionName: op.fn,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      args: op.argsForTld(nextTld) as any,
+    });
+  };
+
+  const startBatch = (op: BatchOp) => {
+    if (batchPending || batchConfirming || batchOp) return;
+    setBatchStatuses({ ins: "pending", igra: "pending", ikas: "pending" });
+    setBatchTxHashes({});
+    processedHashRef.current = null;
+    setBatchOp(op);
+    setBatchIdx(0);
+    fireNextInBatch(op, 0);
+  };
+
+  useEffect(() => {
+    if (!batchOp || !batchConfirmed || !batchHash) return;
+    if (processedHashRef.current === batchHash) return;
+    processedHashRef.current = batchHash;
+
+    const currentTld = batchOp.tlds[batchIdx];
+    setBatchStatuses((s) => ({ ...s, [currentTld]: "mined" }));
+    setBatchTxHashes((m) => ({ ...m, [currentTld]: batchHash }));
+    if (batchIdx + 1 < batchOp.tlds.length) {
+      const nextIdx = batchIdx + 1;
+      setBatchIdx(nextIdx);
+      fireNextInBatch(batchOp, nextIdx);
+    } else {
+      refetch(); refetchAllTlds();
+      const t = setTimeout(() => {
+        setBatchOp(null);
+        setBatchTxHashes({});
+        processedHashRef.current = null;
+        batchReset();
+      }, 3000);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [batchConfirmed, batchHash]);
+
+  useEffect(() => {
+    if (!batchOp || !batchError) return;
+    const currentTld = batchOp.tlds[batchIdx];
+    setBatchStatuses((s) => ({ ...s, [currentTld]: "failed" }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [batchError]);
+
+  const retryBatchFromFailed = () => {
+    if (!batchOp) return;
+    const failedIdx = batchOp.tlds.findIndex((t) => batchStatuses[t] === "failed");
+    if (failedIdx === -1) return;
+    setBatchStatuses((s) => ({ ...s, [batchOp.tlds[failedIdx]]: "pending" }));
+    setBatchIdx(failedIdx);
+    processedHashRef.current = null;
+    batchReset();
+    fireNextInBatch(batchOp, failedIdx);
+  };
+
+  const cancelBatch = () => {
+    setBatchOp(null);
+    setBatchIdx(0);
+    setBatchStatuses({ ins: "pending", igra: "pending", ikas: "pending" });
+    setBatchTxHashes({});
+    processedHashRef.current = null;
+    batchReset();
+  };
+
+  const tldQueue = (): Tld[] => {
+    if (!applyAllTlds) return [tld];
+    const others = (TLDS as readonly Tld[]).filter((t) => t !== tld && isTldLive(t));
+    return [tld, ...others];
+  };
+
+  // Called by TierRow's Save when the apply-all toggle is on.
+  const onRowSaveBatch = (bucket: number, priceBig: bigint, displayPrice: string) => {
+    startBatch({
+      fn: "setLengthPrice",
+      argsForTld: () => [bucket, priceBig],
+      label: `Bucket ${bucket} → ${displayPrice} \u00d7 ${tldQueue().length} TLDs`,
+      tlds: tldQueue(),
+    });
+  };
+
+  /* ── Canonical-Sync step queue ─────────────────────────────
+   * Step-based (not per-TLD) because a sync can need 0-15 writes
+   * spread unevenly across TLDs. Each step is one (tld,bucket,price)
+   * setLengthPrice call. */
+  const [syncSteps, setSyncSteps] = useState<TierSyncStep[] | null>(null);
+  const [syncIdx, setSyncIdx] = useState(0);
+  const [syncStatuses, setSyncStatuses] = useState<BatchTldStatus[]>([]);
+  const [syncHashes, setSyncHashes] = useState<(`0x${string}` | undefined)[]>([]);
+  const syncProcessedHashRef = useRef<`0x${string}` | null>(null);
+
+  const { writeContract: writeSync, data: syncHash, isPending: syncPending, error: syncError, reset: syncReset } = useWriteContract();
+  const { isLoading: syncConfirming, isSuccess: syncConfirmed } = useWaitForTransactionReceipt({ hash: syncHash });
+
+  const fireNextInSync = (steps: TierSyncStep[], idx: number) => {
+    if (idx >= steps.length) return;
+    const step = steps[idx];
+    setSyncStatuses((arr) => arr.map((s, i) => (i === idx ? "signing" : s)));
+    syncReset();
+    writeSync({
+      address: REGISTRY_ADDRESSES[step.tld],
+      abi: REGISTRY_ABI,
+      functionName: "setLengthPrice",
+      args: [step.bucket, parseEther(String(step.toIkas))],
+    });
+  };
+
+  const startSync = () => {
+    if (!canonicalDiff || canonicalDiff.length === 0 || syncSteps) return;
+    setSyncSteps(canonicalDiff);
+    setSyncIdx(0);
+    setSyncStatuses(canonicalDiff.map(() => "pending"));
+    setSyncHashes(canonicalDiff.map(() => undefined));
+    syncProcessedHashRef.current = null;
+    fireNextInSync(canonicalDiff, 0);
+  };
+
+  useEffect(() => {
+    if (!syncSteps || !syncConfirmed || !syncHash) return;
+    if (syncProcessedHashRef.current === syncHash) return;
+    syncProcessedHashRef.current = syncHash;
+
+    setSyncStatuses((arr) => arr.map((s, i) => (i === syncIdx ? "mined" : s)));
+    setSyncHashes((arr) => arr.map((h, i) => (i === syncIdx ? syncHash : h)));
+    if (syncIdx + 1 < syncSteps.length) {
+      const nextIdx = syncIdx + 1;
+      setSyncIdx(nextIdx);
+      fireNextInSync(syncSteps, nextIdx);
+    } else {
+      refetch(); refetchAllTlds();
+      const t = setTimeout(() => {
+        setSyncSteps(null);
+        setSyncStatuses([]);
+        setSyncHashes([]);
+        setSyncIdx(0);
+        syncProcessedHashRef.current = null;
+        syncReset();
+      }, 3500);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [syncConfirmed, syncHash]);
+
+  useEffect(() => {
+    if (!syncSteps || !syncError) return;
+    setSyncStatuses((arr) => arr.map((s, i) => (i === syncIdx ? "failed" : s)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [syncError]);
+
+  const retrySyncFromFailed = () => {
+    if (!syncSteps) return;
+    const failedIdx = syncStatuses.findIndex((s) => s === "failed");
+    if (failedIdx === -1) return;
+    setSyncStatuses((arr) => arr.map((s, i) => (i === failedIdx ? "pending" : s)));
+    setSyncIdx(failedIdx);
+    syncProcessedHashRef.current = null;
+    syncReset();
+    fireNextInSync(syncSteps, failedIdx);
+  };
+
+  const cancelSync = () => {
+    setSyncSteps(null);
+    setSyncStatuses([]);
+    setSyncHashes([]);
+    setSyncIdx(0);
+    syncProcessedHashRef.current = null;
+    syncReset();
+  };
+
+  const syncBusy = !!syncSteps || syncPending || syncConfirming;
+  const batchBusy = !!batchOp || batchPending || batchConfirming;
+  const anyBusy = batchBusy || syncBusy;
+
   return (
     <Card
       icon={<Tag className="h-5 w-5 text-cyan" />}
       title="Length tier pricing"
       subtitle="setLengthPrice(bucket, price) · price in iKAS"
     >
+      <ApplyAllTldsToggle
+        on={applyAllTlds}
+        onToggle={onToggleApplyAll}
+        currentTld={tld}
+        liveTldCount={LIVE_TLDS.length}
+        disabled={anyBusy}
+      />
+
+      {batchOp && (
+        <MultiTldBatchProgress
+          op={batchOp}
+          statuses={batchStatuses}
+          txHashes={batchTxHashes}
+          activeIdx={batchIdx}
+          error={batchError}
+          onRetry={retryBatchFromFailed}
+          onCancel={cancelBatch}
+        />
+      )}
+
+      <CanonicalSyncRow
+        diff={canonicalDiff}
+        liveTldCount={LIVE_TLDS.length}
+        syncSteps={syncSteps}
+        syncStatuses={syncStatuses}
+        syncHashes={syncHashes}
+        syncIdx={syncIdx}
+        syncError={syncError}
+        onStartSync={startSync}
+        onRetry={retrySyncFromFailed}
+        onCancel={cancelSync}
+        disabled={anyBusy && !syncBusy}
+      />
+
       <div className="space-y-2">
         {tiers.map((t, i) => {
           const raw = prices?.[i]?.result as bigint | undefined;
@@ -1553,7 +1861,11 @@ function TierPricingCard({ tld }: { tld: Tld }) {
               label={t.label}
               hint={t.hint}
               current={current}
-              onSaved={() => refetch()}
+              onSaved={() => { refetch(); refetchAllTlds(); }}
+              applyAllTlds={applyAllTlds && LIVE_TLDS.length > 1}
+              onSaveBatch={onRowSaveBatch}
+              batchInFlight={anyBusy}
+              tldQueueLen={tldQueue().length}
             />
           );
         })}
@@ -1562,8 +1874,151 @@ function TierPricingCard({ tld }: { tld: Tld }) {
   );
 }
 
+/** Canonical-sync banner. Shows the diff between on-chain and the canonical
+ *  schedule (1000/500/250/50/30). When syncing, shows step-by-step progress. */
+function CanonicalSyncRow({
+  diff, liveTldCount, syncSteps, syncStatuses, syncHashes, syncIdx, syncError,
+  onStartSync, onRetry, onCancel, disabled,
+}: {
+  diff: TierSyncStep[] | null;
+  liveTldCount: number;
+  syncSteps: TierSyncStep[] | null;
+  syncStatuses: BatchTldStatus[];
+  syncHashes: (`0x${string}` | undefined)[];
+  syncIdx: number;
+  syncError: { message: string } | null;
+  onStartSync: () => void;
+  onRetry: () => void;
+  onCancel: () => void;
+  disabled: boolean;
+}) {
+  if (liveTldCount < 2) return null;
+  // Active sync UI takes priority over diff preview.
+  if (syncSteps) {
+    const failed = syncStatuses.some((s) => s === "failed");
+    const allMined = syncStatuses.every((s) => s === "mined");
+    return (
+      <div className={`mb-3 rounded-xl border p-3 transition ${
+        failed   ? "border-red-500/40 bg-red-500/[0.04]" :
+        allMined ? "border-emerald-500/40 bg-emerald-500/[0.05]" :
+                   "border-cyan/40 bg-cyan/[0.04]"
+      }`}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-bold text-white">
+              {allMined ? <><Check className="mr-1 inline h-3 w-3 text-emerald-300" />Canonical sync — done</> : "Syncing canonical pricing"}
+            </div>
+            {!allMined && !failed && (
+              <div className="mt-0.5 text-[11px] text-white/55">
+                Step {Math.min(syncIdx + 1, syncSteps.length)} of {syncSteps.length}
+                {syncSteps[syncIdx] && (
+                  <> — {tldSuffix(syncSteps[syncIdx].tld)} · bucket {syncSteps[syncIdx].bucket} → {syncSteps[syncIdx].toIkas} iKAS</>
+                )}
+              </div>
+            )}
+            {allMined && (
+              <div className="mt-0.5 text-[11px] text-emerald-200/80">
+                All {syncSteps.length} writes confirmed on-chain.
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {syncSteps.map((step, i) => {
+            const s = syncStatuses[i];
+            const cls =
+              s === "mined"   ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20" :
+              s === "signing" ? "border-cyan/40 bg-cyan/15 text-cyan" :
+              s === "failed"  ? "border-red-500/40 bg-red-500/10 text-red-300" :
+                                "border-white/10 bg-white/[0.04] text-white/55";
+            const hash = syncHashes[i];
+            const inner = (
+              <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-mono ${cls}`}>
+                {s === "signing" && <Loader2 className="h-2.5 w-2.5 animate-spin" />}
+                {s === "mined"   && <Check className="h-2.5 w-2.5" />}
+                {tldSuffix(step.tld)}·b{step.bucket}
+              </span>
+            );
+            return s === "mined" && hash ? (
+              <a
+                key={i}
+                href={`${IGRA_EXPLORER}/tx/${hash}`}
+                target="_blank"
+                rel="noreferrer"
+                title={`bucket ${step.bucket} → ${step.toIkas} iKAS`}
+                className="transition hover:opacity-90"
+              >
+                {inner}
+              </a>
+            ) : (
+              <span key={i} title={`bucket ${step.bucket} → ${step.toIkas} iKAS`}>{inner}</span>
+            );
+          })}
+        </div>
+        {failed && (
+          <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-red-300">
+            <span className="truncate" title={syncError?.message}>
+              Failed at step {syncIdx + 1} — {syncError?.message?.split("\n")[0] ?? "unknown error"}
+            </span>
+            <span className="flex flex-none gap-1">
+              <button onClick={onRetry} className="rounded-md border border-red-500/40 bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-200 hover:bg-red-500/20">Retry</button>
+              <button onClick={onCancel} className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] text-white/60 hover:text-white">Cancel</button>
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Idle: show diff preview / "all in sync" / "loading" state.
+  if (diff === null) {
+    return (
+      <div className="mb-3 rounded-xl border border-white/10 bg-white/[0.02] p-3 text-[11px] text-white/45">
+        <Loader2 className="mr-1 inline h-3 w-3 animate-spin" /> Reading on-chain prices across {liveTldCount} TLDs…
+      </div>
+    );
+  }
+  if (diff.length === 0) {
+    return (
+      <div className="mb-3 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.04] px-3 py-2 text-[11px] text-emerald-200/80">
+        <Check className="h-3 w-3" /> All {liveTldCount} TLDs match the canonical schedule (1000 / 500 / 250 / 50 / 30 iKAS).
+      </div>
+    );
+  }
+  return (
+    <div className="mb-3 rounded-xl border border-plum/30 bg-plum/[0.04] p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex-1 text-[11px] text-white/65">
+          <span className="font-bold text-plum">Sync to canonical</span>
+          {" "}— {diff.length} bucket{diff.length === 1 ? "" : "s"} differ from <span className="font-mono text-white/75">1000 / 500 / 250 / 50 / 30</span>.
+        </div>
+        <button
+          onClick={onStartSync}
+          disabled={disabled}
+          className="rounded-lg border border-plum/40 bg-plum/10 px-3 py-1 text-xs font-bold text-plum transition hover:bg-plum/20 disabled:opacity-40"
+        >
+          Apply {diff.length} change{diff.length === 1 ? "" : "s"}
+        </button>
+      </div>
+      <div className="mt-2 space-y-0.5 text-[11px] text-white/55">
+        {diff.map((d, i) => (
+          <div key={i} className="font-mono">
+            <span className="text-white/70">{tldSuffix(d.tld)}</span>
+            {" · b"}{d.bucket}
+            {": "}
+            <span className="text-amber-300/80">{d.fromIkas === "RESERVED" ? "RESERVED" : `${d.fromIkas} iKAS`}</span>
+            {" → "}
+            <span className="text-emerald-300">{d.toIkas} iKAS</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function TierRow({
   tld, bucket, label, hint, current, onSaved,
+  applyAllTlds, onSaveBatch, batchInFlight, tldQueueLen,
 }: {
   tld: Tld;
   bucket: number;
@@ -1571,6 +2026,14 @@ function TierRow({
   hint: string;
   current: number | "RESERVED" | null;
   onSaved: () => void;
+  /** When true, Save fans out via onSaveBatch instead of single-TLD write. */
+  applyAllTlds: boolean;
+  /** Trigger a multi-TLD batch from the parent card. */
+  onSaveBatch: (bucket: number, priceBig: bigint, displayPrice: string) => void;
+  /** Disables Save while ANY batch (this row's or another row's) is mid-flight. */
+  batchInFlight: boolean;
+  /** Number of TLDs the batch will touch (for the button label). */
+  tldQueueLen: number;
 }) {
   const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
   const REGISTRY_LIVE = isTldLive(tld);
@@ -1602,6 +2065,11 @@ function TierRow({
     const priceBig = isReservedInput
       ? (2n ** 256n - 1n) // TIER_RESERVED sentinel
       : parseEther(String(parsed));
+    if (applyAllTlds) {
+      const display = isReservedInput ? "RESERVED" : `${parsed} iKAS`;
+      onSaveBatch(bucket, priceBig, display);
+      return;
+    }
     writeContract({
       address: REGISTRY_ADDRESS,
       abi: REGISTRY_ABI,
@@ -1609,6 +2077,10 @@ function TierRow({
       args: [bucket, priceBig],
     });
   };
+
+  // Whether to disable the button — single-TLD mode looks at local state;
+  // multi-TLD mode looks at the parent's batch flag.
+  const disableSave = !validInput || !dirty || !REGISTRY_LIVE || busy || isConfirmed || (applyAllTlds && batchInFlight);
 
   return (
     <div className="flex items-center gap-2 rounded-xl border border-white/5 bg-white/[0.02] p-3">
@@ -1628,11 +2100,11 @@ function TierRow({
       </div>
       <button
         onClick={onSave}
-        disabled={!validInput || !dirty || !REGISTRY_LIVE || busy || isConfirmed}
+        disabled={disableSave}
         className="rounded-lg border border-cyan/30 bg-cyan/10 px-3 py-1 text-xs font-bold text-cyan transition hover:bg-cyan/20 disabled:opacity-40"
-        title={error?.message}
+        title={error?.message ?? (applyAllTlds ? `Save to ${tldQueueLen} TLDs` : `Save to ${tldSuffix(tld)} only`)}
       >
-        {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : isConfirmed ? "Saved" : "Save"}
+        {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : isConfirmed ? "Saved" : applyAllTlds && tldQueueLen > 1 ? `Save \u00d7 ${tldQueueLen}` : "Save"}
       </button>
     </div>
   );
@@ -1655,7 +2127,130 @@ function PremiumOverridesCard({ tld }: { tld: Tld }) {
   const parsed = Number(price);
   const valid = isValidLabel(clean) && Number.isFinite(parsed) && parsed >= 0;
 
+  // "Apply premium override to all 3 TLDs" toggle — persisted across sessions.
+  const [applyAllTlds, setApplyAllTlds] = useState(false);
   useEffect(() => {
+    try {
+      const saved = typeof window !== "undefined"
+        ? window.localStorage.getItem("ins:premiumApplyAll")
+        : null;
+      if (saved === "true") setApplyAllTlds(true);
+    } catch { /* noop */ }
+  }, []);
+  const onToggleApplyAll = (v: boolean) => {
+    setApplyAllTlds(v);
+    try { window.localStorage.setItem("ins:premiumApplyAll", String(v)); } catch { /* noop */ }
+  };
+
+  // Multi-TLD batch state (mirrors AdminMintCard / ReservedNamesCard).
+  const [batchOp, setBatchOp] = useState<BatchOp | null>(null);
+  const [batchIdx, setBatchIdx] = useState(0);
+  const [batchStatuses, setBatchStatuses] = useState<Record<Tld, BatchTldStatus>>({
+    ins: "pending", igra: "pending", ikas: "pending",
+  });
+  const [batchTxHashes, setBatchTxHashes] = useState<Partial<Record<Tld, `0x${string}`>>>({});
+  const processedHashRef = useRef<`0x${string}` | null>(null);
+
+  const fireNextInBatch = (op: BatchOp, idx: number) => {
+    if (idx >= op.tlds.length) return;
+    const nextTld = op.tlds[idx];
+    setBatchStatuses((s) => ({ ...s, [nextTld]: "signing" }));
+    reset();
+    writeContract({
+      address: REGISTRY_ADDRESSES[nextTld],
+      abi: REGISTRY_ABI,
+      functionName: op.fn,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      args: op.argsForTld(nextTld) as any,
+    });
+  };
+
+  const startBatch = (op: BatchOp) => {
+    if (busy || batchOp) return;
+    setBatchStatuses({ ins: "pending", igra: "pending", ikas: "pending" });
+    setBatchTxHashes({});
+    processedHashRef.current = null;
+    setBatchOp(op);
+    setBatchIdx(0);
+    fireNextInBatch(op, 0);
+  };
+
+  // Confirm-watcher with hash-dedupe (see ReservedNamesCard for the
+  // wagmi-isSuccess-doesn't-cleanly-toggle gotcha).
+  useEffect(() => {
+    if (!batchOp || !isConfirmed || !hash) return;
+    if (processedHashRef.current === hash) return;
+    processedHashRef.current = hash;
+
+    const currentTld = batchOp.tlds[batchIdx];
+    setBatchStatuses((s) => ({ ...s, [currentTld]: "mined" }));
+    setBatchTxHashes((m) => ({ ...m, [currentTld]: hash }));
+    if (batchIdx + 1 < batchOp.tlds.length) {
+      const nextIdx = batchIdx + 1;
+      setBatchIdx(nextIdx);
+      fireNextInBatch(batchOp, nextIdx);
+    } else {
+      // Persist a single optimistic items-list update covering all TLDs
+      // (the override now lives on every TLD the batch touched).
+      if (pending?.kind === "set") {
+        setItems((prev) => [
+          { label: pending.label, price: pending.price ?? 0 },
+          ...prev.filter((x) => x.label !== pending.label),
+        ]);
+      } else if (pending?.kind === "clear") {
+        setItems((prev) => prev.filter((x) => x.label !== pending.label));
+      }
+      const t = setTimeout(() => {
+        setBatchOp(null);
+        setBatchTxHashes({});
+        processedHashRef.current = null;
+        setLabel(""); setPrice("");
+        setPending(null);
+        reset();
+      }, 3000);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConfirmed, hash]);
+
+  useEffect(() => {
+    if (!batchOp || !error) return;
+    const currentTld = batchOp.tlds[batchIdx];
+    setBatchStatuses((s) => ({ ...s, [currentTld]: "failed" }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error]);
+
+  const retryBatchFromFailed = () => {
+    if (!batchOp) return;
+    const failedIdx = batchOp.tlds.findIndex((t) => batchStatuses[t] === "failed");
+    if (failedIdx === -1) return;
+    setBatchStatuses((s) => ({ ...s, [batchOp.tlds[failedIdx]]: "pending" }));
+    setBatchIdx(failedIdx);
+    processedHashRef.current = null;
+    reset();
+    fireNextInBatch(batchOp, failedIdx);
+  };
+
+  const cancelBatch = () => {
+    setBatchOp(null);
+    setBatchIdx(0);
+    setBatchStatuses({ ins: "pending", igra: "pending", ikas: "pending" });
+    setBatchTxHashes({});
+    processedHashRef.current = null;
+    setPending(null);
+    reset();
+  };
+
+  const tldQueue = (): Tld[] => {
+    if (!applyAllTlds) return [tld];
+    const others = (TLDS as readonly Tld[]).filter((t) => t !== tld && isTldLive(t));
+    return [tld, ...others];
+  };
+
+  // Single-TLD confirm path (when toggle is off) — same optimistic update
+  // logic as before, but doesn't fire when a batch is in progress.
+  useEffect(() => {
+    if (batchOp) return;
     if (isConfirmed && pending) {
       if (pending.kind === "set") {
         setItems((prev) => [{ label: pending.label, price: pending.price ?? 0 }, ...prev.filter((x) => x.label !== pending.label)]);
@@ -1667,10 +2262,20 @@ function PremiumOverridesCard({ tld }: { tld: Tld }) {
       const t = setTimeout(reset, 1200);
       return () => clearTimeout(t);
     }
-  }, [isConfirmed, pending, reset]);
+  }, [isConfirmed, pending, reset, batchOp]);
 
   const onSet = () => {
     if (!valid) return;
+    if (applyAllTlds && tldQueue().length > 1) {
+      setPending({ kind: "set", label: clean, price: parsed });
+      startBatch({
+        fn: "setPremiumPrice",
+        argsForTld: () => [clean, parseEther(String(parsed))],
+        label: `Set "${clean}" \u00d7 ${tldQueue().length} TLDs @ ${formatPrice(parsed)}`,
+        tlds: tldQueue(),
+      });
+      return;
+    }
     setPending({ kind: "set", label: clean, price: parsed });
     writeContract({
       address: REGISTRY_ADDRESS,
@@ -1681,6 +2286,16 @@ function PremiumOverridesCard({ tld }: { tld: Tld }) {
   };
 
   const onClear = (l: string) => {
+    if (applyAllTlds && tldQueue().length > 1) {
+      setPending({ kind: "clear", label: l });
+      startBatch({
+        fn: "setPremiumPrice",
+        argsForTld: () => [l, 0n],
+        label: `Clear "${l}" \u00d7 ${tldQueue().length} TLDs`,
+        tlds: tldQueue(),
+      });
+      return;
+    }
     setPending({ kind: "clear", label: l });
     writeContract({
       address: REGISTRY_ADDRESS,
@@ -1696,6 +2311,26 @@ function PremiumOverridesCard({ tld }: { tld: Tld }) {
       title="Premium overrides"
       subtitle="setPremiumPrice(label, price) · 0 clears the override"
     >
+      <ApplyAllTldsToggle
+        on={applyAllTlds}
+        onToggle={onToggleApplyAll}
+        currentTld={tld}
+        liveTldCount={LIVE_TLDS.length}
+        disabled={busy || !!batchOp}
+      />
+
+      {batchOp && (
+        <MultiTldBatchProgress
+          op={batchOp}
+          statuses={batchStatuses}
+          txHashes={batchTxHashes}
+          activeIdx={batchIdx}
+          error={error}
+          onRetry={retryBatchFromFailed}
+          onCancel={cancelBatch}
+        />
+      )}
+
       <div className="grid grid-cols-[1fr_auto_auto] gap-2">
         <input
           value={label}
@@ -1712,10 +2347,10 @@ function PremiumOverridesCard({ tld }: { tld: Tld }) {
         />
         <button
           onClick={onSet}
-          disabled={!valid || !REGISTRY_LIVE || busy}
+          disabled={!valid || !REGISTRY_LIVE || busy || !!batchOp}
           className="rounded-xl border border-plum/30 bg-plum/10 px-4 text-sm font-semibold text-plum transition hover:bg-plum/20 disabled:opacity-40"
         >
-          {busy && pending?.kind === "set" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Set"}
+          {busy && pending?.kind === "set" ? <Loader2 className="h-4 w-4 animate-spin" /> : applyAllTlds && LIVE_TLDS.length > 1 ? `Set \u00d7 ${LIVE_TLDS.length}` : "Set"}
         </button>
       </div>
 
@@ -1728,13 +2363,16 @@ function PremiumOverridesCard({ tld }: { tld: Tld }) {
         {items.map((x) => (
           <li key={x.label} className="flex items-center justify-between px-3 py-2 text-sm">
             <span className="font-mono">
-              {x.label}<span className="text-white/30">.ins</span>
+              {x.label}
+              <span className="text-white/30">
+                {applyAllTlds && LIVE_TLDS.length > 1 ? ` (× ${LIVE_TLDS.length} TLDs)` : tldSuffix(tld)}
+              </span>
             </span>
             <div className="flex items-center gap-3">
               <span className="text-xs font-semibold text-plum">{formatPrice(x.price)}</span>
               <button
                 onClick={() => onClear(x.label)}
-                disabled={!REGISTRY_LIVE || busy}
+                disabled={!REGISTRY_LIVE || busy || !!batchOp}
                 className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[11px] text-white/60 transition hover:text-red-300 disabled:opacity-40"
               >
                 {busy && pending?.kind === "clear" && pending.label === x.label
