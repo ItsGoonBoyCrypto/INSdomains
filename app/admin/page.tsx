@@ -320,6 +320,12 @@ function AdminMintCard({ tld }: { tld: Tld }) {
     ins: "pending", igra: "pending", ikas: "pending",
   });
   const [batchTxHashes, setBatchTxHashes] = useState<Partial<Record<Tld, `0x${string}`>>>({});
+  /** Dedupe hash so we process each confirmed tx exactly once. wagmi's
+   *  useWaitForTransactionReceipt + useWriteContract don't always cleanly
+   *  toggle isSuccess back to false between sequential writes; adding hash
+   *  to the effect deps + ref-checking guarantees we don't miss a confirm
+   *  and don't re-process the same one. */
+  const processedHashRef = useRef<`0x${string}` | null>(null);
 
   const fireNextInBatch = (op: BatchOp, idx: number) => {
     if (idx >= op.tlds.length) return;
@@ -339,16 +345,24 @@ function AdminMintCard({ tld }: { tld: Tld }) {
     if (busy || batchOp) return;
     setBatchStatuses({ ins: "pending", igra: "pending", ikas: "pending" });
     setBatchTxHashes({});
+    processedHashRef.current = null;
     setBatchOp(op);
     setBatchIdx(0);
     fireNextInBatch(op, 0);
   };
 
+  // Confirm-watcher with hash-dedupe. Adding `hash` to deps means we re-run
+  // when wagmi swaps in the next tx's hash (not just when isConfirmed flips,
+  // which it sometimes doesn't between sequential writes). Ref-checking the
+  // hash ensures each unique tx is processed exactly once.
   useEffect(() => {
-    if (!batchOp || !isConfirmed) return;
+    if (!batchOp || !isConfirmed || !hash) return;
+    if (processedHashRef.current === hash) return;
+    processedHashRef.current = hash;
+
     const currentTld = batchOp.tlds[batchIdx];
     setBatchStatuses((s) => ({ ...s, [currentTld]: "mined" }));
-    if (hash) setBatchTxHashes((m) => ({ ...m, [currentTld]: hash }));
+    setBatchTxHashes((m) => ({ ...m, [currentTld]: hash }));
     if (batchIdx + 1 < batchOp.tlds.length) {
       const nextIdx = batchIdx + 1;
       setBatchIdx(nextIdx);
@@ -357,6 +371,7 @@ function AdminMintCard({ tld }: { tld: Tld }) {
       const t = setTimeout(() => {
         setBatchOp(null);
         setBatchTxHashes({});
+        processedHashRef.current = null;
         setLabel("");
         setTarget("");
         reset();
@@ -364,7 +379,7 @@ function AdminMintCard({ tld }: { tld: Tld }) {
       return () => clearTimeout(t);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConfirmed]);
+  }, [isConfirmed, hash]);
 
   useEffect(() => {
     if (!batchOp || !error) return;
@@ -379,6 +394,7 @@ function AdminMintCard({ tld }: { tld: Tld }) {
     if (failedIdx === -1) return;
     setBatchStatuses((s) => ({ ...s, [batchOp.tlds[failedIdx]]: "pending" }));
     setBatchIdx(failedIdx);
+    processedHashRef.current = null;
     reset();
     fireNextInBatch(batchOp, failedIdx);
   };
@@ -388,6 +404,7 @@ function AdminMintCard({ tld }: { tld: Tld }) {
     setBatchIdx(0);
     setBatchStatuses({ ins: "pending", igra: "pending", ikas: "pending" });
     setBatchTxHashes({});
+    processedHashRef.current = null;
     reset();
   };
 
@@ -586,6 +603,12 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
    *  valid after the batch advances to the next TLD (which would otherwise
    *  overwrite the single shared `hash` from useWriteContract). */
   const [batchTxHashes, setBatchTxHashes] = useState<Partial<Record<Tld, `0x${string}`>>>({});
+  /** Dedupe hash so we process each confirmed tx exactly once. wagmi's
+   *  useWaitForTransactionReceipt + useWriteContract don't always cleanly
+   *  toggle isSuccess back to false between sequential writes; adding hash
+   *  to the effect deps + ref-checking guarantees we don't miss a confirm
+   *  and don't re-process the same one. */
+  const processedHashRef = useRef<`0x${string}` | null>(null);
 
   // Candidate pool is seeded from: the in-code RESERVED_NAMES list + whatever is cached in
   // localStorage + whatever /api/reserved-labels discovers on-chain (auto-populated).
@@ -734,18 +757,23 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
     };
     setBatchStatuses(fresh);
     setBatchTxHashes({});
+    processedHashRef.current = null;
     setBatchOp(op);
     setBatchIdx(0);
     fireNextInBatch(op, 0);
   };
 
-  // On tx confirm during a batch, mark mined + capture this TLD's hash for
-  // per-chip explorer linking, then advance to next TLD.
+  // Confirm-watcher with hash-dedupe (see processedHashRef comment above).
+  // Adding `hash` to deps means we re-run when wagmi swaps in the next tx's
+  // hash; the ref ensures each unique tx is processed exactly once.
   useEffect(() => {
-    if (!batchOp || !isConfirmed) return;
+    if (!batchOp || !isConfirmed || !hash) return;
+    if (processedHashRef.current === hash) return;
+    processedHashRef.current = hash;
+
     const currentTld = batchOp.tlds[batchIdx];
     setBatchStatuses((s) => ({ ...s, [currentTld]: "mined" }));
-    if (hash) setBatchTxHashes((m) => ({ ...m, [currentTld]: hash }));
+    setBatchTxHashes((m) => ({ ...m, [currentTld]: hash }));
     if (batchIdx + 1 < batchOp.tlds.length) {
       const nextIdx = batchIdx + 1;
       setBatchIdx(nextIdx);
@@ -759,12 +787,13 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
       const t = setTimeout(() => {
         setBatchOp(null);
         setBatchTxHashes({});
+        processedHashRef.current = null;
         reset();
       }, 3000);
       return () => clearTimeout(t);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConfirmed]);
+  }, [isConfirmed, hash]);
 
   // On tx error during a batch, mark failed + freeze queue (operator picks
   // retry from the failed step or cancels the whole batch).
@@ -781,6 +810,7 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
     if (failedIdx === -1) return;
     setBatchStatuses((s) => ({ ...s, [batchOp.tlds[failedIdx]]: "pending" }));
     setBatchIdx(failedIdx);
+    processedHashRef.current = null;
     reset();
     fireNextInBatch(batchOp, failedIdx);
   };
@@ -790,6 +820,7 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
     setBatchIdx(0);
     setBatchStatuses({ ins: "pending", igra: "pending", ikas: "pending" });
     setBatchTxHashes({});
+    processedHashRef.current = null;
     reset();
   };
 
