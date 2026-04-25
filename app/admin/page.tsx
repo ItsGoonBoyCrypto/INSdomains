@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ShieldCheck, Lock, Gift, Tag, Gem, ArrowRight, Loader2,
   Check, Plus, Trash2, Wallet, AlertTriangle, Settings2, ExternalLink,
-  ClipboardList, X, Store, Pause, Play, Rocket, Star,
+  ClipboardList, X, Store, Pause, Play, Rocket, Star, Sparkles, RefreshCw,
 } from "lucide-react";
 import {
   useAccount,
@@ -180,6 +180,7 @@ function AdminDashboard() {
         <TierPricingCard tld={activeTld} />
         <PremiumOverridesCard tld={activeTld} />
         <PreLaunchListingsCard tld={activeTld} />
+        <CleanupCard tld={activeTld} />
         <TreasuryCard tld={activeTld} />
         <MarketplaceCard tld={activeTld} />
         <OwnershipCard tld={activeTld} />
@@ -3230,6 +3231,341 @@ function PfBadge({ ok, on, off }: { ok: boolean; on: string; off: string }) {
       {ok ? <Check className="h-2.5 w-2.5" /> : <Plus className="h-2.5 w-2.5" />}
       {ok ? on : off}
     </span>
+  );
+}
+
+/* ── Cleanup ──────────────────────────────────────────────
+ * Pre-launch (and ongoing) janitor card. Discovers two classes of
+ * stale on-chain artifacts and exposes one-click cleanup actions:
+ *
+ *   1. Active marketplace listings — every (TLD, tokenId) where
+ *      getActiveListing(tokenId).active is true. One-click cancel
+ *      (cancelListing(tokenId)) — only valid when seller == you.
+ *
+ *   2. Premium-price overrides — every label with a non-zero
+ *      premiumPrice on at least one TLD. Discovered by scanning the
+ *      reserved-labels seed list + minted-labels (via labelOf scan
+ *      across totalSupply on each TLD). One-click clear sets
+ *      setPremiumPrice(label, 0) on whichever TLDs the override is
+ *      currently set, with an "Apply to all 3" toggle to fan out
+ *      a wholesale clear in one batch.
+ *
+ * Both flows reuse the per-TLD chip strip / step queue patterns
+ * from the other admin cards.
+ */
+function CleanupCard({ tld: _tld }: { tld: Tld }) {
+  const { address } = useAccount();
+  const publicClient = usePublicClient();
+
+  // ── Discovered state ─────────────────────────────────────
+  const [activeListings, setActiveListings] = useState<Array<{
+    tld: Tld;
+    tokenId: bigint;
+    label: string;
+    seller: `0x${string}`;
+    price: bigint;
+    featured: boolean;
+    expiry: bigint;
+  }> | null>(null);
+
+  const [premiumLabels, setPremiumLabels] = useState<Array<{
+    label: string;
+    perTld: Record<Tld, bigint>; // 0n if not set on that TLD
+  }> | null>(null);
+
+  const [scanning, setScanning] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+
+  /**
+   * Discover all active listings + premium overrides across every live TLD.
+   * Per TLD: read totalSupply, then iterate getActiveListing for each
+   * tokenId in [1..totalSupply]. For premiums: pull the union of
+   * /api/reserved-labels?tld=* labels + the labelOf for every minted
+   * tokenId, then read premiumPrice on each Registry.
+   */
+  const runScan = async () => {
+    if (!publicClient) return;
+    setScanning(true);
+    setScanError(null);
+    try {
+      // ── Phase 1: per-TLD totalSupply + labels-via-labelOf + active listings
+      const listings: NonNullable<typeof activeListings> = [];
+      const mintedLabels = new Set<string>();
+
+      for (const t of LIVE_TLDS) {
+        const supply = (await publicClient.readContract({
+          address: REGISTRY_ADDRESSES[t],
+          abi: REGISTRY_ABI,
+          functionName: "totalSupply",
+          args: [],
+        })) as bigint;
+
+        // Tokens are 1-indexed; iterate 1..supply
+        for (let i = 1n; i <= supply; i++) {
+          // Read label for display
+          let label = "";
+          try {
+            label = (await publicClient.readContract({
+              address: REGISTRY_ADDRESSES[t],
+              abi: REGISTRY_ABI,
+              functionName: "labelOf",
+              args: [i],
+            })) as string;
+          } catch { /* tokenId may not exist — burned; skip */ continue; }
+          if (label) mintedLabels.add(label);
+
+          // Read active listing (may be empty struct)
+          const listing = (await publicClient.readContract({
+            address: MARKETPLACE_ADDRESSES[t],
+            abi: MARKETPLACE_ABI,
+            functionName: "getActiveListing",
+            args: [i],
+          })) as { seller: `0x${string}`; expiry: bigint; featured: boolean; active: boolean; price: bigint };
+
+          if (listing.active) {
+            listings.push({
+              tld: t,
+              tokenId: i,
+              label,
+              seller: listing.seller,
+              price: listing.price,
+              featured: listing.featured,
+              expiry: listing.expiry,
+            });
+          }
+        }
+      }
+
+      // ── Phase 2: premium overrides
+      // Union of: /api/reserved-labels?tld=* across all live TLDs + minted labels.
+      const labelUnion = new Set<string>(mintedLabels);
+      for (const t of LIVE_TLDS) {
+        try {
+          const res = await fetch(`/api/reserved-labels?tld=${t}`);
+          if (res.ok) {
+            const data = (await res.json()) as { labels?: string[] };
+            data.labels?.forEach((l) => labelUnion.add(l));
+          }
+        } catch { /* non-fatal — fall through with what we have */ }
+      }
+
+      const premiums: NonNullable<typeof premiumLabels> = [];
+      for (const label of Array.from(labelUnion).sort()) {
+        const perTld = { ins: 0n, igra: 0n, ikas: 0n } as Record<Tld, bigint>;
+        let anyNonZero = false;
+        for (const t of LIVE_TLDS) {
+          const p = (await publicClient.readContract({
+            address: REGISTRY_ADDRESSES[t],
+            abi: REGISTRY_ABI,
+            functionName: "premiumPrice",
+            args: [label],
+          })) as bigint;
+          perTld[t] = p;
+          if (p !== 0n) anyNonZero = true;
+        }
+        if (anyNonZero) premiums.push({ label, perTld });
+      }
+
+      setActiveListings(listings);
+      setPremiumLabels(premiums);
+    } catch (e) {
+      setScanError(e instanceof Error ? e.message : "scan failed");
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  // Auto-scan on first mount.
+  useEffect(() => {
+    if (publicClient && activeListings === null && !scanning) {
+      void runScan();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [publicClient]);
+
+  // ── Action runners — one-shot writes. We don't bother with the full
+  // step-queue UI here because each cleanup is one tx; users can chain
+  // them by clicking one after another.
+  const { writeContract, data: hash, isPending, error, reset } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
+  const busy = isPending || isConfirming;
+
+  const [pending, setPending] = useState<{
+    kind: "cancel" | "clearPremium";
+    tld?: Tld;
+    tokenId?: bigint;
+    label?: string;
+  } | null>(null);
+
+  // Auto-rescan after each successful cleanup so the list stays accurate.
+  useEffect(() => {
+    if (isConfirmed && pending) {
+      setPending(null);
+      const t = setTimeout(() => {
+        reset();
+        void runScan();
+      }, 1200);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConfirmed]);
+
+  const onCancelListing = (tld: Tld, tokenId: bigint) => {
+    if (busy) return;
+    setPending({ kind: "cancel", tld, tokenId });
+    writeContract({
+      address: MARKETPLACE_ADDRESSES[tld],
+      abi: MARKETPLACE_ABI,
+      functionName: "cancelListing",
+      args: [tokenId],
+    });
+  };
+
+  // Single-TLD clear — most common case (e.g. clear kaspa.ins which is
+  // the only TLD that actually has a premium set for kaspa).
+  const onClearPremiumOnTld = (tld: Tld, label: string) => {
+    if (busy) return;
+    setPending({ kind: "clearPremium", tld, label });
+    writeContract({
+      address: REGISTRY_ADDRESSES[tld],
+      abi: REGISTRY_ABI,
+      functionName: "setPremiumPrice",
+      args: [label, 0n],
+    });
+  };
+
+  const isMyListing = (seller: `0x${string}`) =>
+    address && seller.toLowerCase() === address.toLowerCase();
+
+  return (
+    <Card
+      icon={<Sparkles className="h-5 w-5 text-cyan" />}
+      title="Cleanup"
+      subtitle="discover + remove stale listings + premium overrides across all TLDs"
+    >
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="text-[11px] text-white/50">
+          {scanning
+            ? "Scanning all 3 TLDs…"
+            : activeListings === null
+            ? "Click Refresh to scan."
+            : `Last scan: ${activeListings.length} active listing${activeListings.length === 1 ? "" : "s"}, ${premiumLabels?.length ?? 0} premium override${(premiumLabels?.length ?? 0) === 1 ? "" : "s"} found.`}
+        </div>
+        <button
+          onClick={() => void runScan()}
+          disabled={scanning || busy}
+          className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1 text-[11px] text-white/70 hover:border-cyan/30 hover:text-cyan disabled:opacity-40"
+        >
+          {scanning ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+          Refresh
+        </button>
+      </div>
+
+      {scanError && (
+        <div className="mb-3 rounded-lg border border-red-500/30 bg-red-500/[0.04] p-2 text-[11px] text-red-300">
+          Scan error: {scanError}
+        </div>
+      )}
+
+      {/* ── Section 1: Active listings ──────────────────────── */}
+      <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">
+        Active listings
+      </div>
+      {activeListings && activeListings.length === 0 && (
+        <div className="mb-3 rounded-lg border border-emerald-500/30 bg-emerald-500/[0.04] px-3 py-2 text-[11px] text-emerald-200/80">
+          <Check className="mr-1 inline h-3 w-3" /> No active listings on any TLD.
+        </div>
+      )}
+      {activeListings && activeListings.length > 0 && (
+        <ul className="mb-4 divide-y divide-white/5 rounded-xl border border-white/5">
+          {activeListings.map((l) => {
+            const mine = isMyListing(l.seller);
+            const expiryStr =
+              l.expiry > 10n ** 18n
+                ? "forever"
+                : new Date(Number(l.expiry) * 1000).toISOString().slice(0, 10);
+            const isPendingThis = pending?.kind === "cancel" && pending.tld === l.tld && pending.tokenId === l.tokenId;
+            return (
+              <li key={`${l.tld}-${l.tokenId}`} className="flex items-center justify-between gap-3 px-3 py-2 text-[11px]">
+                <div className="min-w-0 flex-1">
+                  <div className="font-mono text-white/80">
+                    {l.label}<span className="text-white/40">{tldSuffix(l.tld)}</span>
+                    <span className="ml-2 text-white/30">#{l.tokenId.toString()}</span>
+                  </div>
+                  <div className="mt-0.5 flex flex-wrap gap-2 text-white/50">
+                    <span><span className="text-white/30">price:</span> {Number(formatEther(l.price)).toLocaleString()} iKAS</span>
+                    <span>{l.featured ? <span className="text-plum">★ featured</span> : "regular"}</span>
+                    <span><span className="text-white/30">expires:</span> {expiryStr}</span>
+                    <span><span className="text-white/30">seller:</span> {shortAddr(l.seller)}{mine ? " (you)" : ""}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => onCancelListing(l.tld, l.tokenId)}
+                  disabled={!mine || busy}
+                  title={mine ? "cancelListing(tokenId)" : "Only the seller can cancel — connect that wallet first."}
+                  className="inline-flex items-center gap-1 rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-1 text-[10px] font-bold text-red-200 transition hover:bg-red-500/20 disabled:opacity-30"
+                >
+                  {isPendingThis ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
+                  Cancel
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {/* ── Section 2: Premium overrides ───────────────────── */}
+      <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">
+        Premium overrides set
+      </div>
+      {premiumLabels && premiumLabels.length === 0 && (
+        <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/[0.04] px-3 py-2 text-[11px] text-emerald-200/80">
+          <Check className="mr-1 inline h-3 w-3" /> No premium overrides set on any TLD.
+        </div>
+      )}
+      {premiumLabels && premiumLabels.length > 0 && (
+        <ul className="divide-y divide-white/5 rounded-xl border border-white/5">
+          {premiumLabels.map((p) => (
+            <li key={p.label} className="px-3 py-2 text-[11px]">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-white/80">{p.label}</span>
+                <span className="text-[10px] text-white/40">premium override active</span>
+              </div>
+              <div className="mt-1 flex flex-wrap gap-1.5">
+                {(LIVE_TLDS as readonly Tld[]).map((t) => {
+                  const v = p.perTld[t];
+                  const isPendingThis = pending?.kind === "clearPremium" && pending.tld === t && pending.label === p.label;
+                  if (v === 0n) {
+                    return (
+                      <span key={t} className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.02] px-2 py-0.5 text-[10px] text-white/35">
+                        {tldSuffix(t)}: 0
+                      </span>
+                    );
+                  }
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => onClearPremiumOnTld(t, p.label)}
+                      disabled={busy}
+                      title={`Clear ${p.label}${tldSuffix(t)} premium → setPremiumPrice(label, 0)`}
+                      className="inline-flex items-center gap-1 rounded-full border border-plum/30 bg-plum/10 px-2 py-0.5 text-[10px] font-mono text-plum hover:bg-plum/20 disabled:opacity-40"
+                    >
+                      {isPendingThis ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Trash2 className="h-2.5 w-2.5" />}
+                      {tldSuffix(t)}: {Number(formatEther(v)).toLocaleString()}
+                    </button>
+                  );
+                })}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <TxError message={error?.message} onReset={reset} />
+      <p className="mt-3 text-[10px] text-white/35">
+        Cancellation is gated by seller-ownership (only your wallet can cancel its own listings). Premium clears use <span className="font-mono">setPremiumPrice(label, 0)</span> and require admin (Safe) ownership. Re-scans after every successful action.
+      </p>
+    </Card>
   );
 }
 
