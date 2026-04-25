@@ -256,14 +256,48 @@
 - [ ] Cancel/Retry buttons appear ONLY on failure
 - [ ] Success state is clearly distinguishable from failure state
 
-### 5c. Tier pricing
-- [ ] On `.ikas` tab, change 5-char tier from 10 → 20 iKAS
-- [ ] Writes `setLengthPrice(5, 20 ether)` on `.ikas` Registry only
-- [ ] Switch to `.ins` tab — its 5-char price still 10 iKAS (per-TLD independence)
+### 5c. Tier pricing — single TLD path
+- [ ] **Apply to all toggle is OFF**
+- [ ] On `.ikas` tab, change 5-char tier from current → 31 iKAS
+- [ ] Writes `setLengthPrice(5, 31 ether)` on `.ikas` Registry only
+- [ ] Switch to `.ins` tab — its 5-char price unchanged (per-TLD independence)
+- [ ] Reset back to canonical via the row (or use 5cii Sync)
 
-### 5d. Premium override
-- [ ] Set premium for `custom.ins` at 100 iKAS → setPremiumPrice tx
-- [ ] Visit `/app?q=custom` → `.ins` row shows 100 iKAS, `.igra`/`.ikas` rows show standard 10
+### 5cii. Tier pricing — Apply to all 3 TLDs
+- [ ] Toggle **Apply to all live TLDs** ON — toggle persists on reload
+- [ ] Save button label changes to "Save × 3" on every row
+- [ ] Change 5-char tier from 30 → 35 iKAS on `.ins` tab → fan-out batch fires
+- [ ] Per-TLD chips advance pending → signing → mined for `.ins` → `.igra` → `.ikas`
+- [ ] Click each mined chip → opens explorer with the right tx hash
+- [ ] Reload page → on-chain reads show 35 iKAS on all 3 TLDs
+
+### 5ciii. Canonical Sync — one-shot pricing standardisation
+- [ ] On TierPricingCard, the **Sync to canonical** banner shows the diff vs `1000 / 500 / 250 / 50 / 30`
+  - **NOTE:** initial state = `.igra` and `.ikas` need bucket 1 (1000), bucket 3 (250), bucket 5 (30) — `.ins` should already be in line
+- [ ] Click **Apply N changes** → step queue fires
+- [ ] Step chips advance one-by-one with `tld·bN` labels (e.g. `.igra·b1`, `.igra·b3`, `.igra·b5`, `.ikas·b1`, …)
+- [ ] Failed step pauses queue with Retry / Cancel
+- [ ] When done, banner flips to green "All 3 TLDs match the canonical schedule"
+- [ ] Reload page → banner stays green (next-run guarantee)
+- [ ] Visit `/app?q=alice` → all 3 TLDs show **30 iKAS** (5-char standard)
+- [ ] Visit `/app?q=ace` (3-char) → all 3 TLDs show **250 iKAS**
+
+### 5d. Premium override — single TLD path
+- [ ] **Apply to all toggle is OFF**
+- [ ] On `.ins` tab, set premium for `attester` at 2500 iKAS → setPremiumPrice tx
+- [ ] Visit `/app?q=attester` → `.ins` row shows 2500 iKAS, `.igra`/`.ikas` rows show 250 iKAS (3-char standard)
+- [ ] Items list correctly shows `attester.ins`
+
+### 5dii. Premium override — Apply to all 3 TLDs
+- [ ] Toggle **Apply to all live TLDs** ON — persists on reload
+- [ ] Set button label changes to "Set × 3"
+- [ ] Set premium for `kaspa` at 100,000 iKAS → fan-out batch fires
+- [ ] Per-TLD chips advance pending → signing → mined for all 3 TLDs
+- [ ] Click each mined chip → opens explorer
+- [ ] Items list shows `kaspa (× 3 TLDs)` (not `.ins` hardcoded)
+- [ ] Visit `/app?q=kaspa` → all 3 TLDs show 100,000 iKAS
+- [ ] Click Clear button on the row → fan-out clear batch fires for all 3
+- [ ] Visit `/app?q=kaspa` → reverts to 250 iKAS standard 3-char on all 3
 
 ### 5e. Treasury
 - [ ] Treasury card shows live balance via `useBalance({ address: registry })`
@@ -375,7 +409,9 @@
 - §1 Homepage, §2f single register, §2g batch register all 3, §3e list for sale (1 TLD), §4a buy flow, §5 admin TLD switcher, §7a-b API
 
 **Nice-to-have if time allows:**
-- §2h batch partial failure, §3c set primary all 3, §3d history per-TLD, §4c stale-price self-heal, §4e revoke-approval revert, §5e premium override, §8b cross-TLD independence
+- §2h batch partial failure, §3c set primary all 3, §3d history per-TLD, §4c stale-price self-heal, §4e revoke-approval revert, §5d/5dii premium override + apply-all, §5cii Tier apply-all, §5ciii Canonical Sync, §8b cross-TLD independence
+
+**Run §5ciii Canonical Sync FIRST when starting tomorrow** — it ensures every TLD is on the standard 1000/500/250/50/30 schedule before any per-TLD test does its own price check.
 
 **Skip unless you have a specific reason:**
 - §5g ownership transfer (irreversible on mainnet — do only on testnet)
