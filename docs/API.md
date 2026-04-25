@@ -236,7 +236,7 @@ Use this if you're integrating via a system that already speaks ENS-style nameha
 
 ## Contract verification
 
-All 9 contracts:
+All 10 contracts:
 - Deployed from the [INSdomains repo](https://github.com/ItsGoonBoyCrypto/INSdomains) (MIT, 116 Foundry tests)
 - Owned by the Igra Safe `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1`
 - Verifiable on-chain via `cast call` or the Igra explorer

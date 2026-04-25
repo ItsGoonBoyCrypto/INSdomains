@@ -29,8 +29,8 @@ Canonical registry of INS contract deployments per chain.
 ### Shared
 | Role               | Address                                          |
 |--------------------|--------------------------------------------------|
-| Owner (all 9)      | Safe `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1` |
-| Treasury (all 9)   | Safe `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1` |
+| Owner (all 10)     | Safe `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1` |
+| Treasury (all 10)  | Safe `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1` |
 | Deployer           | `0x3352E8AF21a02A04Bfb9e4E941295B3f8Fa8D044`     |
 
 **RPC:** `https://rpc.igralabs.com:8545`

@@ -15,7 +15,7 @@ Built with Next.js 15, React 19, Tailwind v3, wagmi 2 + RainbowKit, viem, Claude
 | `.ikas` | `0xe705e38DeF4970e23617d30D9774062FEeEBA610`    | `0x7ec22c238e7392adcc367f332f301629e9f4ec33`    | `0x9963aa24327f513b4cd5ce8118027a1da2fe76b5`   |
 
 - INSResolver (namehash/text records): `0x451D84002cE0eCFd4cc622c72FA40849a8Bb5f2A` (shared across TLDs via namehash)
-- Owner / Treasury (all 9 contracts): Safe `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1`
+- Owner / Treasury (all 10 contracts): Safe `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1`
 
 ## Highlights
 
