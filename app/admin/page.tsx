@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ShieldCheck, Lock, Gift, Tag, Gem, ArrowRight, Loader2,
   Check, Plus, Trash2, Wallet, AlertTriangle, Settings2, ExternalLink,
-  ClipboardList, X, Store, Pause, Play,
+  ClipboardList, X, Store, Pause, Play, Rocket, Star,
 } from "lucide-react";
 import {
   useAccount,
@@ -13,6 +13,7 @@ import {
   useWriteContract,
   useWaitForTransactionReceipt,
   useBalance,
+  usePublicClient,
 } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { formatEther, parseEther } from "viem";
@@ -178,6 +179,7 @@ function AdminDashboard() {
         <ReservedNamesCard tld={activeTld} />
         <TierPricingCard tld={activeTld} />
         <PremiumOverridesCard tld={activeTld} />
+        <PreLaunchListingsCard tld={activeTld} />
         <TreasuryCard tld={activeTld} />
         <MarketplaceCard tld={activeTld} />
         <OwnershipCard tld={activeTld} />
@@ -2707,6 +2709,523 @@ function MarketplaceCard({ tld }: { tld: Tld }) {
         </>
       )}
     </Card>
+  );
+}
+
+/* ── Pre-launch listings ──────────────────────────────────
+ * One-card end-to-end builder for showcase listings before public launch.
+ * For a given (label, price) and the currently-active TLD (or all 3 if
+ * apply-all is on), the card:
+ *   1. reads on-chain state (reserved, minted, owner, approval, listing)
+ *   2. computes the conditional plan per TLD
+ *   3. on click, runs the step queue:
+ *        - setReserved   (skip if already reserved)
+ *        - adminMint     (skip if admin already owns it)
+ *        - setApprovalForAll (skip if already approved)
+ *        - createListing (skip if already listed)
+ *   Featured = always on (1% upfront fee), expiry = uint64.max ("forever").
+ *   Cancel via the existing /domains UI per name.
+ */
+
+/** A single write tx in the listing queue. */
+type ListStepKind = "reserve" | "mint" | "approve" | "list";
+type ListStep = {
+  kind: ListStepKind;
+  tld: Tld;
+  /** Resolved fresh right before the "list" step fires (post-mint). */
+  needsTokenIdLookup?: boolean;
+};
+
+/** Per-TLD pre-flight readout. */
+type ListPreFlight = {
+  tld: Tld;
+  /** Initial chain reads — undefined if still loading. */
+  reserved?: boolean;
+  tokenId?: bigint;
+  owner?: `0x${string}`;
+  approved?: boolean;
+  listed?: boolean;
+  featureFeeBps?: number;
+  /** Plan derived from above. */
+  needs: { reserve: boolean; mint: boolean; approve: boolean; list: boolean };
+  /** Hard block — operator can't proceed on this TLD without manual fix. */
+  blocked?: string;
+};
+
+/** uint64.max — effectively "no expiry" within any practical timeframe. */
+const FOREVER_EXPIRY = (2n ** 64n - 1n);
+
+function PreLaunchListingsCard({ tld }: { tld: Tld }) {
+  const { address } = useAccount();
+  const publicClient = usePublicClient();
+
+  const [labelInput, setLabelInput] = useState("");
+  const [priceInput, setPriceInput] = useState("");
+
+  const cleanedLabel = cleanLabel(labelInput);
+  const labelValid = isValidLabel(cleanedLabel);
+  const priceNum = Number(priceInput);
+  const priceValid = Number.isFinite(priceNum) && priceNum > 0;
+  const priceWei = priceValid ? parseEther(String(priceNum)) : 0n;
+
+  // "Apply to all live TLDs" toggle — persisted.
+  const [applyAllTlds, setApplyAllTlds] = useState(true);
+  useEffect(() => {
+    try {
+      const saved = typeof window !== "undefined"
+        ? window.localStorage.getItem("ins:listingApplyAll")
+        : null;
+      if (saved === "false") setApplyAllTlds(false);
+    } catch { /* noop */ }
+  }, []);
+  const onToggleApplyAll = (v: boolean) => {
+    setApplyAllTlds(v);
+    try { window.localStorage.setItem("ins:listingApplyAll", String(v)); } catch { /* noop */ }
+  };
+
+  const targetTlds: Tld[] = applyAllTlds
+    ? [tld, ...(TLDS as readonly Tld[]).filter((t) => t !== tld && isTldLive(t))]
+    : [tld];
+
+  // Pre-flight reads — 4 reads × N TLDs in one batch. Auto-refreshes on input.
+  const enabledReads = labelValid && targetTlds.length > 0 && !!address;
+  const { data: reads1, refetch: refetchReads1 } = useReadContracts({
+    contracts: targetTlds.flatMap((t) => [
+      { address: REGISTRY_ADDRESSES[t], abi: REGISTRY_ABI, functionName: "reserved" as const, args: [cleanedLabel] as const },
+      { address: REGISTRY_ADDRESSES[t], abi: REGISTRY_ABI, functionName: "tokenIdOf" as const, args: [cleanedLabel] as const },
+      { address: REGISTRY_ADDRESSES[t], abi: REGISTRY_ABI, functionName: "isApprovedForAll" as const, args: [address ?? "0x0", MARKETPLACE_ADDRESSES[t]] as const },
+      { address: MARKETPLACE_ADDRESSES[t], abi: MARKETPLACE_ABI, functionName: "featureFeeBps" as const, args: [] as const },
+    ]),
+    query: { enabled: enabledReads },
+  });
+
+  // For each TLD where tokenId !== 0, also read ownerOf + getActiveListing.
+  // We do this as a second batch driven by the reads1 result.
+  const tldsNeedingSecondPass = useMemo(() => {
+    if (!reads1) return [] as { tld: Tld; tokenId: bigint }[];
+    const out: { tld: Tld; tokenId: bigint }[] = [];
+    for (let i = 0; i < targetTlds.length; i++) {
+      const tokenId = reads1[i * 4 + 1]?.result as bigint | undefined;
+      if (tokenId !== undefined && tokenId !== 0n) {
+        out.push({ tld: targetTlds[i], tokenId });
+      }
+    }
+    return out;
+  }, [reads1, targetTlds]);
+
+  const { data: reads2, refetch: refetchReads2 } = useReadContracts({
+    contracts: tldsNeedingSecondPass.flatMap((x) => [
+      { address: REGISTRY_ADDRESSES[x.tld], abi: REGISTRY_ABI, functionName: "ownerOf" as const, args: [x.tokenId] as const },
+      { address: MARKETPLACE_ADDRESSES[x.tld], abi: MARKETPLACE_ABI, functionName: "getActiveListing" as const, args: [x.tokenId] as const },
+    ]),
+    query: { enabled: tldsNeedingSecondPass.length > 0 },
+  });
+
+  // Build the per-TLD pre-flight table.
+  const preflight: ListPreFlight[] = useMemo(() => {
+    const out: ListPreFlight[] = [];
+    for (let i = 0; i < targetTlds.length; i++) {
+      const t = targetTlds[i];
+      const reserved = reads1?.[i * 4 + 0]?.result as boolean | undefined;
+      const tokenId  = reads1?.[i * 4 + 1]?.result as bigint  | undefined;
+      const approved = reads1?.[i * 4 + 2]?.result as boolean | undefined;
+      const featureFeeBps = reads1?.[i * 4 + 3]?.result as number | undefined;
+
+      let owner: `0x${string}` | undefined;
+      let listed: boolean | undefined;
+      if (tokenId !== undefined && tokenId !== 0n) {
+        const idx = tldsNeedingSecondPass.findIndex((x) => x.tld === t);
+        if (idx >= 0) {
+          owner = reads2?.[idx * 2 + 0]?.result as `0x${string}` | undefined;
+          const listingTuple = reads2?.[idx * 2 + 1]?.result as { active: boolean } | undefined;
+          listed = listingTuple?.active ?? undefined;
+        }
+      } else if (tokenId === 0n) {
+        listed = false;
+      }
+
+      // Compute the plan only when all relevant reads have landed.
+      const stillLoading =
+        reserved === undefined ||
+        tokenId === undefined ||
+        approved === undefined ||
+        featureFeeBps === undefined ||
+        (tokenId !== 0n && (owner === undefined || listed === undefined));
+
+      const needs = stillLoading
+        ? { reserve: false, mint: false, approve: false, list: false }
+        : {
+            reserve: !reserved,
+            mint: tokenId === 0n,
+            approve: !approved,
+            list: !listed && priceValid,
+          };
+
+      let blocked: string | undefined;
+      if (!stillLoading && tokenId !== 0n && owner && address && owner.toLowerCase() !== address.toLowerCase()) {
+        blocked = `Owned by ${shortAddr(owner)} — not by you. Buy or transfer first.`;
+      }
+
+      out.push({ tld: t, reserved, tokenId, owner, approved, listed, featureFeeBps, needs, blocked });
+    }
+    return out;
+  }, [reads1, reads2, targetTlds, tldsNeedingSecondPass, priceValid, address]);
+
+  // Build the step queue from preflight (skipping no-op steps + blocked TLDs).
+  const plannedSteps: ListStep[] = useMemo(() => {
+    if (!labelValid || !priceValid || !address) return [];
+    const out: ListStep[] = [];
+    for (const pf of preflight) {
+      if (pf.blocked) continue;
+      if (pf.needs.reserve) out.push({ kind: "reserve", tld: pf.tld });
+      if (pf.needs.mint)    out.push({ kind: "mint",    tld: pf.tld });
+      if (pf.needs.approve) out.push({ kind: "approve", tld: pf.tld });
+      if (pf.needs.list)    out.push({ kind: "list",    tld: pf.tld, needsTokenIdLookup: pf.needs.mint });
+    }
+    return out;
+  }, [preflight, labelValid, priceValid, address]);
+
+  const totalUpfrontFeeWei = useMemo(() => {
+    if (!priceValid) return 0n;
+    let sum = 0n;
+    for (const pf of preflight) {
+      if (pf.blocked || !pf.needs.list || pf.featureFeeBps === undefined) continue;
+      sum += (priceWei * BigInt(pf.featureFeeBps)) / 10000n;
+    }
+    return sum;
+  }, [preflight, priceWei, priceValid]);
+
+  /* ── Step queue runner ──────────────────────────────────── */
+  const [activeQueue, setActiveQueue] = useState<ListStep[] | null>(null);
+  const [stepIdx, setStepIdx] = useState(0);
+  const [stepStatuses, setStepStatuses] = useState<BatchTldStatus[]>([]);
+  const [stepHashes, setStepHashes] = useState<(`0x${string}` | undefined)[]>([]);
+  const stepProcessedHashRef = useRef<`0x${string}` | null>(null);
+
+  const { writeContract, data: hash, isPending, error, reset } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
+  const busy = isPending || isConfirming || !!activeQueue;
+
+  /** Resolve tokenId for a "list" step (read fresh post-mint). */
+  const resolveTokenId = async (t: Tld): Promise<bigint> => {
+    if (!publicClient) throw new Error("No RPC client");
+    const id = await publicClient.readContract({
+      address: REGISTRY_ADDRESSES[t],
+      abi: REGISTRY_ABI,
+      functionName: "tokenIdOf",
+      args: [cleanedLabel],
+    });
+    return id as bigint;
+  };
+
+  const fireStep = async (queue: ListStep[], idx: number) => {
+    if (idx >= queue.length) return;
+    const step = queue[idx];
+    setStepStatuses((arr) => arr.map((s, i) => (i === idx ? "signing" : s)));
+    reset();
+
+    try {
+      if (step.kind === "reserve") {
+        writeContract({
+          address: REGISTRY_ADDRESSES[step.tld],
+          abi: REGISTRY_ABI,
+          functionName: "setReserved",
+          args: [cleanedLabel, true],
+        });
+      } else if (step.kind === "mint") {
+        if (!address) throw new Error("Wallet not connected");
+        writeContract({
+          address: REGISTRY_ADDRESSES[step.tld],
+          abi: REGISTRY_ABI,
+          functionName: "adminMint",
+          args: [cleanedLabel, address],
+        });
+      } else if (step.kind === "approve") {
+        writeContract({
+          address: REGISTRY_ADDRESSES[step.tld],
+          abi: REGISTRY_ABI,
+          functionName: "setApprovalForAll",
+          args: [MARKETPLACE_ADDRESSES[step.tld], true],
+        });
+      } else if (step.kind === "list") {
+        const tokenId = await resolveTokenId(step.tld);
+        if (tokenId === 0n) throw new Error("tokenId still 0 after mint — chain lag");
+        const pf = preflight.find((p) => p.tld === step.tld);
+        const ffBps = pf?.featureFeeBps ?? 100; // 1% default
+        const featureFee = (priceWei * BigInt(ffBps)) / 10000n;
+        writeContract({
+          address: MARKETPLACE_ADDRESSES[step.tld],
+          abi: MARKETPLACE_ABI,
+          functionName: "createListing",
+          args: [tokenId, priceWei, FOREVER_EXPIRY, true],
+          value: featureFee,
+        });
+      }
+    } catch (e) {
+      setStepStatuses((arr) => arr.map((s, i) => (i === idx ? "failed" : s)));
+      // surface the error via `error` state by re-throwing into wagmi-land
+      // is awkward, so just leave it; the UI shows the .signing → .failed jump
+      console.error("PreLaunchListingsCard step failed", e);
+    }
+  };
+
+  const startQueue = async () => {
+    if (busy || plannedSteps.length === 0) return;
+    setActiveQueue(plannedSteps);
+    setStepIdx(0);
+    setStepStatuses(plannedSteps.map(() => "pending"));
+    setStepHashes(plannedSteps.map(() => undefined));
+    stepProcessedHashRef.current = null;
+    await fireStep(plannedSteps, 0);
+  };
+
+  // Confirm-watcher — same hash-dedupe pattern as the other batch cards.
+  useEffect(() => {
+    if (!activeQueue || !isConfirmed || !hash) return;
+    if (stepProcessedHashRef.current === hash) return;
+    stepProcessedHashRef.current = hash;
+
+    setStepStatuses((arr) => arr.map((s, i) => (i === stepIdx ? "mined" : s)));
+    setStepHashes((arr) => arr.map((h, i) => (i === stepIdx ? hash : h)));
+    if (stepIdx + 1 < activeQueue.length) {
+      const nextIdx = stepIdx + 1;
+      setStepIdx(nextIdx);
+      // Small delay so the chain picks up the just-mined state for the next read.
+      void fireStep(activeQueue, nextIdx);
+    } else {
+      // Done. Refresh preflight reads + linger green ~3.5s.
+      refetchReads1();
+      refetchReads2();
+      const t = setTimeout(() => {
+        setActiveQueue(null);
+        setStepStatuses([]);
+        setStepHashes([]);
+        setStepIdx(0);
+        stepProcessedHashRef.current = null;
+        setLabelInput("");
+        setPriceInput("");
+        reset();
+      }, 3500);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConfirmed, hash]);
+
+  // Mark current step failed on error.
+  useEffect(() => {
+    if (!activeQueue || !error) return;
+    setStepStatuses((arr) => arr.map((s, i) => (i === stepIdx ? "failed" : s)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error]);
+
+  const retryFromFailed = () => {
+    if (!activeQueue) return;
+    const failedIdx = stepStatuses.findIndex((s) => s === "failed");
+    if (failedIdx === -1) return;
+    setStepStatuses((arr) => arr.map((s, i) => (i === failedIdx ? "pending" : s)));
+    setStepIdx(failedIdx);
+    stepProcessedHashRef.current = null;
+    reset();
+    void fireStep(activeQueue, failedIdx);
+  };
+
+  const cancelQueue = () => {
+    setActiveQueue(null);
+    setStepIdx(0);
+    setStepStatuses([]);
+    setStepHashes([]);
+    stepProcessedHashRef.current = null;
+    reset();
+  };
+
+  const stepLabel = (step: ListStep): string => {
+    const suffix = tldSuffix(step.tld);
+    if (step.kind === "reserve") return `reserve ${cleanedLabel}${suffix}`;
+    if (step.kind === "mint")    return `mint ${cleanedLabel}${suffix} → you`;
+    if (step.kind === "approve") return `approve marketplace${suffix}`;
+    return `list ${cleanedLabel}${suffix} @ ${priceNum.toLocaleString()} iKAS (featured)`;
+  };
+
+  const allMined = activeQueue && stepStatuses.length > 0 && stepStatuses.every((s) => s === "mined");
+  const anyFailed = stepStatuses.some((s) => s === "failed");
+
+  return (
+    <Card
+      icon={<Rocket className="h-5 w-5 text-plum" />}
+      title="Pre-launch listings"
+      subtitle="reserve → mint → approve → list, fan-out across TLDs, featured"
+    >
+      <ApplyAllTldsToggle
+        on={applyAllTlds}
+        onToggle={onToggleApplyAll}
+        currentTld={tld}
+        liveTldCount={LIVE_TLDS.length}
+        disabled={busy}
+      />
+
+      {/* Inputs */}
+      <div className="grid grid-cols-[1fr_auto] gap-2">
+        <input
+          value={labelInput}
+          onChange={(e) => setLabelInput(e.target.value)}
+          placeholder="kaspa"
+          disabled={busy}
+          className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm placeholder:text-white/30 focus:outline-none focus:border-plum/40 disabled:opacity-50"
+          spellCheck={false}
+        />
+        <div className="flex items-center rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
+          <input
+            value={priceInput}
+            onChange={(e) => setPriceInput(e.target.value)}
+            placeholder="50000"
+            disabled={busy}
+            className="w-24 bg-transparent text-sm placeholder:text-white/30 focus:outline-none disabled:opacity-50"
+          />
+          <span className="text-xs text-white/40">iKAS</span>
+        </div>
+      </div>
+
+      {/* Pre-flight readout */}
+      {labelValid && (
+        <div className="mt-3 space-y-1.5">
+          {preflight.map((pf) => {
+            const stepCount =
+              (pf.needs.reserve ? 1 : 0) +
+              (pf.needs.mint ? 1 : 0) +
+              (pf.needs.approve ? 1 : 0) +
+              (pf.needs.list ? 1 : 0);
+            const isReady = pf.reserved !== undefined && pf.tokenId !== undefined;
+            return (
+              <div
+                key={pf.tld}
+                className={`rounded-lg border p-2 text-[11px] ${
+                  pf.blocked ? "border-red-500/30 bg-red-500/[0.04]" :
+                  stepCount === 0 && isReady ? "border-emerald-500/30 bg-emerald-500/[0.04]" :
+                  "border-white/10 bg-white/[0.02]"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-white/80">{cleanedLabel}{tldSuffix(pf.tld)}</span>
+                  <span className="text-white/40">
+                    {!isReady ? "reading…" :
+                      pf.blocked ? "blocked" :
+                      stepCount === 0 ? "already live ✓" :
+                      `${stepCount} step${stepCount > 1 ? "s" : ""}`}
+                  </span>
+                </div>
+                {isReady && !pf.blocked && (
+                  <div className="mt-1 flex flex-wrap gap-1.5">
+                    <PfBadge ok={!pf.needs.reserve} on="reserved" off="needs reserve" />
+                    <PfBadge ok={!pf.needs.mint}    on="minted"   off="needs mint" />
+                    <PfBadge ok={!pf.needs.approve} on="approved" off="needs approve" />
+                    <PfBadge ok={!pf.needs.list}    on="listed"   off="needs list" />
+                  </div>
+                )}
+                {pf.blocked && (
+                  <div className="mt-1 text-red-300">{pf.blocked}</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Featured-fee summary */}
+      {priceValid && totalUpfrontFeeWei > 0n && !activeQueue && (
+        <div className="mt-3 flex items-center gap-2 rounded-lg border border-plum/30 bg-plum/[0.04] px-3 py-2 text-[11px] text-plum">
+          <Star className="h-3 w-3" />
+          <span>
+            Featured upfront fee: <span className="font-mono">{Number(formatEther(totalUpfrontFeeWei)).toLocaleString()} iKAS</span>
+            {" "}(1% of {priceNum.toLocaleString()} iKAS × {plannedSteps.filter(s => s.kind === "list").length} TLD{plannedSteps.filter(s => s.kind === "list").length === 1 ? "" : "s"}).
+          </span>
+        </div>
+      )}
+
+      {/* Active queue progress */}
+      {activeQueue && (
+        <div className={`mt-3 rounded-xl border p-3 transition ${
+          anyFailed ? "border-red-500/40 bg-red-500/[0.04]" :
+          allMined  ? "border-emerald-500/40 bg-emerald-500/[0.05]" :
+                      "border-cyan/40 bg-cyan/[0.04]"
+        }`}>
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-xs font-bold text-white">
+              {allMined ? <><Check className="mr-1 inline h-3 w-3 text-emerald-300" />All listings live.</> : `Step ${Math.min(stepIdx + 1, activeQueue.length)} of ${activeQueue.length} — ${stepLabel(activeQueue[stepIdx] ?? activeQueue[activeQueue.length - 1])}`}
+            </div>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {activeQueue.map((step, i) => {
+              const s = stepStatuses[i];
+              const cls =
+                s === "mined"   ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20" :
+                s === "signing" ? "border-cyan/40 bg-cyan/15 text-cyan" :
+                s === "failed"  ? "border-red-500/40 bg-red-500/10 text-red-300" :
+                                  "border-white/10 bg-white/[0.04] text-white/55";
+              const h = stepHashes[i];
+              const inner = (
+                <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-mono ${cls}`}>
+                  {s === "signing" && <Loader2 className="h-2.5 w-2.5 animate-spin" />}
+                  {s === "mined"   && <Check className="h-2.5 w-2.5" />}
+                  {step.kind}·{tldSuffix(step.tld)}
+                </span>
+              );
+              return s === "mined" && h ? (
+                <a key={i} href={`${IGRA_EXPLORER}/tx/${h}`} target="_blank" rel="noreferrer" title={stepLabel(step)} className="transition hover:opacity-90">{inner}</a>
+              ) : (
+                <span key={i} title={stepLabel(step)}>{inner}</span>
+              );
+            })}
+          </div>
+          {anyFailed && (
+            <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-red-300">
+              <span className="truncate" title={error?.message}>
+                Failed at step {stepIdx + 1} — {error?.message?.split("\n")[0] ?? "see console"}
+              </span>
+              <span className="flex flex-none gap-1">
+                <button onClick={retryFromFailed} className="rounded-md border border-red-500/40 bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-200 hover:bg-red-500/20">Retry</button>
+                <button onClick={cancelQueue} className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] text-white/60 hover:text-white">Cancel</button>
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* CTA */}
+      <div className="mt-3">
+        <button
+          onClick={startQueue}
+          disabled={!labelValid || !priceValid || !address || busy || plannedSteps.length === 0 || preflight.some(p => !!p.blocked)}
+          className="btn-primary w-full justify-center"
+        >
+          {busy ? (
+            <><Loader2 className="mr-1 inline h-4 w-4 animate-spin" />Building…</>
+          ) : plannedSteps.length === 0 && labelValid ? (
+            <>Nothing to do — already live</>
+          ) : (
+            <>
+              <Rocket className="mr-1 inline h-4 w-4" />
+              Build {plannedSteps.length || ""} listing{plannedSteps.length === 1 ? "" : "s"} {plannedSteps.length > 0 ? `→` : ""}
+            </>
+          )}
+        </button>
+        <p className="mt-2 text-[10px] text-white/40">
+          Featured = 1% upfront fee (paid on each list step). Expiry = forever (uint64 max). Cancel any listing anytime via <span className="font-mono">/domains</span> or directly via <span className="font-mono">cancelListing(tokenId)</span>.
+        </p>
+      </div>
+    </Card>
+  );
+}
+
+/** Tiny pill used in the pre-flight readout. */
+function PfBadge({ ok, on, off }: { ok: boolean; on: string; off: string }) {
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] ${
+      ok ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" :
+           "border-amber-500/30 bg-amber-500/10 text-amber-200"
+    }`}>
+      {ok ? <Check className="h-2.5 w-2.5" /> : <Plus className="h-2.5 w-2.5" />}
+      {ok ? on : off}
+    </span>
   );
 }
 
