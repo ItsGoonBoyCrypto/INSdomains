@@ -46,15 +46,15 @@
 ### 2b. Name search
 - [ ] Type `alice` → 3 rows appear (`.igra` / `.ikas` / `.ins`)
 - [ ] Each row fetches `available()` + `priceFor()` from its TLD's Registry
-- [ ] All 3 show "Available · forever · 10 iKAS" (tier 5, assuming `alice` is free on all 3)
-- [ ] BatchRegisterBanner appears with "Claim alice on all 3 TLDs" + total 30 iKAS
+- [ ] All 3 show "Available · forever · 30 iKAS" (tier 5, assuming `alice` is free on all 3)
+- [ ] BatchRegisterBanner appears with "Claim alice on all 3 TLDs" + total 90 iKAS
 
-### 2c. Tier edge cases
-- [ ] `ab` (2-char) → 5,000 iKAS ultra-rare row if available; reserved if reserved
-- [ ] `abc` (3-char) → 500 iKAS rare
+### 2c. Tier edge cases (canonical 1000 / 500 / 250 / 50 / 30)
+- [ ] `a` (1-char) → 1,000 iKAS ultra-premium (or Reserved if seeded into reserved set)
+- [ ] `ab` (2-char) → 500 iKAS premium row if available
+- [ ] `abc` (3-char) → 250 iKAS rare
 - [ ] `abcd` (4-char) → 50 iKAS uncommon
-- [ ] `abcde` (5-char+) → 10 iKAS standard
-- [ ] `a` (1-char) → "Reserved · ecosystem only"
+- [ ] `abcde` (5-char+) → 30 iKAS standard
 
 ### 2d. Invalid input
 - [ ] `ABC` → auto-lowered to `abc`
@@ -67,8 +67,8 @@
 - [ ] Search a known-reserved label (e.g. `dao`, `kcom`, `zealous`) → Reserved card shows "Not for sale · Contact team for ecosystem allocation"
 
 ### 2f. Single-TLD registration
-- [ ] Wallet B connected, `alice.ikas` (cheapest at 10 iKAS) → click Register on `.ikas` row
-- [ ] Wallet prompts tx with `value = 10 iKAS` to `INSRegistryIkas`
+- [ ] Wallet B connected, `alice.ikas` (5+ char standard at 30 iKAS) → click Register on `.ikas` row
+- [ ] Wallet prompts tx with `value = 30 iKAS` to `INSRegistryIkas`
 - [ ] Confirm → tx pending → mined → "Minted! #1 →" badge appears with explorer link
 - [ ] Navigate to `/domains` — `alice.ikas` appears with emerald TLD badge
 - [ ] Call `/api/resolve?name=alice.ikas` → returns the wallet as address + owner
@@ -419,11 +419,14 @@
 
 ## Test wallet funding (plan for tomorrow)
 
-Expected iKAS spend for full §2-§5 run: ~50-80 iKAS
-- Batch register all 3 × 1 round = 30 iKAS
-- Admin-mints (free — adminMint bypasses)
-- List + buy + 2% fees = negligible
-- A few registration retries + experimentation buffer
+Expected iKAS spend for full §2-§5 run with canonical (1000/500/250/50/30): ~150-220 iKAS
+- Batch register all 3 × 1 round (5+ char) = 90 iKAS
+- A 3-char round on one TLD = 250 iKAS (skip if budget tight)
+- A 4-char round on one TLD = 50 iKAS
+- Admin-mints (free — adminMint bypasses payment)
+- List + buy + 2% fees = negligible (seller funds it themselves)
+- ~50 iKAS experimentation / retry buffer
+- Premium-override test on attester @ 2,500 iKAS — only if you actually buy it; setting the override itself is free
 
 Top up Wallet B before starting.
 

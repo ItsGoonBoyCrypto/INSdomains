@@ -1530,8 +1530,8 @@ function TierPricingCard({ tld }: { tld: Tld }) {
   const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
   const REGISTRY_LIVE = isTldLive(tld);
   const tiers = [
-    { bucket: 1, label: "1-char", hint: "ecosystem allocation only" },
-    { bucket: 2, label: "2-char", hint: "ultra-rare" },
+    { bucket: 1, label: "1-char", hint: "ultra-premium" },
+    { bucket: 2, label: "2-char", hint: "premium" },
     { bucket: 3, label: "3-char", hint: "rare" },
     { bucket: 4, label: "4-char", hint: "uncommon" },
     { bucket: 5, label: "5–32", hint: "standard" },
@@ -1847,7 +1847,7 @@ function TierPricingCard({ tld }: { tld: Tld }) {
         {tiers.map((t, i) => {
           const raw = prices?.[i]?.result as bigint | undefined;
           const current: number | "RESERVED" | null = !REGISTRY_LIVE
-            ? ({ 1: "RESERVED", 2: 5000, 3: 500, 4: 50, 5: 10 } as const)[t.bucket as 1 | 2 | 3 | 4 | 5]
+            ? ({ 1: 1000, 2: 500, 3: 250, 4: 50, 5: 30 } as const)[t.bucket as 1 | 2 | 3 | 4 | 5]
             : raw === undefined
             ? null
             : raw === BigInt(TIER_RESERVED) || raw > 10n ** 30n

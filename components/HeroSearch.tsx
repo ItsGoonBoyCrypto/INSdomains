@@ -69,7 +69,7 @@ export function HeroSearch() {
       <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-white/40">
         <span className="inline-flex items-center gap-1 rounded-full bg-white/[0.04] px-2.5 py-1">
           <Sparkles className="h-3 w-3 text-cyan" />
-          Tiered pricing · <span className="font-semibold text-cyan">from 10 iKAS</span>
+          Tiered pricing · <span className="font-semibold text-cyan">from 30 iKAS</span>
         </span>
         <span>· gas ~$0.0004</span>
         <span className="dot-sep" />

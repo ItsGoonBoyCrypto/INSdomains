@@ -130,11 +130,11 @@ export default function AboutPage() {
             transparent multisig control.
           </p>
           <div className="mt-5 grid gap-3 sm:grid-cols-5">
-            <TierChip color="red"     len="1-char"  price="Reserved" tag="ecosystem only" />
-            <TierChip color="plum"    len="2-char"  price="5,000 iKAS" tag="ultra-rare" />
-            <TierChip color="amber"   len="3-char"  price="500 iKAS"   tag="rare" />
+            <TierChip color="plum"    len="1-char"  price="1,000 iKAS" tag="ultra-premium" />
+            <TierChip color="plum"    len="2-char"  price="500 iKAS"   tag="premium" />
+            <TierChip color="amber"   len="3-char"  price="250 iKAS"   tag="rare" />
             <TierChip color="cyan"    len="4-char"  price="50 iKAS"    tag="uncommon" />
-            <TierChip color="emerald" len={"5\u201332"}   price="10 iKAS"    tag="standard" />
+            <TierChip color="emerald" len={"5\u201332"}   price="30 iKAS"    tag="standard" />
           </div>
         </section>
 

@@ -19,14 +19,14 @@ Built with Next.js 15, React 19, Tailwind v3, wagmi 2 + RainbowKit, viem, Claude
 
 ## Highlights
 
-- **Tiered pricing** in native iKAS — baked into the contract:
+- **Tiered pricing** in native iKAS — baked into the contract, identical across all 3 TLDs (kept in sync via Admin → Length tier pricing → Sync to canonical):
   | Length | Price      | Tag              |
   |--------|------------|------------------|
-  | 1-char | reserved   | ecosystem only   |
-  | 2-char | 5,000 iKAS | ultra-rare  |
-  | 3-char | 500 iKAS   | rare        |
-  | 4-char | 50 iKAS    | uncommon    |
-  | 5–32   | 10 iKAS    | standard    |
+  | 1-char | 1,000 iKAS | ultra-premium    |
+  | 2-char | 500 iKAS   | premium          |
+  | 3-char | 250 iKAS   | rare             |
+  | 4-char | 50 iKAS    | uncommon         |
+  | 5–32   | 30 iKAS    | standard         |
 - **On-chain SVG artwork** (Base64 data URI — no IPFS dependency)
 - **Reserved names** for ecosystem partners (26-name seed list + admin batch-set)
 - **Three TLDs: `.ins` · `.igra` · `.ikas`** — claim any name on one, two, or all three. `/app` registers across all three in a single flow; `/domains` aggregates your names from every TLD with colour-coded badges.

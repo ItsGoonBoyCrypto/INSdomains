@@ -8,12 +8,17 @@ import { TAKEN_NAMES } from "./mock-registry";
 
 export const TIER_RESERVED = Number.MAX_SAFE_INTEGER;
 
+/**
+ * Canonical tier schedule, mirrored on every Registry contract via
+ * setLengthPrice. Admin → Length tier pricing → "Sync to canonical"
+ * keeps every TLD aligned with this. Update both places together.
+ */
 export const LENGTH_PRICE: Record<number, number> = {
-  1: TIER_RESERVED,   // reserved / ecosystem allocation only
-  2: 5000,
-  3: 500,
-  4: 50,
-  5: 10,              // 5–32 chars
+  1: 1000,            // ultra-premium (1-char)
+  2: 500,             // premium (2-char)
+  3: 250,             // rare (3-char)
+  4: 50,              // uncommon (4-char)
+  5: 30,              // standard (5–32 chars)
 };
 
 /** Curated premium overrides — these mirror the admin-set on-chain mapping. */
@@ -51,8 +56,8 @@ export function rarityFor(label: string, reservedSet: Set<string>): Rarity {
 export function tierLabel(r: Rarity): string {
   if (r.kind === "reserved") return "Reserved";
   if (r.kind === "premium") return "Premium";
-  if (r.bucket === 1) return "1-char · reserved";
-  if (r.bucket === 2) return "2-char · ultra-rare";
+  if (r.bucket === 1) return "1-char · ultra-premium";
+  if (r.bucket === 2) return "2-char · premium";
   if (r.bucket === 3) return "3-char · rare";
   if (r.bucket === 4) return "4-char · uncommon";
   return "Standard";
@@ -61,7 +66,8 @@ export function tierLabel(r: Rarity): string {
 export function tierColor(r: Rarity): "red" | "plum" | "amber" | "cyan" | "emerald" {
   if (r.kind === "reserved") return "red";
   if (r.kind === "premium") return "plum";
-  if (r.bucket <= 2) return "plum";
+  if (r.bucket === 1) return "plum";
+  if (r.bucket === 2) return "plum";
   if (r.bucket === 3) return "amber";
   if (r.bucket === 4) return "cyan";
   return "emerald";

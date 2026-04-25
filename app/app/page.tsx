@@ -145,11 +145,11 @@ function EmptyHint() {
         ))}
       </div>
       <div className="mt-8 grid gap-2 text-left text-xs text-white/50 sm:grid-cols-5">
-        <TierSample color="plum"    label="2-char"  price="5,000 iKAS" tag="ultra-rare" />
-        <TierSample color="amber"   label="3-char"  price="500 iKAS"   tag="rare" />
+        <TierSample color="plum"    label="1-char"  price="1,000 iKAS" tag="ultra-premium" />
+        <TierSample color="plum"    label="2-char"  price="500 iKAS"   tag="premium" />
+        <TierSample color="amber"   label="3-char"  price="250 iKAS"   tag="rare" />
         <TierSample color="cyan"    label="4-char"  price="50 iKAS"    tag="uncommon" />
-        <TierSample color="emerald" label="5–32"    price="10 iKAS"    tag="standard" />
-        <TierSample color="red"     label="1-char"  price="reserved"   tag="ecosystem only" />
+        <TierSample color="emerald" label="5–32"    price="30 iKAS"    tag="standard" />
       </div>
       <div className="mt-4 flex items-center justify-center gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.04] px-4 py-2.5 text-xs text-emerald-200">
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-[10px] font-black">0</span>
@@ -739,7 +739,7 @@ function NameRow({ label }: { label: string }) {
 function genSuggestions(label: string): string[] {
   if (!label || label.length < 3) return [];
   return [
-    `${label}x`, `${label}1`, `${label}-dao`,
+    `${label}x`, `${label}1`, `${label}-hq`,
     `my${label}`, `${label}pro`, `the${label}`,
   ].filter((s) => isValidLabel(s)).slice(0, 5);
 }

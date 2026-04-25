@@ -133,7 +133,7 @@ export default async function OGImage() {
                   letterSpacing: 2,
                 }}
               >
-                STANDARD · 10 iKAS
+                STANDARD · 30 iKAS
               </div>
               <div
                 style={{
