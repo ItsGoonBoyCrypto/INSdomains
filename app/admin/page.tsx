@@ -297,8 +297,112 @@ function AdminMintCard({ tld }: { tld: Tld }) {
   const targetValid = /^0x[a-fA-F0-9]{40}$/.test(target.trim());
   const busy = isPending || isConfirming;
 
+  // "Mint on all 3 TLDs to same recipient" toggle. Persisted across sessions.
+  const [applyAllTlds, setApplyAllTlds] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = typeof window !== "undefined"
+        ? window.localStorage.getItem("ins:mintApplyAll")
+        : null;
+      if (saved === "true") setApplyAllTlds(true);
+    } catch { /* noop */ }
+  }, []);
+  const onToggleApplyAll = (v: boolean) => {
+    setApplyAllTlds(v);
+    try { window.localStorage.setItem("ins:mintApplyAll", String(v)); } catch { /* noop */ }
+  };
+
+  // Multi-TLD batch state — same pattern as ReservedNamesCard, just smaller
+  // since adminMint is one-tx-per-TLD with no chunking.
+  const [batchOp, setBatchOp] = useState<BatchOp | null>(null);
+  const [batchIdx, setBatchIdx] = useState(0);
+  const [batchStatuses, setBatchStatuses] = useState<Record<Tld, BatchTldStatus>>({
+    ins: "pending", igra: "pending", ikas: "pending",
+  });
+
+  const fireNextInBatch = (op: BatchOp, idx: number) => {
+    if (idx >= op.tlds.length) return;
+    const nextTld = op.tlds[idx];
+    setBatchStatuses((s) => ({ ...s, [nextTld]: "signing" }));
+    reset();
+    writeContract({
+      address: REGISTRY_ADDRESSES[nextTld],
+      abi: REGISTRY_ABI,
+      functionName: op.fn,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      args: op.argsForTld(nextTld) as any,
+    });
+  };
+
+  const startBatch = (op: BatchOp) => {
+    if (busy || batchOp) return;
+    setBatchStatuses({ ins: "pending", igra: "pending", ikas: "pending" });
+    setBatchOp(op);
+    setBatchIdx(0);
+    fireNextInBatch(op, 0);
+  };
+
+  useEffect(() => {
+    if (!batchOp || !isConfirmed) return;
+    const currentTld = batchOp.tlds[batchIdx];
+    setBatchStatuses((s) => ({ ...s, [currentTld]: "mined" }));
+    if (batchIdx + 1 < batchOp.tlds.length) {
+      const nextIdx = batchIdx + 1;
+      setBatchIdx(nextIdx);
+      fireNextInBatch(batchOp, nextIdx);
+    } else {
+      const t = setTimeout(() => {
+        setBatchOp(null);
+        setLabel("");
+        setTarget("");
+        reset();
+      }, 1500);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConfirmed]);
+
+  useEffect(() => {
+    if (!batchOp || !error) return;
+    const currentTld = batchOp.tlds[batchIdx];
+    setBatchStatuses((s) => ({ ...s, [currentTld]: "failed" }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error]);
+
+  const retryBatchFromFailed = () => {
+    if (!batchOp) return;
+    const failedIdx = batchOp.tlds.findIndex((t) => batchStatuses[t] === "failed");
+    if (failedIdx === -1) return;
+    setBatchStatuses((s) => ({ ...s, [batchOp.tlds[failedIdx]]: "pending" }));
+    setBatchIdx(failedIdx);
+    reset();
+    fireNextInBatch(batchOp, failedIdx);
+  };
+
+  const cancelBatch = () => {
+    setBatchOp(null);
+    setBatchIdx(0);
+    setBatchStatuses({ ins: "pending", igra: "pending", ikas: "pending" });
+    reset();
+  };
+
+  const tldQueue = (): Tld[] => {
+    if (!applyAllTlds) return [tld];
+    const others = (TLDS as readonly Tld[]).filter((t) => t !== tld && isTldLive(t));
+    return [tld, ...others];
+  };
+
   const onMint = () => {
     if (!valid || !targetValid) return;
+    if (applyAllTlds && tldQueue().length > 1) {
+      startBatch({
+        fn: "adminMint",
+        argsForTld: () => [clean, target as `0x${string}`],
+        label: `Gift "${clean}" \u00d7 ${tldQueue().length} TLDs to ${shortAddr(target)}`,
+        tlds: tldQueue(),
+      });
+      return;
+    }
     writeContract({
       address: REGISTRY_ADDRESS,
       abi: REGISTRY_ABI,
@@ -308,11 +412,11 @@ function AdminMintCard({ tld }: { tld: Tld }) {
   };
 
   useEffect(() => {
-    if (isConfirmed) {
+    if (isConfirmed && !batchOp) {
       const t = setTimeout(() => { setLabel(""); setTarget(""); reset(); }, 2500);
       return () => clearTimeout(t);
     }
-  }, [isConfirmed, reset]);
+  }, [isConfirmed, reset, batchOp]);
 
   return (
     <Card
@@ -320,6 +424,26 @@ function AdminMintCard({ tld }: { tld: Tld }) {
       title="Gift a name"
       subtitle="adminMint — bypasses payment + reservation"
     >
+      <ApplyAllTldsToggle
+        on={applyAllTlds}
+        onToggle={onToggleApplyAll}
+        currentTld={tld}
+        liveTldCount={LIVE_TLDS.length}
+        disabled={busy || !!batchOp}
+      />
+
+      {batchOp && (
+        <MultiTldBatchProgress
+          op={batchOp}
+          statuses={batchStatuses}
+          activeIdx={batchIdx}
+          hash={hash}
+          error={error}
+          onRetry={retryBatchFromFailed}
+          onCancel={cancelBatch}
+        />
+      )}
+
       <div className="space-y-3">
         <Field label="Label">
           <div className="flex items-center rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
@@ -331,7 +455,7 @@ function AdminMintCard({ tld }: { tld: Tld }) {
               autoComplete="off"
               spellCheck={false}
             />
-            <span className="text-sm text-white/40">.ins</span>
+            <span className="text-sm text-white/40">{applyAllTlds && LIVE_TLDS.length > 1 ? `\u00d7 ${LIVE_TLDS.length} TLDs` : tldSuffix(tld)}</span>
           </div>
         </Field>
         <Field label="Recipient address">
@@ -348,24 +472,31 @@ function AdminMintCard({ tld }: { tld: Tld }) {
 
         <button
           onClick={onMint}
-          disabled={!valid || !targetValid || !REGISTRY_LIVE || busy || isConfirmed}
+          disabled={!valid || !targetValid || !REGISTRY_LIVE || busy || (isConfirmed && !batchOp) || !!batchOp}
           className="btn-primary w-full justify-center"
         >
           {isPending ? (
             <><Loader2 className="mr-1 inline h-4 w-4 animate-spin" />Confirm in wallet…</>
           ) : isConfirming ? (
             <><Loader2 className="mr-1 inline h-4 w-4 animate-spin" />Minting…</>
-          ) : isConfirmed ? (
+          ) : isConfirmed && !batchOp ? (
             <><Check className="mr-1 inline h-4 w-4" />Gifted!</>
           ) : (
-            <>Mint &amp; send →</>
+            <>Mint &amp; send{applyAllTlds && LIVE_TLDS.length > 1 ? ` \u00d7 ${LIVE_TLDS.length}` : ""} →</>
           )}
         </button>
 
         <div className="flex items-center justify-between text-xs text-white/40">
           {valid && clean ? (
             <span>
-              Will mint <span className="font-mono text-white/70">{clean}.ins</span>
+              Will mint{" "}
+              {applyAllTlds && LIVE_TLDS.length > 1 ? (
+                <span className="font-mono text-white/70">
+                  {clean}{tldSuffix(tld)} + {LIVE_TLDS.length - 1} other TLD{LIVE_TLDS.length - 1 > 1 ? "s" : ""}
+                </span>
+              ) : (
+                <span className="font-mono text-white/70">{clean}{tldSuffix(tld)}</span>
+              )}
               {targetValid && <> to <span className="font-mono text-white/70">{shortAddr(target)}</span></>}
             </span>
           ) : <span />}
@@ -398,9 +529,55 @@ function saveCandidates(labels: string[]) {
   }
 }
 
+/**
+ * Multi-TLD batch state machine — used for "Apply to all 3 TLDs" reserve
+ * actions and the one-shot Sync button. Queues a sequence of (TLD →
+ * function args) operations, fires them sequentially via writeContract,
+ * tracks per-TLD status, and pauses on error so the operator can retry.
+ */
+type BatchTldStatus = "pending" | "signing" | "mined" | "failed";
+
+type BatchOp = {
+  /** Which contract function to call on each TLD's Registry. */
+  fn: "setReserved" | "setReservedBatch" | "adminMint";
+  /** Arg builder per TLD. Most ops use the same args for every TLD;
+   *  the Sync flow uses per-TLD diffs and so receives a builder. */
+  argsForTld: (tld: Tld) => readonly unknown[];
+  /** Display label so the UI can name the op in progress. */
+  label: string;
+  /** Which TLDs are queued. Order matters — they execute sequentially. */
+  tlds: readonly Tld[];
+};
+
 function ReservedNamesCard({ tld }: { tld: Tld }) {
   const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
   const REGISTRY_LIVE = isTldLive(tld);
+
+  // "Apply to all 3 TLDs" toggle. When ON, every reserve / unreserve /
+  // batch-seed action fires on .ins → .igra → .ikas in sequence (mined-first
+  // proceed-to-next pattern). Persisted across sessions so the operator's
+  // preference sticks.
+  const [applyAllTlds, setApplyAllTlds] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = typeof window !== "undefined"
+        ? window.localStorage.getItem("ins:reservedApplyAll")
+        : null;
+      if (saved === "true") setApplyAllTlds(true);
+    } catch { /* localStorage may be blocked — silently fall back */ }
+  }, []);
+  const onToggleApplyAll = (v: boolean) => {
+    setApplyAllTlds(v);
+    try { window.localStorage.setItem("ins:reservedApplyAll", String(v)); } catch { /* noop */ }
+  };
+
+  // Multi-TLD batch queue. When non-null, a sequence of writes is in flight.
+  const [batchOp, setBatchOp] = useState<BatchOp | null>(null);
+  const [batchIdx, setBatchIdx] = useState(0);
+  const [batchStatuses, setBatchStatuses] = useState<Record<Tld, BatchTldStatus>>({
+    ins: "pending", igra: "pending", ikas: "pending",
+  });
+
   // Candidate pool is seeded from: the in-code RESERVED_NAMES list + whatever is cached in
   // localStorage + whatever /api/reserved-labels discovers on-chain (auto-populated).
   // On-chain `reserved(label)` is still the source of truth per row.
@@ -523,8 +700,122 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConfirmed, pendingAction, reset, refetchReserved]);
 
+  // Multi-TLD batch — fire the next pending TLD in the queue. Idempotent:
+  // returns early if there's no active batch, no pending TLDs, or a tx is
+  // already in flight.
+  const fireNextInBatch = (op: BatchOp, idx: number) => {
+    if (idx >= op.tlds.length) return;
+    const nextTld = op.tlds[idx];
+    setBatchStatuses((s) => ({ ...s, [nextTld]: "signing" }));
+    reset();
+    writeContract({
+      address: REGISTRY_ADDRESSES[nextTld],
+      abi: REGISTRY_ABI,
+      functionName: op.fn,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      args: op.argsForTld(nextTld) as any,
+    });
+  };
+
+  // Start a multi-TLD batch from scratch.
+  const startBatch = (op: BatchOp) => {
+    if (busy || batchOp) return;
+    const fresh: Record<Tld, BatchTldStatus> = {
+      ins: "pending", igra: "pending", ikas: "pending",
+    };
+    setBatchStatuses(fresh);
+    setBatchOp(op);
+    setBatchIdx(0);
+    fireNextInBatch(op, 0);
+  };
+
+  // On tx confirm during a batch, mark mined + advance to next TLD.
+  useEffect(() => {
+    if (!batchOp || !isConfirmed) return;
+    const currentTld = batchOp.tlds[batchIdx];
+    setBatchStatuses((s) => ({ ...s, [currentTld]: "mined" }));
+    if (batchIdx + 1 < batchOp.tlds.length) {
+      const nextIdx = batchIdx + 1;
+      setBatchIdx(nextIdx);
+      fireNextInBatch(batchOp, nextIdx);
+    } else {
+      // Batch complete — refresh chain state, clear queue.
+      refetchReserved();
+      fetchChainLabels();
+      setNewLabel("");
+      const t = setTimeout(() => {
+        setBatchOp(null);
+        reset();
+      }, 1500);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConfirmed]);
+
+  // On tx error during a batch, mark failed + freeze queue (operator picks
+  // retry from the failed step or cancels the whole batch).
+  useEffect(() => {
+    if (!batchOp || !error) return;
+    const currentTld = batchOp.tlds[batchIdx];
+    setBatchStatuses((s) => ({ ...s, [currentTld]: "failed" }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error]);
+
+  const retryBatchFromFailed = () => {
+    if (!batchOp) return;
+    const failedIdx = batchOp.tlds.findIndex((t) => batchStatuses[t] === "failed");
+    if (failedIdx === -1) return;
+    setBatchStatuses((s) => ({ ...s, [batchOp.tlds[failedIdx]]: "pending" }));
+    setBatchIdx(failedIdx);
+    reset();
+    fireNextInBatch(batchOp, failedIdx);
+  };
+
+  const cancelBatch = () => {
+    setBatchOp(null);
+    setBatchIdx(0);
+    setBatchStatuses({ ins: "pending", igra: "pending", ikas: "pending" });
+    reset();
+  };
+
+  // When a batch finishes, dismiss the Sync banner (if it was the trigger)
+  // with a success message. Triggered by batchOp going non-null → null.
+  const wasBatching = useRef(false);
+  useEffect(() => {
+    if (batchOp) wasBatching.current = true;
+    else if (wasBatching.current) {
+      wasBatching.current = false;
+      setSyncStatus((s) => {
+        if (s.kind === "running" && s.missingByTld) {
+          const total = Object.values(s.missingByTld).reduce((sum, a) => sum + (a?.length ?? 0), 0);
+          const tlds = (Object.keys(s.missingByTld) as Tld[]).map(tldSuffix).join(", ");
+          return { kind: "done", message: `Synced ${total} label${total === 1 ? "" : "s"} to ${tlds}.` };
+        }
+        return s;
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [batchOp]);
+
+  // List of TLDs to apply an action to. Always starts with the active TLD
+  // so the operator sees their primary target progress first.
+  const tldQueue = (): Tld[] => {
+    if (!applyAllTlds) return [tld];
+    const others = (TLDS as readonly Tld[]).filter((t) => t !== tld && isTldLive(t));
+    return [tld, ...others];
+  };
+
   const onAdd = () => {
     if (!valid) return;
+    if (applyAllTlds && tldQueue().length > 1) {
+      startBatch({
+        fn: "setReserved",
+        argsForTld: () => [clean, true],
+        label: `Reserve "${clean}"`,
+        tlds: tldQueue(),
+      });
+      return;
+    }
     setPendingAction({ kind: "add", label: clean });
     writeContract({
       address: REGISTRY_ADDRESS,
@@ -535,6 +826,15 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
   };
 
   const onRemove = (label: string) => {
+    if (applyAllTlds && tldQueue().length > 1) {
+      startBatch({
+        fn: "setReserved",
+        argsForTld: () => [label, false],
+        label: `Unreserve "${label}"`,
+        tlds: tldQueue(),
+      });
+      return;
+    }
     setPendingAction({ kind: "remove", label });
     writeContract({
       address: REGISTRY_ADDRESS,
@@ -553,12 +853,70 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
     const toAdd = Array.from(RESERVED_NAMES).filter((n) => !reservedSet.has(n));
     if (toAdd.length === 0) return;
     setCandidates((prev) => Array.from(new Set([...prev, ...toAdd])).sort());
+    if (applyAllTlds && tldQueue().length > 1) {
+      startBatch({
+        fn: "setReservedBatch",
+        argsForTld: () => [toAdd, true],
+        label: `Seed ${toAdd.length} reserved labels`,
+        tlds: tldQueue(),
+      });
+      return;
+    }
     setPendingAction({ kind: "add", label: "(batch)" });
     writeContract({
       address: REGISTRY_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: "setReservedBatch",
       args: [toAdd, true],
+    });
+  };
+
+  /**
+   * One-shot Sync — copy this TLD's full reserved list to the other 2 TLDs.
+   * Reads each other TLD's reserved labels via /api/reserved-labels?tld=,
+   * computes the diff (labels reserved here but not there), and submits
+   * setReservedBatch(diff, true) on each missing TLD. Skips TLDs that are
+   * already in sync.
+   */
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>({ kind: "idle" });
+  const onSync = async () => {
+    setSyncStatus({ kind: "computing" });
+    try {
+      const sourceLabels = Array.from(reservedSet);
+      if (sourceLabels.length === 0) {
+        setSyncStatus({ kind: "done", error: "No reserved labels on the current TLD to sync." });
+        return;
+      }
+      const otherTlds = (TLDS as readonly Tld[]).filter((t) => t !== tld && isTldLive(t));
+      const missingByTld: Partial<Record<Tld, string[]>> = {};
+      for (const otherTld of otherTlds) {
+        const res = await fetch(`/api/reserved-labels?tld=${otherTld}`, { cache: "no-store" });
+        const data = (await res.json()) as { labels?: string[] };
+        const existing = new Set(data.labels ?? []);
+        const missing = sourceLabels.filter((l) => !existing.has(l));
+        if (missing.length > 0) missingByTld[otherTld] = missing;
+      }
+      const totalMissing = Object.values(missingByTld).reduce((s, arr) => s + (arr?.length ?? 0), 0);
+      if (totalMissing === 0) {
+        setSyncStatus({ kind: "done", error: "All reserved labels already mirrored on the other TLDs. Nothing to sync." });
+        return;
+      }
+      setSyncStatus({ kind: "ready", missingByTld });
+    } catch (e) {
+      setSyncStatus({ kind: "done", error: (e as Error).message ?? "sync diff failed" });
+    }
+  };
+  const startSync = () => {
+    if (syncStatus.kind !== "ready" || !syncStatus.missingByTld) return;
+    const tldsToHit = (Object.keys(syncStatus.missingByTld) as Tld[]).filter(
+      (t) => (syncStatus.missingByTld![t]?.length ?? 0) > 0,
+    );
+    setSyncStatus({ ...syncStatus, kind: "running" });
+    startBatch({
+      fn: "setReservedBatch",
+      argsForTld: (t) => [syncStatus.missingByTld![t] ?? [], true],
+      label: `Sync ${Object.values(syncStatus.missingByTld!).reduce((s, a) => s + (a?.length ?? 0), 0)} labels to ${tldsToHit.join(", ")}`,
+      tlds: tldsToHit,
     });
   };
 
@@ -590,7 +948,41 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
       title="Reserved names"
       subtitle={subtitle}
     >
-      <div className="flex gap-2">
+      {/* Multi-TLD apply toggle + sync — sits at the top so it's seen
+          before any reserve action is taken. */}
+      <ApplyAllTldsToggle
+        on={applyAllTlds}
+        onToggle={onToggleApplyAll}
+        currentTld={tld}
+        liveTldCount={LIVE_TLDS.length}
+        disabled={busy || !!batchOp}
+      />
+
+      {/* One-shot Sync — copies current TLD's reservations to the other 2 */}
+      <SyncReservationsRow
+        currentTld={tld}
+        liveTldCount={LIVE_TLDS.length}
+        status={syncStatus}
+        onSync={onSync}
+        onStartSync={startSync}
+        onDismiss={() => setSyncStatus({ kind: "idle" })}
+        disabled={busy || !!batchOp}
+      />
+
+      {/* Batch progress display when a multi-TLD op is in flight. */}
+      {batchOp && (
+        <MultiTldBatchProgress
+          op={batchOp}
+          statuses={batchStatuses}
+          activeIdx={batchIdx}
+          hash={hash}
+          error={error}
+          onRetry={retryBatchFromFailed}
+          onCancel={cancelBatch}
+        />
+      )}
+
+      <div className="mt-3 flex gap-2">
         <input
           value={newLabel}
           onChange={(e) => setNewLabel(e.target.value)}
@@ -600,23 +992,23 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
         />
         <button
           onClick={onAdd}
-          disabled={!valid || !REGISTRY_LIVE || busy}
+          disabled={!valid || !REGISTRY_LIVE || busy || !!batchOp}
           className="inline-flex items-center gap-1 rounded-xl border border-red-500/30 bg-red-500/10 px-4 text-sm font-semibold text-red-300 transition hover:bg-red-500/20 disabled:opacity-40"
         >
           {busy && pendingAction?.kind === "add" && pendingAction.label === clean
             ? <Loader2 className="h-4 w-4 animate-spin" />
             : <Plus className="h-4 w-4" />}
-          Reserve
+          Reserve{applyAllTlds && LIVE_TLDS.length > 1 ? ` × ${LIVE_TLDS.length}` : ""}
         </button>
       </div>
 
       <div className="mt-3 flex items-center justify-between">
         <button
           onClick={onBatchSeed}
-          disabled={!REGISTRY_LIVE || busy}
+          disabled={!REGISTRY_LIVE || busy || !!batchOp}
           className="text-[11px] text-white/50 underline decoration-dotted hover:text-cyan disabled:opacity-40"
         >
-          Batch-reserve full ecosystem seed list ({Array.from(RESERVED_NAMES).length})
+          Batch-reserve full ecosystem seed list ({Array.from(RESERVED_NAMES).length}){applyAllTlds && LIVE_TLDS.length > 1 ? ` × ${LIVE_TLDS.length} TLDs` : ""}
         </button>
         <TxLink hash={hash} />
       </div>
@@ -715,14 +1107,14 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
                 {isOnChain && (
                   <button
                     onClick={() => onRemove(label)}
-                    disabled={!REGISTRY_LIVE || busy}
+                    disabled={!REGISTRY_LIVE || busy || !!batchOp}
                     className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-xs text-white/60 transition hover:border-red-500/30 hover:text-red-300 disabled:opacity-40"
-                    title="Call setReserved(label, false) on-chain"
+                    title={applyAllTlds && LIVE_TLDS.length > 1 ? `Unreserve on all ${LIVE_TLDS.length} TLDs` : "Call setReserved(label, false) on-chain"}
                   >
                     {busy && pendingAction?.kind === "remove" && pendingAction.label === label
                       ? <Loader2 className="h-3 w-3 animate-spin" />
                       : <Trash2 className="h-3 w-3" />}
-                    Unreserve
+                    Unreserve{applyAllTlds && LIVE_TLDS.length > 1 ? ` × ${LIVE_TLDS.length}` : ""}
                   </button>
                 )}
                 {!isOnChain && (
@@ -1665,5 +2057,204 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <div className="mb-1 text-[11px] uppercase tracking-wider text-white/50">{label}</div>
       {children}
     </label>
+  );
+}
+
+/* ─────────────────────────── Multi-TLD helpers ─────────────────── */
+
+/** Toggle that controls whether subsequent reserve / unreserve / batch
+ *  actions on this card fan out to every live TLD. State persists across
+ *  sessions via localStorage. */
+function ApplyAllTldsToggle({
+  on, onToggle, currentTld, liveTldCount, disabled,
+}: {
+  on: boolean;
+  onToggle: (v: boolean) => void;
+  currentTld: Tld;
+  liveTldCount: number;
+  disabled: boolean;
+}) {
+  if (liveTldCount < 2) return null; // nothing to fan out to
+  return (
+    <div className={`mb-3 flex items-center justify-between gap-3 rounded-xl border p-3 transition ${
+      on ? "border-cyan/40 bg-cyan/[0.05]" : "border-white/10 bg-white/[0.02]"
+    }`}>
+      <div className="flex-1">
+        <div className="text-xs font-bold text-white">
+          Apply to all {liveTldCount} TLDs
+          {on && <span className="ml-2 rounded-full border border-cyan/40 bg-cyan/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-cyan">on</span>}
+        </div>
+        <div className="mt-0.5 text-[11px] text-white/55">
+          {on
+            ? `Each reserve / unreserve / batch sends ${liveTldCount} sequential txs (one per TLD).`
+            : `Currently writes to ${tldSuffix(currentTld)} only. Toggle on to fan out to .ins / .igra / .ikas in one click.`}
+        </div>
+      </div>
+      <button
+        onClick={() => onToggle(!on)}
+        disabled={disabled}
+        aria-pressed={on}
+        className={`relative inline-flex h-6 w-11 flex-none items-center rounded-full transition disabled:opacity-40 ${
+          on ? "bg-cyan" : "bg-white/15"
+        }`}
+      >
+        <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition ${
+          on ? "translate-x-6" : "translate-x-1"
+        }`} />
+      </button>
+    </div>
+  );
+}
+
+/** Inline row that exposes the one-shot Sync flow: read this TLD's
+ *  reserved labels, diff against the other live TLDs, and offer to
+ *  setReservedBatch the missing labels onto each. */
+type SyncStatus =
+  | { kind: "idle" }
+  | { kind: "computing" }
+  | { kind: "ready"; missingByTld?: Partial<Record<Tld, string[]>> }
+  | { kind: "running"; missingByTld?: Partial<Record<Tld, string[]>> }
+  | { kind: "done"; missingByTld?: Partial<Record<Tld, string[]>>; error?: string; message?: string };
+
+function SyncReservationsRow({
+  currentTld, liveTldCount, status, onSync, onStartSync, onDismiss, disabled,
+}: {
+  currentTld: Tld;
+  liveTldCount: number;
+  status: SyncStatus;
+  onSync: () => void;
+  onStartSync: () => void;
+  onDismiss: () => void;
+  disabled: boolean;
+}) {
+  if (liveTldCount < 2) return null;
+  return (
+    <div className="mb-3 rounded-xl border border-plum/30 bg-plum/[0.04] p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex-1 text-[11px] text-white/65">
+          <span className="font-bold text-plum">Sync</span> — copy {tldSuffix(currentTld)}&rsquo;s on-chain reserved list onto the other {liveTldCount - 1} TLD{liveTldCount - 1 > 1 ? "s" : ""}.
+        </div>
+        {status.kind === "idle" && (
+          <button
+            onClick={onSync}
+            disabled={disabled}
+            className="rounded-lg border border-plum/40 bg-plum/10 px-3 py-1 text-xs font-bold text-plum transition hover:bg-plum/20 disabled:opacity-40"
+          >
+            Compute diff
+          </button>
+        )}
+        {status.kind === "computing" && (
+          <span className="inline-flex items-center gap-1.5 text-xs text-plum">
+            <Loader2 className="h-3 w-3 animate-spin" /> Reading other TLDs…
+          </span>
+        )}
+        {status.kind === "ready" && status.missingByTld && (
+          <button
+            onClick={onStartSync}
+            disabled={disabled}
+            className="rounded-lg border border-plum/40 bg-plum/10 px-3 py-1 text-xs font-bold text-plum transition hover:bg-plum/20 disabled:opacity-40"
+          >
+            Apply diff
+          </button>
+        )}
+        {status.kind === "running" && (
+          <span className="inline-flex items-center gap-1.5 text-xs text-plum">
+            <Loader2 className="h-3 w-3 animate-spin" /> Syncing…
+          </span>
+        )}
+        {status.kind === "done" && (
+          <button
+            onClick={onDismiss}
+            className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/60 hover:text-white"
+          >
+            Dismiss
+          </button>
+        )}
+      </div>
+      {status.kind === "ready" && status.missingByTld && (
+        <div className="mt-2 space-y-1 text-[11px] text-white/55">
+          {(Object.keys(status.missingByTld) as Tld[]).map((t) => (
+            <div key={t}>
+              <span className="font-mono text-white/70">{tldSuffix(t)}</span> ← {status.missingByTld![t]?.length ?? 0} label{(status.missingByTld![t]?.length ?? 0) === 1 ? "" : "s"} to add
+            </div>
+          ))}
+        </div>
+      )}
+      {status.kind === "done" && status.message && (
+        <div className="mt-2 text-[11px] text-emerald-300">{status.message}</div>
+      )}
+      {status.kind === "done" && status.error && (
+        <div className="mt-2 text-[11px] text-amber-300">{status.error}</div>
+      )}
+    </div>
+  );
+}
+
+/** Visual progress strip while a multi-TLD batch is in flight.
+ *  Per-TLD chips: pending / signing / mined / failed. */
+function MultiTldBatchProgress({
+  op, statuses, activeIdx, hash, error, onRetry, onCancel,
+}: {
+  op: BatchOp;
+  statuses: Record<Tld, BatchTldStatus>;
+  activeIdx: number;
+  hash?: `0x${string}`;
+  error: { message: string } | null;
+  onRetry: () => void;
+  onCancel: () => void;
+}) {
+  const failed = op.tlds.find((t) => statuses[t] === "failed");
+  return (
+    <div className={`mb-3 rounded-xl border p-3 ${
+      failed ? "border-red-500/40 bg-red-500/[0.04]" : "border-cyan/40 bg-cyan/[0.04]"
+    }`}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex-1">
+          <div className="text-xs font-bold text-white">{op.label}</div>
+          <div className="mt-0.5 text-[11px] text-white/55">
+            Step {Math.min(activeIdx + 1, op.tlds.length)} of {op.tlds.length}
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {op.tlds.map((t) => {
+            const s = statuses[t];
+            const cls =
+              s === "mined"   ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300" :
+              s === "signing" ? "border-cyan/40 bg-cyan/15 text-cyan" :
+              s === "failed"  ? "border-red-500/40 bg-red-500/10 text-red-300" :
+                                "border-white/15 bg-white/[0.04] text-white/55";
+            return (
+              <span key={t} className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${cls}`}>
+                {s === "signing" && <Loader2 className="h-2.5 w-2.5 animate-spin" />}
+                {s === "mined"   && <Check className="h-2.5 w-2.5" />}
+                {tldSuffix(t)}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+      {hash && <div className="mt-2"><TxLink hash={hash} /></div>}
+      {failed && (
+        <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-red-300">
+          <span className="truncate" title={error?.message}>
+            Failed on {tldSuffix(failed)} — {error?.message?.split("\n")[0] ?? "unknown error"}
+          </span>
+          <span className="flex flex-none gap-1">
+            <button
+              onClick={onRetry}
+              className="rounded-md border border-red-500/40 bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-200 hover:bg-red-500/20"
+            >
+              Retry
+            </button>
+            <button
+              onClick={onCancel}
+              className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] text-white/60 hover:text-white"
+            >
+              Cancel
+            </button>
+          </span>
+        </div>
+      )}
+    </div>
   );
 }
