@@ -179,13 +179,7 @@ function AdminDashboard() {
         <ReservedNamesCard tld={activeTld} />
         <TierPricingCard tld={activeTld} />
         <PremiumOverridesCard tld={activeTld} />
-        {/* PreLaunchListingsCard temporarily disabled — has a Safe-timing race
-            condition where wagmi returns instantly on Safe-proposed tx, so the
-            step queue fires all 11 steps before earlier ones are mined. Result:
-            createListing reads tokenId=0 because the mint hasn't executed yet,
-            silent inner-call revert, no listing. Manual AdminMint + /domains
-            ListForSaleButton work fine. To-do: make the step queue Safe-aware
-            (poll chain state, not wagmi receipt). */}
+        <PreLaunchListingsCard tld={activeTld} />
         <CleanupCard tld={activeTld} />
         <TreasuryCard tld={activeTld} />
         <MarketplaceCard tld={activeTld} />
@@ -2911,11 +2905,9 @@ function PreLaunchListingsCard({ tld }: { tld: Tld }) {
   const [stepIdx, setStepIdx] = useState(0);
   const [stepStatuses, setStepStatuses] = useState<BatchTldStatus[]>([]);
   const [stepHashes, setStepHashes] = useState<(`0x${string}` | undefined)[]>([]);
-  const stepProcessedHashRef = useRef<`0x${string}` | null>(null);
 
   const { writeContract, data: hash, isPending, error, reset } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
-  const busy = isPending || isConfirming || !!activeQueue;
+  const busy = isPending || !!activeQueue;
 
   /** Resolve tokenId for a "list" step (read fresh post-mint). */
   const resolveTokenId = async (t: Tld): Promise<bigint> => {
@@ -2929,12 +2921,124 @@ function PreLaunchListingsCard({ tld }: { tld: Tld }) {
     return id as bigint;
   };
 
+  /* ── Safe-aware step runner ─────────────────────────────────
+   * Old design relied on wagmi's `useWaitForTransactionReceipt` to know
+   * when a step "mined" — but with a Safe-mediated wallet, the outer
+   * Safe.execTransaction returns success even when the inner call
+   * (adminMint, createListing) reverts silently. That made the queue
+   * race ahead, computing createListing args against a tokenId of 0
+   * because the mint hadn't actually executed yet → silent revert →
+   * no listings.
+   *
+   * New design (post 2026-04-26 pivot): after firing each writeContract,
+   * POLL the chain for the EXPECTED state change with viem readContract.
+   *   - reserve:  poll reserved(label) → true
+   *   - mint:     poll tokenIdOf(label) → non-zero AND ownerOf == admin
+   *   - approve:  poll isApprovedForAll(admin, market) → true
+   *   - list:     poll getActiveListing(tokenId).active → true
+   *
+   * Works for EOA wallets (state changes in ~5s, polling catches it
+   * fast) AND Safe wallets (state may take longer if Safe queues; we
+   * wait up to POLL_TIMEOUT_MS, default 180s, then mark failed with a
+   * helpful "Safe execution may still be pending" message).
+   */
+  const POLL_INTERVAL_MS = 3_000;
+  const POLL_TIMEOUT_MS  = 180_000; // 3 min — generous for Safe queue execution
+
+  const checkStepCompleted = async (step: ListStep): Promise<boolean> => {
+    if (!publicClient) return false;
+    try {
+      if (step.kind === "reserve") {
+        const r = await publicClient.readContract({
+          address: REGISTRY_ADDRESSES[step.tld],
+          abi: REGISTRY_ABI,
+          functionName: "reserved",
+          args: [cleanedLabel],
+        });
+        return r === true;
+      }
+      if (step.kind === "mint") {
+        const id = (await publicClient.readContract({
+          address: REGISTRY_ADDRESSES[step.tld],
+          abi: REGISTRY_ABI,
+          functionName: "tokenIdOf",
+          args: [cleanedLabel],
+        })) as bigint;
+        if (id === 0n) return false;
+        const owner = (await publicClient.readContract({
+          address: REGISTRY_ADDRESSES[step.tld],
+          abi: REGISTRY_ABI,
+          functionName: "ownerOf",
+          args: [id],
+        })) as `0x${string}`;
+        return owner.toLowerCase() === (address ?? "").toLowerCase();
+      }
+      if (step.kind === "approve") {
+        if (!address) return false;
+        const ok = await publicClient.readContract({
+          address: REGISTRY_ADDRESSES[step.tld],
+          abi: REGISTRY_ABI,
+          functionName: "isApprovedForAll",
+          args: [address, MARKETPLACE_ADDRESSES[step.tld]],
+        });
+        return ok === true;
+      }
+      if (step.kind === "list") {
+        const id = (await publicClient.readContract({
+          address: REGISTRY_ADDRESSES[step.tld],
+          abi: REGISTRY_ABI,
+          functionName: "tokenIdOf",
+          args: [cleanedLabel],
+        })) as bigint;
+        if (id === 0n) return false;
+        const listing = (await publicClient.readContract({
+          address: MARKETPLACE_ADDRESSES[step.tld],
+          abi: MARKETPLACE_ABI,
+          functionName: "getActiveListing",
+          args: [id],
+        })) as { active: boolean };
+        return listing.active === true;
+      }
+    } catch {
+      return false;
+    }
+    return false;
+  };
+
+  /** Resolves once the step's expected state is on chain, OR rejects on
+   *  timeout. Polls every POLL_INTERVAL_MS, gives up after POLL_TIMEOUT_MS. */
+  const pollForCompletion = async (step: ListStep, atIdx: number): Promise<void> => {
+    const start = Date.now();
+    // First check immediately — if state already true (rare but possible for
+    // already-reserved labels etc.), skip the wait entirely.
+    if (await checkStepCompleted(step)) return;
+    while (Date.now() - start < POLL_TIMEOUT_MS) {
+      // Bail if user cancelled this whole queue
+      if (activeQueueRef.current === null) {
+        throw new Error("Queue cancelled");
+      }
+      // Or if user moved on to a different step (retry / cancel current)
+      if (stepIdxRef.current !== atIdx) {
+        throw new Error("Step superseded");
+      }
+      await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+      if (await checkStepCompleted(step)) return;
+    }
+    throw new Error(
+      `Step "${step.kind}" timed out after ${Math.round(POLL_TIMEOUT_MS / 1000)}s. ` +
+      `Either the wallet popup was dismissed, the inner call reverted silently ` +
+      `(e.g. createListing with tokenId=0), or a Safe-mediated tx is still ` +
+      `awaiting execution. Check Safe queue + retry.`,
+    );
+  };
+
   const fireStep = async (queue: ListStep[], idx: number) => {
     if (idx >= queue.length) return;
     const step = queue[idx];
     setStepStatuses((arr) => arr.map((s, i) => (i === idx ? "signing" : s)));
     reset();
 
+    // ── Phase 1: fire the writeContract (proposes tx; with EOA, mines ~5s; with Safe, queues)
     try {
       if (step.kind === "reserve") {
         writeContract({
@@ -2960,9 +3064,11 @@ function PreLaunchListingsCard({ tld }: { tld: Tld }) {
         });
       } else if (step.kind === "list") {
         const tokenId = await resolveTokenId(step.tld);
-        if (tokenId === 0n) throw new Error("tokenId still 0 after mint — chain lag");
+        if (tokenId === 0n) {
+          throw new Error("Cannot list — tokenId is 0. Mint hasn't completed yet on chain.");
+        }
         const pf = preflight.find((p) => p.tld === step.tld);
-        const ffBps = pf?.featureFeeBps ?? 100; // 1% default
+        const ffBps = pf?.featureFeeBps ?? 100;
         const featureFee = (priceWei * BigInt(ffBps)) / 10000n;
         writeContract({
           address: MARKETPLACE_ADDRESSES[step.tld],
@@ -2974,9 +3080,42 @@ function PreLaunchListingsCard({ tld }: { tld: Tld }) {
       }
     } catch (e) {
       setStepStatuses((arr) => arr.map((s, i) => (i === idx ? "failed" : s)));
-      // surface the error via `error` state by re-throwing into wagmi-land
-      // is awkward, so just leave it; the UI shows the .signing → .failed jump
-      console.error("PreLaunchListingsCard step failed", e);
+      console.error("PreLaunchListings fire failed:", e);
+      return;
+    }
+
+    // ── Phase 2: poll the chain for the expected state change.
+    // This is THE Safe-aware bit. We don't trust wagmi's isConfirmed
+    // because Safe can return success-of-outer with revert-of-inner.
+    try {
+      await pollForCompletion(step, idx);
+      // Confirmed via chain state. Mark mined + capture whatever hash wagmi has.
+      setStepStatuses((arr) => arr.map((s, i) => (i === idx ? "mined" : s)));
+      setStepHashes((arr) =>
+        arr.map((h, i) => (i === idx ? (hashRef.current ?? "0x" as `0x${string}`) : h)),
+      );
+
+      if (idx + 1 < queue.length) {
+        // Small breath so any indexers settle, then advance.
+        await new Promise((r) => setTimeout(r, 500));
+        void fireStep(queue, idx + 1);
+      } else {
+        // All steps verified on chain. Refresh + linger green strip.
+        refetchReads1();
+        refetchReads2();
+        setTimeout(() => {
+          setActiveQueue(null);
+          setStepStatuses([]);
+          setStepHashes([]);
+          setStepIdx(0);
+          setLabelInput("");
+          setPriceInput("");
+          reset();
+        }, 3500);
+      }
+    } catch (e) {
+      setStepStatuses((arr) => arr.map((s, i) => (i === idx ? "failed" : s)));
+      console.error("PreLaunchListings poll failed:", e);
     }
   };
 
@@ -2986,43 +3125,20 @@ function PreLaunchListingsCard({ tld }: { tld: Tld }) {
     setStepIdx(0);
     setStepStatuses(plannedSteps.map(() => "pending"));
     setStepHashes(plannedSteps.map(() => undefined));
-    stepProcessedHashRef.current = null;
+    activeQueueRef.current = plannedSteps;
+    stepIdxRef.current = 0;
     await fireStep(plannedSteps, 0);
   };
 
-  // Confirm-watcher — same hash-dedupe pattern as the other batch cards.
-  useEffect(() => {
-    if (!activeQueue || !isConfirmed || !hash) return;
-    if (stepProcessedHashRef.current === hash) return;
-    stepProcessedHashRef.current = hash;
+  // Refs that polling loops use to detect cancel/supersede without stale closures.
+  const activeQueueRef = useRef<ListStep[] | null>(null);
+  const stepIdxRef = useRef<number>(0);
+  const hashRef = useRef<`0x${string}` | undefined>(undefined);
+  useEffect(() => { activeQueueRef.current = activeQueue; }, [activeQueue]);
+  useEffect(() => { stepIdxRef.current = stepIdx; }, [stepIdx]);
+  useEffect(() => { hashRef.current = hash; }, [hash]);
 
-    setStepStatuses((arr) => arr.map((s, i) => (i === stepIdx ? "mined" : s)));
-    setStepHashes((arr) => arr.map((h, i) => (i === stepIdx ? hash : h)));
-    if (stepIdx + 1 < activeQueue.length) {
-      const nextIdx = stepIdx + 1;
-      setStepIdx(nextIdx);
-      // Small delay so the chain picks up the just-mined state for the next read.
-      void fireStep(activeQueue, nextIdx);
-    } else {
-      // Done. Refresh preflight reads + linger green ~3.5s.
-      refetchReads1();
-      refetchReads2();
-      const t = setTimeout(() => {
-        setActiveQueue(null);
-        setStepStatuses([]);
-        setStepHashes([]);
-        setStepIdx(0);
-        stepProcessedHashRef.current = null;
-        setLabelInput("");
-        setPriceInput("");
-        reset();
-      }, 3500);
-      return () => clearTimeout(t);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConfirmed, hash]);
-
-  // Mark current step failed on error.
+  // Mark step failed if wagmi reports a write-side error (rejected popup etc.)
   useEffect(() => {
     if (!activeQueue || !error) return;
     setStepStatuses((arr) => arr.map((s, i) => (i === stepIdx ? "failed" : s)));
@@ -3035,7 +3151,7 @@ function PreLaunchListingsCard({ tld }: { tld: Tld }) {
     if (failedIdx === -1) return;
     setStepStatuses((arr) => arr.map((s, i) => (i === failedIdx ? "pending" : s)));
     setStepIdx(failedIdx);
-    stepProcessedHashRef.current = null;
+    stepIdxRef.current = failedIdx;
     reset();
     void fireStep(activeQueue, failedIdx);
   };
@@ -3045,7 +3161,7 @@ function PreLaunchListingsCard({ tld }: { tld: Tld }) {
     setStepIdx(0);
     setStepStatuses([]);
     setStepHashes([]);
-    stepProcessedHashRef.current = null;
+    activeQueueRef.current = null; // signals any in-flight pollForCompletion to bail
     reset();
   };
 
