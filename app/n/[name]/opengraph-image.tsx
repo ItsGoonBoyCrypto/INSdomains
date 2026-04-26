@@ -133,15 +133,15 @@ export default async function NameOG({ params }: { params: { name: string } }) {
               alignItems: "center",
               padding: "10px 18px",
               borderRadius: 999,
-              border: `1px solid ${exists ? accent : "rgba(52,211,153,0.6)"}55`,
-              background: `${exists ? accent : "rgba(52,211,153,1)"}1a`,
+              border: `1px solid ${exists ? accent : "#34d399"}88`,
+              background: exists ? `${accent}1a` : "rgba(52,211,153,0.10)",
               color: exists ? accent : "#34d399",
               fontSize: 16,
               fontWeight: 800,
               letterSpacing: 1.5,
             }}
           >
-            {exists ? "★ MINTED ON IGRA" : "✨ AVAILABLE TO CLAIM"}
+            {exists ? "MINTED ON IGRA" : "AVAILABLE TO CLAIM"}
           </div>
         </div>
 
