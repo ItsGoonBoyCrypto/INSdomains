@@ -11,15 +11,15 @@ const TLD_COLOR: Record<Tld, string> = {
 };
 
 /**
- * Inline NFT-card preview matching the OG card's left-side visual identity.
- * Uses explicit inline styles (not bg-orb / ins-gradient-text utility classes)
- * so the card's gradients are scoped to the card itself, not the viewport.
+ * Inline SVG-based NFT-card preview. Uses SVG so the centered name auto-fits
+ * the card via viewBox scaling — no overflow regardless of label length.
  *
- * - Top row: tier pill + token id badge
- * - Centre: large gradient name (cyan → plum) + accent-coloured TLD suffix
- * - Bottom: "On-chain SVG" / "Permanent · No expiry"
- *
- * Auto-scales font for label length so 3-char and 20-char names both fit.
+ * Mirrors the on-chain Registry _renderSVG visual identity:
+ *   - Card surface: glass gradient + subtle border + TLD-coloured glow
+ *   - Top-left:  tier pill in TLD accent colour
+ *   - Top-right: optional INS #N token-id badge
+ *   - Centre:    big gradient name (cyan→plum) + accent-coloured TLD suffix
+ *   - Bottom:    "On-chain SVG" + "Permanent · No expiry"
  */
 export function NameCard({
   label,
@@ -35,24 +35,24 @@ export function NameCard({
   className?: string;
 }) {
   const accent = TLD_COLOR[tld];
+  const suffix = tldSuffix(tld);
 
-  // Font sizes that fit cleanly inside a square card.
-  // Empirically tuned so a 4-char and 12-char label both look balanced.
-  const labelStyle = (() => {
-    const len = label.length;
-    if (len <= 4) return { fontSize: "clamp(72px, 18vw, 132px)" };
-    if (len <= 8) return { fontSize: "clamp(48px, 12vw, 92px)" };
-    if (len <= 14) return { fontSize: "clamp(36px, 8vw, 64px)" };
-    return { fontSize: "clamp(28px, 6vw, 48px)" };
-  })();
+  // Single random-but-stable id per render so multiple cards on a page don't
+  // collide on gradient defs (SVG <defs> ids must be unique in DOM).
+  const gradId = `nc-grad-${tld}-${label}`.replace(/[^a-z0-9-]/gi, "");
 
-  const suffixStyle = (() => {
-    const len = label.length;
-    if (len <= 4) return { fontSize: "clamp(40px, 10vw, 72px)" };
-    if (len <= 8) return { fontSize: "clamp(28px, 7vw, 52px)" };
-    if (len <= 14) return { fontSize: "clamp(20px, 4.5vw, 36px)" };
-    return { fontSize: "clamp(16px, 3.5vw, 28px)" };
-  })();
+  // Estimate: Inter / sans bold avg char width ≈ 0.55 × fontSize.
+  // Combined string includes the suffix, so all of "igralabs.igra" must fit.
+  const combined = `${label}${suffix}`;
+  // SVG viewBox is 400×400. Text container is 360 wide (20px padding ea side).
+  // Pick fontSize so combined string fits at ~340 to leave a bit of breathing room.
+  const targetWidth = 340;
+  const charWidth = 0.55;
+  const idealFontSize = targetWidth / (combined.length * charWidth);
+  // Cap upper bound at 80 so 2-3 char names don't go absurdly large.
+  const labelFontSize = Math.min(80, Math.max(32, idealFontSize));
+  // Suffix slightly smaller for visual hierarchy.
+  const suffixFontSize = labelFontSize * 0.7;
 
   return (
     <div
@@ -63,157 +63,144 @@ export function NameCard({
         width: "100%",
         borderRadius: 28,
         overflow: "hidden",
-        // Card surface — soft glass gradient
         background:
           "linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",
         border: "1px solid rgba(255,255,255,0.10)",
-        // Card-scoped glow that matches the TLD accent
         boxShadow: `0 0 60px ${accent}26, 0 0 120px ${accent}14, inset 0 0 40px rgba(255,255,255,0.02)`,
       }}
     >
-      {/* Card-internal radial orbs (NOT viewport-fixed) */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: `radial-gradient(700px 500px at 100% 110%, ${accent}33, transparent 60%), radial-gradient(500px 350px at 0% -10%, ${CYAN}1f, transparent 65%)`,
-          pointerEvents: "none",
-        }}
-      />
-      {/* Subtle inner border highlight */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          borderRadius: 28,
-          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
-          pointerEvents: "none",
-        }}
-      />
-
-      <div
-        style={{
-          position: "relative",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          padding: "clamp(20px, 5%, 36px)",
-        }}
+      <svg
+        viewBox="0 0 400 400"
+        preserveAspectRatio="xMidYMid meet"
+        style={{ display: "block", width: "100%", height: "100%" }}
+        xmlns="http://www.w3.org/2000/svg"
       >
-        {/* Top: tier pill + token id badge */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 8,
-          }}
-        >
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              padding: "6px 12px",
-              borderRadius: 999,
-              border: `1px solid ${accent}66`,
-              background: `${accent}1a`,
-              color: accent,
-              fontSize: "clamp(9px, 1.6vw, 12px)",
-              fontWeight: 700,
-              letterSpacing: 1.6,
-              textTransform: "uppercase",
-              whiteSpace: "nowrap",
-            }}
+        <defs>
+          <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={CYAN} />
+            <stop offset="100%" stopColor={PLUM} />
+          </linearGradient>
+          <radialGradient id={`${gradId}-orb1`} cx="100%" cy="110%" r="70%">
+            <stop offset="0%" stopColor={accent} stopOpacity="0.20" />
+            <stop offset="100%" stopColor={accent} stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id={`${gradId}-orb2`} cx="0%" cy="-10%" r="55%">
+            <stop offset="0%" stopColor={CYAN} stopOpacity="0.12" />
+            <stop offset="100%" stopColor={CYAN} stopOpacity="0" />
+          </radialGradient>
+        </defs>
+
+        {/* Background orbs (card-scoped) */}
+        <rect width="400" height="400" fill={`url(#${gradId}-orb1)`} />
+        <rect width="400" height="400" fill={`url(#${gradId}-orb2)`} />
+
+        {/* Top: tier pill */}
+        <g transform="translate(28, 28)">
+          {/* pill bg */}
+          <rect
+            width={tier.length * 6.2 + 24}
+            height="24"
+            rx="12"
+            fill={accent}
+            fillOpacity="0.10"
+            stroke={accent}
+            strokeOpacity="0.42"
+          />
+          <text
+            x={(tier.length * 6.2 + 24) / 2}
+            y="16"
+            fontSize="10.5"
+            fontWeight="700"
+            fill={accent}
+            fontFamily="system-ui, -apple-system, sans-serif"
+            textAnchor="middle"
+            letterSpacing="1.4"
           >
-            {tier}
-          </span>
-          {tokenId !== undefined && tokenId !== null && (
-            <span
-              style={{
-                display: "inline-flex",
-                padding: "5px 10px",
-                borderRadius: 999,
-                border: "1px solid rgba(255,255,255,0.10)",
-                background: "rgba(255,255,255,0.04)",
-                fontSize: "clamp(9px, 1.5vw, 12px)",
-                fontFamily:
-                  "ui-monospace, SFMono-Regular, Menlo, Monaco, monospace",
-                color: "rgba(255,255,255,0.55)",
-                whiteSpace: "nowrap",
-              }}
+            {tier.toUpperCase()}
+          </text>
+        </g>
+
+        {/* Top-right: token id badge */}
+        {tokenId !== undefined && tokenId !== null && (
+          <g transform="translate(372, 28)">
+            <rect
+              x={-(`INS #${tokenId}`.length * 6 + 18)}
+              width={`INS #${tokenId}`.length * 6 + 18}
+              height="22"
+              rx="11"
+              fill="rgba(255,255,255,0.04)"
+              stroke="rgba(255,255,255,0.10)"
+            />
+            <text
+              x={-9}
+              y="15"
+              fontSize="11"
+              fontWeight="600"
+              fill="rgba(255,255,255,0.55)"
+              fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
+              textAnchor="end"
             >
               INS #{tokenId}
-            </span>
-          )}
-        </div>
+            </text>
+          </g>
+        )}
 
-        {/* Centre: name + TLD suffix */}
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "baseline",
-            justifyContent: "center",
-            gap: "0.08em",
-            paddingInline: "4%",
-            paddingBlock: 12,
-          }}
-        >
-          <span
-            style={{
-              ...labelStyle,
-              fontWeight: 900,
-              letterSpacing: "-0.03em",
-              lineHeight: 1,
-              backgroundImage: `linear-gradient(120deg, ${CYAN} 0%, ${PLUM} 100%)`,
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              color: "transparent",
-              WebkitTextFillColor: "transparent",
-            }}
+        {/* Centre: name + suffix */}
+        <g transform="translate(200, 215)">
+          {/* Use textAnchor='middle' so we can build label + suffix in two
+              <tspan> blocks that share a single baseline + colour fade. */}
+          <text
+            textAnchor="middle"
+            fontFamily="system-ui, -apple-system, sans-serif"
+            fontWeight="900"
+            letterSpacing="-1"
           >
-            {label}
-          </span>
-          <span
-            style={{
-              ...suffixStyle,
-              fontWeight: 800,
-              letterSpacing: "-0.02em",
-              lineHeight: 1,
-              color: accent,
-              opacity: 0.88,
-            }}
-          >
-            {tldSuffix(tld)}
-          </span>
-        </div>
+            <tspan
+              fontSize={labelFontSize}
+              fill={`url(#${gradId})`}
+              dominantBaseline="middle"
+            >
+              {label}
+            </tspan>
+            <tspan
+              fontSize={suffixFontSize}
+              fill={accent}
+              fillOpacity="0.95"
+              dominantBaseline="middle"
+              dx="2"
+            >
+              {suffix}
+            </tspan>
+          </text>
+        </g>
 
-        {/* Bottom meta row */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            fontSize: "clamp(10px, 1.5vw, 13px)",
-            color: "rgba(255,255,255,0.5)",
-          }}
-        >
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            <span
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: 999,
-                background: accent,
-                display: "inline-block",
-              }}
-            />
+        {/* Bottom: meta row */}
+        <g transform="translate(0, 372)">
+          {/* On-chain SVG (left) */}
+          <circle cx="32" cy="0" r="3.5" fill={accent} />
+          <text
+            x="42"
+            y="4"
+            fontSize="12"
+            fill="rgba(255,255,255,0.55)"
+            fontFamily="system-ui, -apple-system, sans-serif"
+          >
             On-chain SVG
-          </span>
-          <span>Permanent · No expiry</span>
-        </div>
-      </div>
+          </text>
+
+          {/* Permanent · No expiry (right) */}
+          <text
+            x="372"
+            y="4"
+            fontSize="12"
+            fill="rgba(255,255,255,0.55)"
+            textAnchor="end"
+            fontFamily="system-ui, -apple-system, sans-serif"
+          >
+            Permanent · No expiry
+          </text>
+        </g>
+      </svg>
     </div>
   );
 }
