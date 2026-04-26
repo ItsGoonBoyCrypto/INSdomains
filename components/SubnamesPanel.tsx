@@ -235,7 +235,8 @@ function SubnameRow({
 }) {
   const isOwner = connected?.toLowerCase() === owner.toLowerCase();
   const [editing, setEditing] = useState(false);
-  const [newTarget, setNewTarget] = useState(target);
+  // string (not Address) so the input can be edited freely; validated below
+  const [newTarget, setNewTarget] = useState<string>(target);
   const { writeContract, data: hash, isPending, error, reset } = useWriteContract();
   const { isLoading: confirming, isSuccess: confirmed } = useWaitForTransactionReceipt({ hash });
 
@@ -297,7 +298,7 @@ function SubnameRow({
             Save
           </button>
           <button
-            onClick={() => { setEditing(false); setNewTarget(target); reset(); }}
+            onClick={() => { setEditing(false); setNewTarget(target as string); reset(); }}
             className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] text-white/60 hover:text-white"
           >
             Cancel
