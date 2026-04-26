@@ -7,9 +7,10 @@ import { X, Check, Sparkles, ExternalLink } from "lucide-react";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://insdomains.org";
 // Once the official @ handle exists, set NEXT_PUBLIC_X_HANDLE in env (e.g. "InsDomains")
-// and the tweet copy will tag it. Until then we tag @IgraNetwork as the chain.
+// and the tweet copy will tag it. The chain itself is referenced via the
+// $Igra cashtag (better discovery on X than the @IgraNetwork mention).
 const X_HANDLE = process.env.NEXT_PUBLIC_X_HANDLE?.replace(/^@/, "") || "";
-const CHAIN_HANDLE = "IgraNetwork";
+const CHAIN_CASHTAG = "$Igra";
 
 /**
  * Share-to-X modal that auto-pops on a successful mint. Pre-loads the NFT
@@ -58,8 +59,8 @@ export function ShareToXModal({
   const imgSrc = tokenIdStr ? `${SITE}/api/nft-image/${tokenIdStr}?size=1200` : null;
 
   const tagLine = X_HANDLE
-    ? `Powered by @${X_HANDLE} on @${CHAIN_HANDLE}.`
-    : `Built on @${CHAIN_HANDLE}.`;
+    ? `Powered by @${X_HANDLE} on ${CHAIN_CASHTAG}.`
+    : `Built on ${CHAIN_CASHTAG}.`;
 
   const namesList =
     names.length === 1
