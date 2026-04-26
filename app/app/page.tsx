@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search, Check, X, Sparkles, Loader2, ArrowRight, Lock, Gem, ExternalLink, Layers } from "lucide-react";
@@ -9,6 +9,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { NameCard } from "@/components/NameCard";
+import { ShareToXModal } from "@/components/ShareToXModal";
 import { cleanLabel, isValidLabel } from "@/lib/names";
 import { mockAvailable, TAKEN_NAMES, RESERVED_NAMES } from "@/lib/mock-registry";
 import { rarityFor, tierLabel, formatPrice, type Rarity } from "@/lib/pricing";
@@ -494,6 +495,27 @@ function BatchRegisterAll({
   const allDone = availableTlds.every((t) => statuses[t] === "mined");
   const busy = isPending || confirming;
 
+  // Share-to-X modal state. Pops once the queue finishes (allDone flips true)
+  // and won't re-pop on subsequent renders.
+  const [shareOpen, setShareOpen] = useState(false);
+  const poppedShareRef = useRef(false);
+  useEffect(() => {
+    if (allDone && !poppedShareRef.current) {
+      poppedShareRef.current = true;
+      setShareOpen(true);
+    }
+  }, [allDone]);
+
+  // Pull the parent tokenId for the headline NFT image — first minted TLD wins.
+  const headlineTld = availableTlds.find((t) => statuses[t] === "mined") ?? availableTlds[0];
+  const { data: headlineTokenId } = useReadContract({
+    address: REGISTRY_ADDRESSES[headlineTld],
+    abi: REGISTRY_ABI,
+    functionName: "tokenIdOf",
+    args: [label],
+    query: { enabled: allDone && isTldLive(headlineTld) && !!label },
+  });
+
   const onStart = () => {
     if (busy || running) return; // double-click guard
     setRunning(true);
@@ -503,9 +525,28 @@ function BatchRegisterAll({
 
   if (allDone) {
     return (
-      <Link href="/domains" className="btn-primary bg-emerald-400">
-        <Check className="mr-1 inline h-4 w-4" /> All {availableTlds.length} minted →
-      </Link>
+      <>
+        <div className="flex flex-col items-end gap-1">
+          <button
+            onClick={() => setShareOpen(true)}
+            className="btn-primary bg-emerald-400"
+          >
+            <Check className="mr-1 inline h-4 w-4" /> All {availableTlds.length} minted — Share →
+          </button>
+          <Link
+            href="/domains"
+            className="text-[10px] text-white/50 hover:text-cyan"
+          >
+            View in My Names →
+          </Link>
+        </div>
+        <ShareToXModal
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          names={availableTlds.map((t) => `${label}${tldSuffix(t)}`)}
+          primaryTokenId={typeof headlineTokenId === "bigint" ? headlineTokenId : null}
+        />
+      </>
     );
   }
 
@@ -687,26 +728,54 @@ function MintedSuccess({ label, tld, hash }: { label: string; tld: Tld; hash: `0
     query: { enabled: isTldLive(tld) && !!label },
   });
 
+  // Auto-pop the share modal once the tokenId resolves. Tracked per-hash so
+  // a fresh mint pops a fresh modal but dismissing won't loop on re-renders.
+  const [shareOpen, setShareOpen] = useState(false);
+  const poppedForHash = useRef<string | null>(null);
+  useEffect(() => {
+    if (
+      typeof tokenId === "bigint" &&
+      tokenId > 0n &&
+      poppedForHash.current !== hash
+    ) {
+      poppedForHash.current = hash;
+      setShareOpen(true);
+    }
+  }, [tokenId, hash]);
+
+  const fullName = `${label}${tldSuffix(tld)}`;
+
   return (
-    <div className="flex flex-col items-end gap-1">
-      <Link href="/domains" className="btn-primary bg-emerald-400 text-xs">
-        <Check className="mr-1 inline h-3 w-3" />
-        Minted! →
-      </Link>
-      {typeof tokenId === "bigint" && tokenId > 0n && (
-        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 font-mono text-[10px] font-semibold text-white/70">
-          #{tokenId.toString()}
-        </span>
-      )}
-      <a
-        href={`${IGRA_EXPLORER}/tx/${hash}`}
-        target="_blank"
-        rel="noreferrer"
-        className="text-[10px] text-white/50 hover:text-cyan"
-      >
-        Tx <ExternalLink className="inline h-3 w-3" />
-      </a>
-    </div>
+    <>
+      <div className="flex flex-col items-end gap-1">
+        <button
+          onClick={() => setShareOpen(true)}
+          className="btn-primary bg-emerald-400 text-xs"
+        >
+          <Check className="mr-1 inline h-3 w-3" />
+          Minted! Share →
+        </button>
+        {typeof tokenId === "bigint" && tokenId > 0n && (
+          <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 font-mono text-[10px] font-semibold text-white/70">
+            #{tokenId.toString()}
+          </span>
+        )}
+        <a
+          href={`${IGRA_EXPLORER}/tx/${hash}`}
+          target="_blank"
+          rel="noreferrer"
+          className="text-[10px] text-white/50 hover:text-cyan"
+        >
+          Tx <ExternalLink className="inline h-3 w-3" />
+        </a>
+      </div>
+      <ShareToXModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        names={[fullName]}
+        primaryTokenId={typeof tokenId === "bigint" ? tokenId : null}
+      />
+    </>
   );
 }
 
