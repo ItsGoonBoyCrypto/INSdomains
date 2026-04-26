@@ -44,7 +44,7 @@ export default function AboutPage() {
         <div className="mt-10 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] shadow-[0_0_80px_rgba(0,240,255,0.08),0_0_120px_rgba(168,85,247,0.06)]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/opengraph-image?v=20260426c"
+            src="/opengraph-image?v=20260426d"
             alt="INS — Igra Name Service overview: sample igralabs.igra NFT and tiered iKAS pricing"
             width={1200}
             height={630}

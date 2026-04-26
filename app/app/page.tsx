@@ -138,12 +138,12 @@ function EmptyHint() {
       <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
         {(
           [
-            { s: "vitalik", tld: "ins",  colour: "text-cyan" },
-            { s: "satoshi", tld: "ikas", colour: "text-emerald-300" },
+            { s: "vitalik", tld: "igra", colour: "text-plum" },
+            { s: "satoshi", tld: "igra", colour: "text-plum" },
             { s: "grok",    tld: "igra", colour: "text-plum" },
-            { s: "kaspa",   tld: "ins",  colour: "text-cyan" },
+            { s: "kaspa",   tld: "igra", colour: "text-plum" },
             { s: "zeal",    tld: "igra", colour: "text-plum" },
-            { s: "alice",   tld: "ikas", colour: "text-emerald-300" },
+            { s: "alice",   tld: "igra", colour: "text-plum" },
           ] as const
         ).map((x) => (
           <Link
@@ -166,7 +166,7 @@ function EmptyHint() {
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-[10px] font-black">0</span>
         <span>
           <span className="font-bold text-emerald-300">Renewal fee: 0 iKAS</span>
-          <span className="text-emerald-200/70"> · every tier, every TLD, forever. Pay once — no expiry.</span>
+          <span className="text-emerald-200/70"> · every tier, forever. Pay once — no expiry.</span>
         </span>
       </div>
     </div>
@@ -258,7 +258,9 @@ function MultiTldNameResult({
         <BatchRegisterBanner label={label} owner={owner} availableTlds={availableTlds} perTld={perTld} />
       )}
 
-      {TLDS.map((tld) => (
+      {/* Only render rows for TLDs that are actually live in this build —
+          legacy / paused TLDs are hidden, not rendered as "Coming soon". */}
+      {LIVE_TLDS.map((tld) => (
         <TldRow
           key={tld}
           tld={tld}
@@ -267,7 +269,7 @@ function MultiTldNameResult({
           available={perTld[tld].available}
           price={perTld[tld].price}
           owner={owner}
-          loading={readsLoading && isTldLive(tld)}
+          loading={readsLoading}
         />
       ))}
     </div>

@@ -152,7 +152,8 @@ export default async function OGImage() {
               </div>
             </div>
 
-            {/* Centered name */}
+            {/* Centered name — explicit gap on the suffix to stop the
+                gradient "s" of igralabs colliding with the ".igra" plum. */}
             <div
               style={{
                 display: "flex",
@@ -165,14 +166,15 @@ export default async function OGImage() {
               <div
                 style={{
                   display: "flex",
-                  fontSize: 96,
+                  fontSize: 90,
                   fontWeight: 900,
-                  letterSpacing: -3,
+                  letterSpacing: -2,
                   backgroundImage: `linear-gradient(120deg, ${CYAN} 0%, ${PLUM} 100%)`,
                   backgroundClip: "text",
                   color: "transparent",
                   lineHeight: 1.3,
                   paddingBottom: 8,
+                  paddingRight: 6,
                 }}
               >
                 igralabs
@@ -180,10 +182,11 @@ export default async function OGImage() {
               <div
                 style={{
                   display: "flex",
-                  fontSize: 64,
+                  fontSize: 56,
                   fontWeight: 700,
                   color: PLUM,
-                  letterSpacing: -2,
+                  letterSpacing: -1,
+                  marginLeft: 4,
                 }}
               >
                 .igra
