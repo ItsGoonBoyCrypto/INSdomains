@@ -21,34 +21,34 @@ function tierFor(label: string): { tag: string; price: string; color: string } {
   return        { tag: "STANDARD",      price: "30",    color: PLUM };
 }
 
-/** Auto-fit the label so it never overflows the 400px card. */
+/** Auto-fit the label so it never overflows the 200px card. */
 function labelFontSize(len: number): number {
-  if (len <= 6)  return 76;
-  if (len <= 9)  return 60;
-  if (len <= 14) return 44;
-  if (len <= 20) return 32;
-  return 24;
+  if (len <= 6)  return 38;
+  if (len <= 9)  return 30;
+  if (len <= 14) return 22;
+  if (len <= 20) return 16;
+  return 12;
 }
 
 function suffixFontSize(labelLen: number): number {
-  if (labelLen <= 6)  return 42;
-  if (labelLen <= 9)  return 32;
-  if (labelLen <= 14) return 26;
-  if (labelLen <= 20) return 20;
-  return 16;
+  if (labelLen <= 6)  return 21;
+  if (labelLen <= 9)  return 16;
+  if (labelLen <= 14) return 13;
+  if (labelLen <= 20) return 10;
+  return 8;
 }
 
 /**
  * GET /api/nft-image/<tokenId>
  *
- * Returns a 400×400 PNG of the .igra NFT card for `tokenId`. Used by the
+ * Returns a 200×200 PNG of the .igra NFT card for `tokenId`. Used by the
  * Telegram activity bot's sendPhoto + the on-site mint-success "Share to X"
  * card. Cached at the edge for 1h since the visual is deterministic per
  * tokenId (label never changes after mint).
  *
- * 2026-04-26 — sized down from 600×600 because TG renders square photos
- * full-chat-width which dominated the feed. 400px gives the same readable
- * card without eating the screen.
+ * 2026-04-26 — sized down from 600 → 400 → 200 because TG was rendering
+ * square photos chat-wide and dominating the feed. At 200px source, TG
+ * keeps the photo at a sensible small-card size without scaling up.
  */
 export async function GET(
   _req: Request,
@@ -96,8 +96,8 @@ export async function GET(
           display: "flex",
           flexDirection: "column",
           backgroundColor: INK,
-          backgroundImage: `radial-gradient(340px 270px at 80% 110%, rgba(168,85,247,0.30), transparent 70%), radial-gradient(280px 240px at 0% -10%, rgba(0,240,255,0.22), transparent 70%)`,
-          padding: "22px 24px",
+          backgroundImage: `radial-gradient(170px 140px at 80% 110%, rgba(168,85,247,0.32), transparent 70%), radial-gradient(140px 120px at 0% -10%, rgba(0,240,255,0.22), transparent 70%)`,
+          padding: "11px 12px",
           color: "#fff",
           fontFamily: "sans-serif",
           position: "relative",
@@ -112,20 +112,20 @@ export async function GET(
             justifyContent: "space-between",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: 26,
-                height: 26,
-                borderRadius: 8,
+                width: 16,
+                height: 16,
+                borderRadius: 5,
                 background: `linear-gradient(120deg, ${CYAN} 0%, ${PLUM} 100%)`,
                 color: "#000",
-                fontSize: 16,
+                fontSize: 11,
                 fontWeight: 900,
-                boxShadow: "0 0 14px rgba(0,240,255,0.35)",
+                boxShadow: "0 0 8px rgba(0,240,255,0.35)",
               }}
             >
               i
@@ -133,9 +133,9 @@ export async function GET(
             <div
               style={{
                 display: "flex",
-                fontSize: 11,
+                fontSize: 7,
                 fontWeight: 700,
-                letterSpacing: 2.5,
+                letterSpacing: 1.5,
                 color: "rgba(255,255,255,0.6)",
               }}
             >
@@ -145,16 +145,16 @@ export async function GET(
           <div
             style={{
               display: "flex",
-              padding: "3px 9px",
+              padding: "1px 5px",
               borderRadius: 999,
               border: "1px solid rgba(255,255,255,0.1)",
               background: "rgba(255,255,255,0.04)",
-              fontSize: 9,
+              fontSize: 7,
               fontFamily: "monospace",
               color: "rgba(255,255,255,0.55)",
             }}
           >
-            INSG #{tokenIdStr}
+            #{tokenIdStr}
           </div>
         </div>
 
@@ -162,21 +162,21 @@ export async function GET(
         <div
           style={{
             display: "flex",
-            marginTop: 14,
+            marginTop: 7,
           }}
         >
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              padding: "5px 11px",
+              padding: "2px 6px",
               borderRadius: 999,
               border: `1px solid ${tier.color}66`,
               background: `${tier.color}1f`,
               color: tier.color,
-              fontSize: 10,
+              fontSize: 7,
               fontWeight: 800,
-              letterSpacing: 2,
+              letterSpacing: 1.2,
             }}
           >
             {tier.tag} · {tier.price} iKAS
@@ -190,7 +190,7 @@ export async function GET(
             alignItems: "baseline",
             justifyContent: "center",
             flex: 1,
-            paddingTop: 6,
+            paddingTop: 3,
           }}
         >
           <div
@@ -198,13 +198,13 @@ export async function GET(
               display: "flex",
               fontSize: labelSize,
               fontWeight: 900,
-              letterSpacing: -1.5,
+              letterSpacing: -0.8,
               backgroundImage: `linear-gradient(120deg, ${CYAN} 0%, ${PLUM} 100%)`,
               backgroundClip: "text",
               color: "transparent",
               lineHeight: 1.2,
-              paddingBottom: 4,
-              paddingRight: 4,
+              paddingBottom: 2,
+              paddingRight: 2,
             }}
           >
             {safeLabel}
@@ -215,8 +215,8 @@ export async function GET(
               fontSize: suffSize,
               fontWeight: 700,
               color: PLUM,
-              letterSpacing: -0.8,
-              marginLeft: 3,
+              letterSpacing: -0.4,
+              marginLeft: 1,
             }}
           >
             .igra
@@ -229,26 +229,26 @@ export async function GET(
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            paddingTop: 12,
+            paddingTop: 6,
             borderTop: "1px solid rgba(255,255,255,0.08)",
-            fontSize: 9,
-            letterSpacing: 1.2,
+            fontSize: 7,
+            letterSpacing: 0.8,
             color: "rgba(255,255,255,0.55)",
             textTransform: "uppercase",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <div
               style={{
                 display: "flex",
-                width: 5,
-                height: 5,
+                width: 4,
+                height: 4,
                 borderRadius: 999,
                 background: PLUM,
-                boxShadow: `0 0 6px ${PLUM}`,
+                boxShadow: `0 0 4px ${PLUM}`,
               }}
             />
-            <div style={{ display: "flex" }}>Permanent · On-chain</div>
+            <div style={{ display: "flex" }}>On-chain · Forever</div>
           </div>
           <div style={{ display: "flex", color: "rgba(255,255,255,0.7)" }}>
             insdomains.org
@@ -257,8 +257,8 @@ export async function GET(
       </div>
     ),
     {
-      width: 400,
-      height: 400,
+      width: 200,
+      height: 200,
       headers: {
         "Cache-Control": "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
         "Content-Type": "image/png",
