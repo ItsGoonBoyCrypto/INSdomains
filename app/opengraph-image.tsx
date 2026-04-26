@@ -10,10 +10,11 @@ const PLUM = "#a855f7";
 const INK = "#0a0a0a";
 
 const TIERS = [
-  { len: "2-char", price: "5,000", tag: "ultra-rare" },
-  { len: "3-char", price: "500", tag: "rare" },
-  { len: "4-char", price: "50", tag: "uncommon" },
-  { len: "5–32", price: "10", tag: "standard" },
+  { len: "1-char", price: "1,000", tag: "ultra-premium" },
+  { len: "2-char", price: "500",   tag: "premium" },
+  { len: "3-char", price: "250",   tag: "rare" },
+  { len: "4-char", price: "50",    tag: "uncommon" },
+  { len: "5–32",   price: "30",    tag: "standard" },
 ];
 
 export default async function OGImage() {
