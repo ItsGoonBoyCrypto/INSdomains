@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const alt =
-  "INS — Igra Name Service. Forever .ins / .igra / .ikas names. Pay once in iKAS, own forever.";
+  "INS — Igra Name Service. Permanent .igra names on Igra L2. Pay once in iKAS, own forever.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -152,8 +152,10 @@ export default async function OGImage() {
               </div>
             </div>
 
-            {/* Centered name — explicit gap on the suffix to stop the
-                gradient "s" of igralabs colliding with the ".igra" plum. */}
+            {/* Centered sample name — "forever.igra" leans on the brand
+                promise (no renewals) which is the headline pitch. Explicit
+                gap on the suffix to stop the gradient "r" colliding with
+                the ".igra" plum at baseline. */}
             <div
               style={{
                 display: "flex",
@@ -166,7 +168,7 @@ export default async function OGImage() {
               <div
                 style={{
                   display: "flex",
-                  fontSize: 90,
+                  fontSize: 96,
                   fontWeight: 900,
                   letterSpacing: -2,
                   backgroundImage: `linear-gradient(120deg, ${CYAN} 0%, ${PLUM} 100%)`,
@@ -177,12 +179,12 @@ export default async function OGImage() {
                   paddingRight: 6,
                 }}
               >
-                igralabs
+                forever
               </div>
               <div
                 style={{
                   display: "flex",
-                  fontSize: 56,
+                  fontSize: 60,
                   fontWeight: 700,
                   color: PLUM,
                   letterSpacing: -1,

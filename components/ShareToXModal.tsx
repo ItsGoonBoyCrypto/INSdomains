@@ -52,7 +52,10 @@ export function ShareToXModal({
 
   const primary = names[0];
   const tokenIdStr = primaryTokenId != null ? String(primaryTokenId) : null;
-  const imgSrc = tokenIdStr ? `${SITE}/api/nft-image/${tokenIdStr}` : null;
+  // Modal preview + X intent target use the 1200px render so the card stays
+  // crisp on retina displays + when X expands the embedded image. The TG bot
+  // continues to fetch the default 200px (no `?size=`) for a compact card.
+  const imgSrc = tokenIdStr ? `${SITE}/api/nft-image/${tokenIdStr}?size=1200` : null;
 
   const tagLine = X_HANDLE
     ? `Powered by @${X_HANDLE} on @${CHAIN_HANDLE}.`
