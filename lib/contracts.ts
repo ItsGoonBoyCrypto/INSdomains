@@ -69,6 +69,80 @@ export const REVERSE_RESOLVER_ADDRESS = REVERSE_RESOLVER_ADDRESSES.igra;
 export const RESOLVER_ADDRESS = (process.env.NEXT_PUBLIC_INS_RESOLVER ??
   ZERO) as Address;
 
+/* ──────────────────── Subname extension (.igra) ─────────────────────
+ * Optional layer that lets owners of top-level .igra names mint free
+ * subnames (e.g. pay.alice.igra). Ships in this codebase but the on-chain
+ * contract launches with `enabled = false`, and the env var is unset
+ * until the v1.1 activation (~1 month post-mainnet).
+ *
+ * Frontend code MUST gate on BOTH:
+ *   (a) SUBNAME_EXTENSION_ADDRESS !== ZERO  (env var set)
+ *   (b) the contract's `enabled()` getter returning true
+ * so accidental UI surfacing before activation is impossible.
+ */
+export const SUBNAME_EXTENSION_ADDRESS = (process.env.NEXT_PUBLIC_INS_SUBNAME_EXTENSION_IGRA ??
+  ZERO) as Address;
+
+export const SUBNAME_EXTENSION_ABI = [
+  // ── reads ─────────────────────────────────────────────
+  { type: "function", name: "enabled",       stateMutability: "view", inputs: [], outputs: [{ type: "bool" }] },
+  { type: "function", name: "owner",         stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
+  { type: "function", name: "totalSupply",   stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "parentRegistry",stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
+  { type: "function", name: "subnameOf",     stateMutability: "view",
+    inputs: [{ name: "parentTokenId", type: "uint256" }, { name: "subLabel", type: "string" }],
+    outputs: [{ type: "uint256" }] },
+  { type: "function", name: "parentOf",      stateMutability: "view", inputs: [{ name: "subTokenId", type: "uint256" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "subLabelOf",    stateMutability: "view", inputs: [{ name: "subTokenId", type: "uint256" }], outputs: [{ type: "string" }] },
+  { type: "function", name: "lockedParents", stateMutability: "view", inputs: [{ name: "parentTokenId", type: "uint256" }], outputs: [{ type: "bool" }] },
+  { type: "function", name: "targetOf",      stateMutability: "view", inputs: [{ name: "subTokenId", type: "uint256" }], outputs: [{ type: "address" }] },
+  { type: "function", name: "fullName",      stateMutability: "view", inputs: [{ name: "subTokenId", type: "uint256" }], outputs: [{ type: "string" }] },
+  { type: "function", name: "ownerOf",       stateMutability: "view", inputs: [{ name: "tokenId", type: "uint256" }], outputs: [{ type: "address" }] },
+  { type: "function", name: "balanceOf",     stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ type: "uint256" }] },
+  // ── writes ────────────────────────────────────────────
+  { type: "function", name: "mintSubname", stateMutability: "nonpayable",
+    inputs: [
+      { name: "parentTokenId", type: "uint256" },
+      { name: "subLabel", type: "string" },
+      { name: "to", type: "address" },
+    ],
+    outputs: [{ name: "subTokenId", type: "uint256" }] },
+  { type: "function", name: "setSubnameTarget", stateMutability: "nonpayable",
+    inputs: [{ name: "subTokenId", type: "uint256" }, { name: "newTarget", type: "address" }],
+    outputs: [] },
+  { type: "function", name: "lockParentSubnames", stateMutability: "nonpayable",
+    inputs: [{ name: "parentTokenId", type: "uint256" }, { name: "locked", type: "bool" }],
+    outputs: [] },
+  { type: "function", name: "transferFrom", stateMutability: "nonpayable",
+    inputs: [{ name: "from", type: "address" }, { name: "to", type: "address" }, { name: "tokenId", type: "uint256" }],
+    outputs: [] },
+  // ── admin (Safe) ──────────────────────────────────────
+  { type: "function", name: "setEnabled", stateMutability: "nonpayable",
+    inputs: [{ name: "_enabled", type: "bool" }], outputs: [] },
+  { type: "function", name: "transferOwnership", stateMutability: "nonpayable",
+    inputs: [{ name: "newOwner", type: "address" }], outputs: [] },
+  // ── events ────────────────────────────────────────────
+  { type: "event", name: "SubnameMinted", anonymous: false,
+    inputs: [
+      { name: "parentTokenId", type: "uint256", indexed: true },
+      { name: "subLabel", type: "string", indexed: true },
+      { name: "subTokenId", type: "uint256", indexed: true },
+      { name: "to", type: "address", indexed: false },
+    ] },
+  { type: "event", name: "TargetSet", anonymous: false,
+    inputs: [
+      { name: "subTokenId", type: "uint256", indexed: true },
+      { name: "target", type: "address", indexed: true },
+    ] },
+  { type: "event", name: "ParentLockSet", anonymous: false,
+    inputs: [
+      { name: "parentTokenId", type: "uint256", indexed: true },
+      { name: "locked", type: "bool", indexed: false },
+    ] },
+  { type: "event", name: "EnabledSet", anonymous: false,
+    inputs: [{ name: "enabled", type: "bool", indexed: false }] },
+] as const;
+
 /** Base tier price (5-32 char) in iKAS — kept for backwards-compat display. */
 export const BASE_PRICE_IKAS = Number(process.env.NEXT_PUBLIC_BASE_PRICE_IKAS ?? 10);
 

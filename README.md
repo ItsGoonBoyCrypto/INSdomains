@@ -35,6 +35,7 @@ Earlier this year we shipped sister TLDs `.ins` and `.ikas`. Their Registries + 
 - **Reverse resolution** — opt-in `setPrimary(tokenId)` lets wallets + explorers render `foo.igra` for an address.
 - **Zero-custody marketplace** — `setApprovalForAll` once, NFT stays in your wallet until the moment of sale; 2% seller fee + optional 1% featured promotion; buyer pays 0%.
 - **Live activity feed** — `@insdomainsbot` in the [INS Telegram](https://t.me/IgraNameService) posts every mint, listing, and sale in real time.
+- **Subnames (post-launch)** — code shipped + 27 Foundry tests passing. Owners of `.igra` names can mint free children like `pay.alice.igra`, `vault.alice.igra`. Contract launches with `enabled = false`; activation planned ~1 month post-mainnet. Full design + integration guide in [`docs/SUBNAMES.md`](./docs/SUBNAMES.md).
 - **Admin dashboard** (`/admin`) — wallet-gated via `NEXT_PUBLIC_ADMIN_WALLET`
   - Gift names (`adminMint` — bypasses payment + reservation)
   - Reserve / unreserve names

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ShieldCheck, Lock, Gift, Tag, Gem, ArrowRight, Loader2,
   Check, Plus, Trash2, Wallet, AlertTriangle, Settings2, ExternalLink,
-  ClipboardList, X, Store, Pause, Play, Rocket, Star, Sparkles, RefreshCw,
+  ClipboardList, X, Store, Pause, Play, Rocket, Star, Sparkles, RefreshCw, Layers,
 } from "lucide-react";
 import {
   useAccount,
@@ -23,6 +23,7 @@ import { ADMIN_WALLET, isAdmin } from "@/lib/admin";
 import {
   REGISTRY_ABI, MARKETPLACE_ABI,
   REGISTRY_ADDRESSES, MARKETPLACE_ADDRESSES,
+  SUBNAME_EXTENSION_ADDRESS, SUBNAME_EXTENSION_ABI,
   TLDS, LIVE_TLDS, isTldLive, tldSuffix,
   type Tld,
 } from "@/lib/contracts";
@@ -181,6 +182,7 @@ function AdminDashboard() {
         <PremiumOverridesCard tld={activeTld} />
         <PreLaunchListingsCard tld={activeTld} />
         <CleanupCard tld={activeTld} />
+        <SubnameExtensionCard tld={activeTld} />
         <TreasuryCard tld={activeTld} />
         <MarketplaceCard tld={activeTld} />
         <OwnershipCard tld={activeTld} />
@@ -3771,6 +3773,140 @@ function OwnershipCard({ tld }: { tld: Tld }) {
         <code className="rounded bg-black/40 px-1 py-0.5 font-mono text-[10px]">NEXT_PUBLIC_ADMIN_WALLET</code>{" "}
         to match and redeploy the dapp.
       </p>
+    </Card>
+  );
+}
+
+/* ─────────────────────────── Subname Extension ──────────────────
+ * Tiny admin card for the optional Subname Extension contract. Renders as
+ * a "not deployed" stub when SUBNAME_EXTENSION_ADDRESS is the zero address
+ * (env var not set). Once deployed + env-wired, exposes:
+ *   - current enabled/disabled state
+ *   - on/off toggle (Safe tx)
+ *   - total subnames minted
+ *   - link to explorer
+ */
+function SubnameExtensionCard({ tld }: { tld: Tld }) {
+  // .igra-only — only the .igra Registry has subname support in v1
+  if (tld !== "igra") return null;
+
+  const ZERO_ADDR = "0x0000000000000000000000000000000000000000";
+  const isDeployed = SUBNAME_EXTENSION_ADDRESS !== ZERO_ADDR;
+
+  const { data: enabled, refetch: refetchEnabled } = useReadContract({
+    address: SUBNAME_EXTENSION_ADDRESS,
+    abi: SUBNAME_EXTENSION_ABI,
+    functionName: "enabled",
+    query: { enabled: isDeployed },
+  });
+  const { data: total } = useReadContract({
+    address: SUBNAME_EXTENSION_ADDRESS,
+    abi: SUBNAME_EXTENSION_ABI,
+    functionName: "totalSupply",
+    query: { enabled: isDeployed },
+  });
+  const { data: extOwner } = useReadContract({
+    address: SUBNAME_EXTENSION_ADDRESS,
+    abi: SUBNAME_EXTENSION_ABI,
+    functionName: "owner",
+    query: { enabled: isDeployed },
+  });
+
+  const { writeContract, data: hash, isPending, error, reset } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
+  const busy = isPending || isConfirming;
+
+  useEffect(() => {
+    if (isConfirmed) {
+      refetchEnabled();
+      const t = setTimeout(reset, 1500);
+      return () => clearTimeout(t);
+    }
+  }, [isConfirmed, refetchEnabled, reset]);
+
+  const onToggle = () => {
+    writeContract({
+      address: SUBNAME_EXTENSION_ADDRESS,
+      abi: SUBNAME_EXTENSION_ABI,
+      functionName: "setEnabled",
+      args: [!enabled],
+    });
+  };
+
+  return (
+    <Card
+      icon={<Layers className="h-5 w-5 text-plum" />}
+      title="Subname Extension"
+      subtitle="optional layer · pay.alice.igra style names · activate ~1 month post-launch"
+    >
+      {!isDeployed && (
+        <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/55">
+          <div className="font-bold text-white/70">Not deployed yet.</div>
+          <p className="mt-1 text-xs">
+            Code lives in <span className="font-mono">contracts/src/INSSubnameExtension.sol</span>.
+            Deploy via <span className="font-mono">forge script DeploySubnameExtension.s.sol</span>,
+            then add <span className="font-mono">NEXT_PUBLIC_INS_SUBNAME_EXTENSION_IGRA</span> to the VPS env file
+            and rebuild. Recommended timing: <strong>1 month post-mainnet</strong> after
+            zero-issue baseline is established.
+          </p>
+        </div>
+      )}
+
+      {isDeployed && (
+        <>
+          <div className="mb-3 grid grid-cols-2 gap-3">
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+              <div className="text-[10px] uppercase tracking-wider text-white/40">State</div>
+              <div className={`mt-1 text-lg font-black ${enabled ? "text-emerald-300" : "text-white/45"}`}>
+                {enabled ? "🟢 Enabled" : "⚪ Disabled"}
+              </div>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+              <div className="text-[10px] uppercase tracking-wider text-white/40">Subnames minted</div>
+              <div className="mt-1 text-lg font-black text-white">
+                {total !== undefined ? (total as bigint).toString() : "—"}
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={onToggle}
+            disabled={busy}
+            className={`w-full rounded-lg border px-3 py-2 text-sm font-bold transition disabled:opacity-40 ${
+              enabled
+                ? "border-amber-500/40 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20"
+                : "border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
+            }`}
+          >
+            {busy ? <Loader2 className="mr-1 inline h-4 w-4 animate-spin" /> : null}
+            {enabled ? "Disable subname minting" : "Enable subname minting"}
+          </button>
+          <p className="mt-2 text-[10px] text-white/40">
+            When enabled, owners of .igra names can mint free subnames via /domains.
+            Reversible — disable any time. Safe tx.
+          </p>
+
+          <div className="mt-4 space-y-1 text-[11px] text-white/45">
+            <div className="flex items-center justify-between">
+              <span>Contract:</span>
+              <a
+                href={`${IGRA_EXPLORER}/address/${SUBNAME_EXTENSION_ADDRESS}`}
+                target="_blank"
+                rel="noreferrer"
+                className="font-mono text-cyan hover:underline"
+              >
+                {shortAddr(SUBNAME_EXTENSION_ADDRESS)}
+              </a>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Owner:</span>
+              <span className="font-mono">{extOwner ? shortAddr(extOwner as string) : "—"}</span>
+            </div>
+          </div>
+
+          <TxError message={error?.message} onReset={reset} />
+        </>
+      )}
     </Card>
   );
 }

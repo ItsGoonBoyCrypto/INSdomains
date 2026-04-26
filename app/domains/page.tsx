@@ -14,6 +14,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { NameHistory } from "@/components/NameHistory";
 import { ListForSaleButton } from "@/components/ListForSaleButton";
+import { SubnamesPanel } from "@/components/SubnamesPanel";
 import { DEMO_OWNED } from "@/lib/mock-registry";
 import { shortAddr } from "@/lib/names";
 import { explorerAddr } from "@/lib/igra-chain";
@@ -497,6 +498,16 @@ function LiveDomainCard({
           </p>
         </div>
       )}
+
+      {/* Subnames panel — auto-hidden until SUBNAME_EXTENSION_ADDRESS is set
+          AND the contract reports enabled = true. So it's invisible at v1
+          launch and starts appearing organically once admin flips the
+          feature on (~1 month post-mainnet). */}
+      <SubnamesPanel
+        parentTokenId={name.tokenId}
+        parentLabel={name.label}
+        tld={name.tld}
+      />
     </div>
   );
 }

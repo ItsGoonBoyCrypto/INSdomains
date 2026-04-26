@@ -207,7 +207,7 @@ export default function AboutPage() {
             <Milestone done title="Reverse resolution" body="primaryName(address) so block explorers, bots and dApps can render a name next to an address." />
             <Milestone done title="Zero-custody marketplace" body="Fixed-price listings, 2% seller fee + 1% optional featured promotion. Buyer pays 0%. NFT stays in the seller's wallet until the moment of sale." />
             <Milestone done title="Live activity feed" body="@insdomainsbot in the INS Telegram posts every mint, listing, and sale in real time so the community sees activity happen." />
-            <Milestone title="Subnames" body="Zero-cost subdomains — alice.igra can mint pay.alice.igra, vault.alice.igra, etc." />
+            <Milestone title="Subnames (code complete · activates v1.1)" body="Free child names under any .igra parent — pay.alice.igra, vault.alice.igra, etc. Contract + 27 Foundry tests + full UI shipped today; launches with enabled=false on chain. Activation planned ~1 month post-mainnet once v1 is stable. Full design at docs/SUBNAMES.md." />
             <Milestone title="Cross-chain reverse resolution" body="Explorer + wallet integrations to render .igra names natively across Kaspa L1 + Igra L2 + other EVMs that bridge to Igra." />
             <Milestone title="Renounce admin on parameter knobs" body="Once tier pricing + marketplace fees prove out, renounce the admin ability to change them. The Safe keeps emergency pause; the rest becomes immutable." />
           </ol>

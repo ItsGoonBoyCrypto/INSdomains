@@ -2,6 +2,8 @@ import { createPublicClient, http, type Address } from "viem";
 import {
   REGISTRY_ADDRESSES,
   REGISTRY_ABI,
+  SUBNAME_EXTENSION_ADDRESS,
+  SUBNAME_EXTENSION_ABI,
   TLDS,
   tldSuffix,
   type Tld,
@@ -23,16 +25,23 @@ const CORS_HEADERS = {
   "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
 };
 
-/** Split a full name (`alice.igra`) into (label, tld). Returns tld=null when
- *  no recognised suffix is present so callers can fall back to `?tld=` param. */
-function parseName(input: string): { label: string; tld: Tld | null } {
+/** Split a full name into (label, tld) — and optional subLabel for 3-segment
+ *  names like `pay.alice.igra`. Returns tld=null when no recognised suffix is
+ *  present so callers can fall back to `?tld=` param. */
+function parseName(input: string): { label: string; subLabel: string | null; tld: Tld | null } {
   const s = input.trim().toLowerCase();
   for (const tld of TLDS) {
     if (s.endsWith("." + tld)) {
-      return { label: s.slice(0, -(tld.length + 1)), tld };
+      const stripped = s.slice(0, -(tld.length + 1));
+      // 3-segment? "pay.alice.igra" → after stripping ".igra" we get "pay.alice"
+      const dot = stripped.indexOf(".");
+      if (dot > 0 && dot < stripped.length - 1) {
+        return { subLabel: stripped.slice(0, dot), label: stripped.slice(dot + 1), tld };
+      }
+      return { label: stripped, subLabel: null, tld };
     }
   }
-  return { label: s, tld: null };
+  return { label: s, subLabel: null, tld: null };
 }
 
 function validLabel(s: string): boolean {
@@ -78,6 +87,82 @@ export async function GET(req: Request) {
     return Response.json(
       { error: "invalid_label", label, tld },
       { status: 400, headers: CORS_HEADERS },
+    );
+  }
+
+  // Subname path (e.g. pay.alice.igra). Only attempted when:
+  //   1. SUBNAME_EXTENSION_ADDRESS is set in env (gate A)
+  //   2. The contract reports enabled = true (gate B, checked below)
+  //   3. The TLD has a registered SubnameExtension (currently .igra only)
+  if (parsed.subLabel && validLabel(parsed.subLabel) && tld === "igra" && SUBNAME_EXTENSION_ADDRESS !== ZERO) {
+    try {
+      const extEnabled = (await client.readContract({
+        address: SUBNAME_EXTENSION_ADDRESS,
+        abi: SUBNAME_EXTENSION_ABI,
+        functionName: "enabled",
+      })) as boolean;
+      if (extEnabled) {
+        const parentTokenId = (await client.readContract({
+          address: REGISTRY_ADDRESSES[tld],
+          abi: REGISTRY_ABI,
+          functionName: "tokenIdOf",
+          args: [label],
+        })) as bigint;
+        if (parentTokenId !== 0n) {
+          const subTokenId = (await client.readContract({
+            address: SUBNAME_EXTENSION_ADDRESS,
+            abi: SUBNAME_EXTENSION_ABI,
+            functionName: "subnameOf",
+            args: [parentTokenId, parsed.subLabel],
+          })) as bigint;
+          if (subTokenId !== 0n) {
+            const [target, subOwner] = await Promise.all([
+              client.readContract({
+                address: SUBNAME_EXTENSION_ADDRESS,
+                abi: SUBNAME_EXTENSION_ABI,
+                functionName: "targetOf",
+                args: [subTokenId],
+              }) as Promise<Address>,
+              client.readContract({
+                address: SUBNAME_EXTENSION_ADDRESS,
+                abi: SUBNAME_EXTENSION_ABI,
+                functionName: "ownerOf",
+                args: [subTokenId],
+              }) as Promise<Address>,
+            ]);
+            return Response.json(
+              {
+                name: `${parsed.subLabel}.${label}${tldSuffix(tld)}`,
+                subLabel: parsed.subLabel,
+                label,
+                tld,
+                tokenId: subTokenId.toString(),
+                parentTokenId: parentTokenId.toString(),
+                isSubname: true,
+                address: target,
+                owner: subOwner,
+                exists: true,
+              },
+              { headers: CORS_HEADERS },
+            );
+          }
+        }
+      }
+    } catch {
+      // fall through — treat as not found
+    }
+    // Subname requested but not found → 404 with the subname-shaped envelope
+    return Response.json(
+      {
+        name: `${parsed.subLabel}.${label}${tldSuffix(tld)}`,
+        subLabel: parsed.subLabel,
+        label,
+        tld,
+        isSubname: true,
+        address: null,
+        exists: false,
+      },
+      { status: 404, headers: CORS_HEADERS },
     );
   }
 
