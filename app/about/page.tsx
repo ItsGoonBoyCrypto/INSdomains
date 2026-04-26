@@ -34,10 +34,9 @@ export default function AboutPage() {
         </h1>
         <p className="mt-4 text-lg text-white/60">
           INS gives every wallet, contract and community on the Igra Network a
-          human-readable identity across three TLDs — <span className="text-plum">.igra</span> /{" "}
-          <span className="text-emerald-300">.ikas</span> / <span className="text-cyan">.ins</span>.
-          Pay once in native iKAS, own forever. No renewals, no squatters&rsquo; auctions,
-          no rent-seeking.
+          human-readable <span className="text-plum">.igra</span> identity. Pay
+          once in native iKAS, own forever. No renewals, no squatters&rsquo;
+          auctions, no rent-seeking.
         </p>
 
         {/* Hero card — reuses the /opengraph-image route. Cache-bust query
@@ -46,7 +45,7 @@ export default function AboutPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/opengraph-image?v=20260426c"
-            alt="INS — Igra Name Service overview: sample igralabs.igra NFT and tiered iKAS pricing across .ins / .igra / .ikas"
+            alt="INS — Igra Name Service overview: sample igralabs.igra NFT and tiered iKAS pricing"
             width={1200}
             height={630}
             className="block h-auto w-full"
@@ -125,12 +124,8 @@ export default function AboutPage() {
         <section className="mt-16">
           <h2 className="text-2xl font-bold">How the pricing works</h2>
           <p className="mt-3 text-white/60">
-            Tiered iKAS pricing, baked into the contract on every TLD. Shorter
-            names are rarer, so they cost more. <strong className="text-white">Identical
-            schedule across <span className="text-cyan">.ins</span>,{" "}
-            <span className="text-plum">.igra</span>, and{" "}
-            <span className="text-emerald-300">.ikas</span></strong> \u2014 pick the
-            one (or three) you want. The fee stream funds the treasury Safe,
+            Tiered iKAS pricing, baked into the contract. Shorter names are
+            rarer, so they cost more. The fee stream funds the treasury Safe,
             deployed into grants, liquidity, and ecosystem spend under
             transparent multisig control.
           </p>
@@ -179,31 +174,41 @@ export default function AboutPage() {
             explorer.
           </p>
           <div className="mt-4 space-y-2">
-            <ContractRow label="Registry (.ins)"         addr={REGISTRY_INS} />
             <ContractRow label="Registry (.igra)"        addr={REGISTRY_IGRA} />
-            <ContractRow label="Registry (.ikas)"        addr={REGISTRY_IKAS} />
-            <ContractRow label="Marketplace (.ins)"      addr={MARKET_INS} />
             <ContractRow label="Marketplace (.igra)"     addr={MARKET_IGRA} />
-            <ContractRow label="Marketplace (.ikas)"     addr={MARKET_IKAS} />
-            <ContractRow label="ReverseResolver (.ins)"  addr={REVERSE_INS} />
             <ContractRow label="ReverseResolver (.igra)" addr={REVERSE_IGRA} />
-            <ContractRow label="ReverseResolver (.ikas)" addr={REVERSE_IKAS} />
             <ContractRow label="Resolver (shared)"       addr={RESOLVER} />
             <ContractRow label="Treasury Safe"           addr={OWNER_SAFE} />
           </div>
+
+          <details className="mt-6 rounded-xl border border-white/5 bg-white/[0.02] p-4 text-sm">
+            <summary className="cursor-pointer text-white/50 hover:text-white/80">
+              Legacy contracts (paused) — <span className="font-mono">.ins</span> + <span className="font-mono">.ikas</span>
+            </summary>
+            <p className="mt-3 text-xs text-white/45">
+              Earlier this year we shipped sister TLDs <code className="text-white/65">.ins</code> and <code className="text-white/65">.ikas</code>. Their Registries + ReverseResolvers remain on chain forever (existing holders&rsquo; NFTs are permanent, by design), but their Marketplaces are paused and the platform now focuses on <span className="text-plum">.igra</span> as the canonical Igra TLD. Holders can transfer / setPrimary their legacy names directly via the contracts below.
+            </p>
+            <div className="mt-3 space-y-2">
+              <ContractRow label="Registry (.ins) · legacy"         addr={REGISTRY_INS} />
+              <ContractRow label="Marketplace (.ins) · paused"      addr={MARKET_INS} />
+              <ContractRow label="ReverseResolver (.ins)"           addr={REVERSE_INS} />
+              <ContractRow label="Registry (.ikas) · legacy"        addr={REGISTRY_IKAS} />
+              <ContractRow label="Marketplace (.ikas) · paused"     addr={MARKET_IKAS} />
+              <ContractRow label="ReverseResolver (.ikas)"          addr={REVERSE_IKAS} />
+            </div>
+          </details>
         </section>
 
         <section className="mt-16">
           <h2 className="text-2xl font-bold">Roadmap</h2>
           <ol className="mt-4 space-y-3 text-sm text-white/70">
-            <Milestone done title="Mainnet launch" body="Registry + Resolver live on Igra, on-chain SVG art, Safe-owned admin surface." />
+            <Milestone done title="Mainnet launch" body=".igra Registry + Resolver live on Igra, on-chain SVG art, Safe-owned admin surface." />
             <Milestone done title="Kaspa-native wallets" body="KasWare + Kastle first-class alongside MetaMask, Rabby, WalletConnect." />
-            <Milestone done title="Reverse resolution" body="primaryName(address) so block explorers, bots and dApps can render a name next to an address. Live per-TLD." />
-            <Milestone done title="Multi-TLD: .ins, .igra, .ikas" body="Three sister Registries + Marketplaces + ReverseResolvers. Claim any name on one, two, or all three with a single batch flow on /app." />
-            <Milestone done title="Zero-custody marketplace" body="Fixed-price listings, 2% seller fee + 1% optional featured promotion. Buyer pays 0%. Aggregated across all three TLDs on /marketplace." />
-            <Milestone done title="Admin across all TLDs" body="First-class TLD switcher on /admin with apply-all-3-TLDs toggle on every admin card. One click reserves / mints / lists across .ins + .igra + .ikas in one batched flow." />
-            <Milestone title="Subnames" body="Zero-cost subdomains — alice.ins can mint pay.alice.ins, vault.alice.ins, etc." />
-            <Milestone title="Cross-chain reverse resolution" body="Explorer + wallet integrations to render INS names natively across Kaspa L1 + Igra L2 + other EVMs that bridge to Igra." />
+            <Milestone done title="Reverse resolution" body="primaryName(address) so block explorers, bots and dApps can render a name next to an address." />
+            <Milestone done title="Zero-custody marketplace" body="Fixed-price listings, 2% seller fee + 1% optional featured promotion. Buyer pays 0%. NFT stays in the seller's wallet until the moment of sale." />
+            <Milestone done title="Live activity feed" body="@insdomainsbot in the INS Telegram posts every mint, listing, and sale in real time so the community sees activity happen." />
+            <Milestone title="Subnames" body="Zero-cost subdomains — alice.igra can mint pay.alice.igra, vault.alice.igra, etc." />
+            <Milestone title="Cross-chain reverse resolution" body="Explorer + wallet integrations to render .igra names natively across Kaspa L1 + Igra L2 + other EVMs that bridge to Igra." />
             <Milestone title="Renounce admin on parameter knobs" body="Once tier pricing + marketplace fees prove out, renounce the admin ability to change them. The Safe keeps emergency pause; the rest becomes immutable." />
           </ol>
         </section>

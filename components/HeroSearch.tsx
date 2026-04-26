@@ -30,7 +30,7 @@ export function HeroSearch() {
           <input
             value={raw}
             onChange={(e) => setRaw(e.target.value)}
-            placeholder="Search .igra / .ikas / .ins"
+            placeholder="Search .igra names"
             className="w-full bg-transparent px-3 py-4 text-lg text-white placeholder:text-white/30 focus:outline-none"
             autoComplete="off"
             spellCheck={false}

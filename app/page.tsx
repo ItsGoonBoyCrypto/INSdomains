@@ -22,21 +22,15 @@ export default function Home() {
 
         {/* Headline */}
         <h1 className="mx-auto max-w-4xl text-5xl font-black leading-[0.95] tracking-[-0.04em] sm:text-7xl lg:text-[96px] animate-fade-up">
-          Your forever domain{" "}
-          <span className="text-plum">.igra</span>
-          <span className="text-white/30">/</span>{" "}
-          <span className="text-emerald-300">.ikas</span>
-          <span className="text-white/30">/</span>{" "}
-          <span className="text-cyan">.ins</span>{" "}
+          Your forever{" "}
+          <span className="text-plum">.igra</span>{" "}
           name on Igra
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-lg text-white/60 sm:text-xl animate-fade-up">
-          Permanent on-chain identities across three TLDs. No renewals. No expiry.
-          Send crypto to{" "}
-          <span className="font-medium text-cyan">alice.ins</span> /{" "}
-          <span className="font-medium text-plum">alice.igra</span> /{" "}
-          <span className="font-medium text-emerald-300">alice.ikas</span>{" "}
+          Permanent on-chain identity for every wallet, contract, and community
+          on the Igra Network. No renewals. No expiry. Send crypto to{" "}
+          <span className="font-medium text-plum">alice.igra</span>{" "}
           instead of <span className="font-mono text-white/50">0x71C4…f3a2</span>.
         </p>
 

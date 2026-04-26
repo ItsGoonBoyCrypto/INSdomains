@@ -2,13 +2,21 @@ import type { Address } from "viem";
 
 const ZERO = "0x0000000000000000000000000000000000000000" as Address;
 
-/* ──────────────────── Multi-TLD address registry ──────────────────── */
-/**
- * INS supports three TLDs that share identical contract logic but live at
- * independent addresses on Igra mainnet: `.ins`, `.igra`, `.ikas`. Each
- * has its own Registry + Marketplace + (optional) ReverseResolver. The
- * frontend fans out reads across all three and lets users pick the TLD
- * they want to register / list / manage.
+/* ──────────────────── TLD address registry ──────────────────────────
+ * As of 2026-04-26 the platform focuses exclusively on `.igra`. The
+ * `.ins` and `.ikas` Registries / Marketplaces / ReverseResolvers
+ * remain deployed + Safe-owned as legacy infrastructure (existing
+ * holders' NFTs continue to work) but their marketplaces are paused
+ * and they no longer surface in the dApp UI.
+ *
+ * Mechanism: the .ins / .ikas env vars are blanked on the live VPS, so
+ * `isTldLive()` returns false for those, `LIVE_TLDS` collapses to
+ * `["igra"]`, and every multi-TLD UI loop iterates over .igra only —
+ * tabs hide, "apply-all" toggles vanish (gated on liveTldCount >= 2),
+ * /domains + /marketplace aggregations become single-TLD.
+ *
+ * To re-enable a legacy TLD (e.g. for migration), repopulate its three
+ * env vars and rebuild — no code change needed.
  */
 export const TLDS = ["ins", "igra", "ikas"] as const;
 export type Tld = (typeof TLDS)[number];
@@ -47,13 +55,16 @@ export function tldSuffix(tld: Tld): string {
   return "." + tld;
 }
 
-/* ──────────────────── Legacy single-TLD aliases (.ins) ───────────────
+/* ──────────────────── Legacy single-TLD aliases (.igra primary) ──────
  * Kept so the dozens of existing imports keep working without a big-bang
- * rename. New multi-TLD code should prefer REGISTRY_ADDRESSES[tld] etc.
+ * rename. New code should prefer REGISTRY_ADDRESSES[tld] etc.
+ *
+ * Pointed at .igra now (not .ins) since the platform focuses on .igra
+ * post-2026-04-26 pivot.
  */
-export const REGISTRY_ADDRESS         = REGISTRY_ADDRESSES.ins;
-export const MARKETPLACE_ADDRESS      = MARKETPLACE_ADDRESSES.ins;
-export const REVERSE_RESOLVER_ADDRESS = REVERSE_RESOLVER_ADDRESSES.ins;
+export const REGISTRY_ADDRESS         = REGISTRY_ADDRESSES.igra;
+export const MARKETPLACE_ADDRESS      = MARKETPLACE_ADDRESSES.igra;
+export const REVERSE_RESOLVER_ADDRESS = REVERSE_RESOLVER_ADDRESSES.igra;
 
 export const RESOLVER_ADDRESS = (process.env.NEXT_PUBLIC_INS_RESOLVER ??
   ZERO) as Address;

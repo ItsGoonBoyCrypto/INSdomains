@@ -89,17 +89,17 @@ async function fetchReservedLogs(registry: `0x${string}`) {
 }
 
 /**
- * Accepts `?tld=ins|igra|ikas` — defaults to `ins` for backward-compat with
+ * Accepts `?tld=ins|igra|ikas` — defaults to `igra` (the active TLD).
  * older callers. Returns the on-chain reserved-label history for exactly
  * that TLD's Registry (parsed from setReserved / setReservedBatch /
  * Safe-wrapped execTransaction calldata).
  */
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const tldParam = (url.searchParams.get("tld") ?? "ins").toLowerCase();
+  const tldParam = (url.searchParams.get("tld") ?? "igra").toLowerCase();
   const tld: Tld = (TLDS as readonly string[]).includes(tldParam)
     ? (tldParam as Tld)
-    : "ins";
+    : ("igra" as Tld);
   const registry = REGISTRY_ADDRESSES[tld];
 
   if (registry === "0x0000000000000000000000000000000000000000") {

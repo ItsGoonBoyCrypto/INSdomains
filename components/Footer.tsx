@@ -38,7 +38,7 @@ export function Footer() {
             <span className="ins-gradient-text text-xl font-black">INS</span>
           </div>
           <p className="mt-3 max-w-xs text-sm text-white/50">
-            Permanent <span className="text-plum">.igra</span> / <span className="text-emerald-300">.ikas</span> / <span className="text-cyan">.ins</span> names on the Igra Network. Built on Kaspa BlockDAG.
+            Permanent <span className="text-plum">.igra</span> names on the Igra Network. Built on Kaspa BlockDAG.
           </p>
           <div className="mt-6 flex items-center gap-2 text-xs text-white/40">
             <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-emerald-300">

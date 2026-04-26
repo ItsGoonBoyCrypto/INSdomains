@@ -64,7 +64,7 @@ function AppInner() {
         Search the <span className="ins-gradient-text">INS</span> registry
       </h1>
       <p className="mt-3 text-center text-white/60">
-        Mint once, own forever. One name, three TLDs — <span className="text-plum">.igra</span> / <span className="text-emerald-300">.ikas</span> / <span className="text-cyan">.ins</span>. Tiered pricing in iKAS.
+        Mint once, own forever. Permanent <span className="text-plum">.igra</span> identity for any wallet, contract, or community on Igra Network. Tiered pricing in iKAS.
       </p>
 
       {/* Search */}
