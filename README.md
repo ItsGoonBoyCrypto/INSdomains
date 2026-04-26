@@ -1,25 +1,28 @@
 # INS — Igra Name Service
 
-**Permanent `.ins` · `.igra` · `.ikas` names on the Igra Network.** Pay once, own forever. **0 renewal fees, ever.**
+**Permanent `.igra` names on the Igra Network.** Pay once, own forever. **0 renewal fees, ever.**
 
 Live at **[insdomains.org](https://insdomains.org)** · [sslip fallback](https://ins.178-104-105-0.sslip.io)
 
 Built with Next.js 15, React 19, Tailwind v3, wagmi 2 + RainbowKit, viem, Claude Haiku 4.5, Solidity 0.8.24 (Foundry).
 
-**Three TLDs live on Igra mainnet** (chain 38833), all Safe-owned, one name can be claimed on any or all three:
+## Active contracts on Igra mainnet (chain 38833)
 
-| TLD     | Registry                                        | Marketplace                                     | Reverse Resolver                               |
-|---------|-------------------------------------------------|-------------------------------------------------|------------------------------------------------|
-| `.ins`  | `0x535ff4A6710C2b0d087c5afF01b16fE10bC34D46`    | `0xf9e41e0a6fa04B641F6Cf8C92562C551034Af9F7`    | `0x9afb263be198c35159FafDafa0729Fc8B13562DA`   |
-| `.igra` | `0x42c2f5AA0c4aACfD07e5fBe65B898212c1c2879c`    | `0xde8df276e93394c0e5dd9fe7a7ff6fd144a3642a`    | `0x1bbd46aec04330a90832faf1da91889dee67d931`   |
-| `.ikas` | `0xe705e38DeF4970e23617d30D9774062FEeEBA610`    | `0x7ec22c238e7392adcc367f332f301629e9f4ec33`    | `0x9963aa24327f513b4cd5ce8118027a1da2fe76b5`   |
+| | Address |
+|---|---|
+| **Registry (.igra)**        | `0x42c2f5AA0c4aACfD07e5fBe65B898212c1c2879c` |
+| **Marketplace (.igra)**     | `0xde8df276e93394c0e5dd9fe7a7ff6fd144a3642a` |
+| **ReverseResolver (.igra)** | `0x1bbd46aec04330a90832faf1da91889dee67d931` |
+| **Resolver (shared, namehash-keyed)** | `0x451D84002cE0eCFd4cc622c72FA40849a8Bb5f2A` |
+| **Owner / Treasury**        | Safe `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1` |
 
-- INSResolver (namehash/text records): `0x451D84002cE0eCFd4cc622c72FA40849a8Bb5f2A` (shared across TLDs via namehash)
-- Owner / Treasury (all 10 contracts): Safe `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1`
+### Legacy contracts (paused 2026-04-26)
+
+Earlier this year we shipped sister TLDs `.ins` and `.ikas`. Their Registries + ReverseResolvers remain on chain forever (existing holders' NFTs are permanent, by design). Their Marketplaces are paused. The platform now focuses on `.igra` as the canonical Igra TLD. See `deployments/README.md` for legacy addresses.
 
 ## Highlights
 
-- **Tiered pricing** in native iKAS — baked into the contract, identical across all 3 TLDs (kept in sync via Admin → Length tier pricing → Sync to canonical):
+- **Tiered pricing** in native iKAS — baked into the contract:
   | Length | Price      | Tag              |
   |--------|------------|------------------|
   | 1-char | 1,000 iKAS | ultra-premium    |
@@ -28,10 +31,10 @@ Built with Next.js 15, React 19, Tailwind v3, wagmi 2 + RainbowKit, viem, Claude
   | 4-char | 50 iKAS    | uncommon         |
   | 5–32   | 30 iKAS    | standard         |
 - **On-chain SVG artwork** (Base64 data URI — no IPFS dependency)
-- **Reserved names** for ecosystem partners (26-name seed list + admin batch-set)
-- **Three TLDs: `.ins` · `.igra` · `.ikas`** — claim any name on one, two, or all three. `/app` registers across all three in a single flow; `/domains` aggregates your names from every TLD with colour-coded badges.
-- **Reverse resolution** — opt-in `setPrimary(tokenId)` lets wallets + explorers render `foo.ins` (or `foo.igra` / `foo.ikas`) for an address. Per-TLD reverse resolvers.
-- **Zero-custody marketplace** — `setApprovalForAll` once per TLD, NFT stays in your wallet; 2% seller fee + optional 1% featured promotion; buyer pays 0%. `/marketplace` aggregates listings across all three TLDs.
+- **Reserved names** for ecosystem partners (admin batch-set)
+- **Reverse resolution** — opt-in `setPrimary(tokenId)` lets wallets + explorers render `foo.igra` for an address.
+- **Zero-custody marketplace** — `setApprovalForAll` once, NFT stays in your wallet until the moment of sale; 2% seller fee + optional 1% featured promotion; buyer pays 0%.
+- **Live activity feed** — `@insdomainsbot` in the [INS Telegram](https://t.me/IgraNameService) posts every mint, listing, and sale in real time.
 - **Admin dashboard** (`/admin`) — wallet-gated via `NEXT_PUBLIC_ADMIN_WALLET`
   - Gift names (`adminMint` — bypasses payment + reservation)
   - Reserve / unreserve names
@@ -121,7 +124,7 @@ See `.env.example`. `NEXT_PUBLIC_*` are baked in at build time — always rebuil
 Open, CORS-enabled HTTP endpoints for resolving names without reading contracts yourself. Full guide in [`docs/API.md`](./docs/API.md).
 
 ```bash
-curl https://insdomains.org/api/resolve?name=alice.ins
+curl https://insdomains.org/api/resolve?name=alice.igra
 curl https://insdomains.org/api/reverse?address=0xF9d065b70C9357098dc7854D7A28B1498f6d125c
 ```
 
