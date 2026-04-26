@@ -40,12 +40,13 @@ export default function AboutPage() {
           no rent-seeking.
         </p>
 
-        {/* Hero card — reuses the /opengraph-image route */}
+        {/* Hero card — reuses the /opengraph-image route. Cache-bust query
+            param bumps each release so browsers don't serve a stale PNG. */}
         <div className="mt-10 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] shadow-[0_0_80px_rgba(0,240,255,0.08),0_0_120px_rgba(168,85,247,0.06)]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/opengraph-image"
-            alt="INS — Igra Name Service overview: sample igra.ins NFT and tiered iKAS pricing"
+            src="/opengraph-image?v=20260426c"
+            alt="INS — Igra Name Service overview: sample igralabs.igra NFT and tiered iKAS pricing across .ins / .igra / .ikas"
             width={1200}
             height={630}
             className="block h-auto w-full"
