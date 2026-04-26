@@ -7,6 +7,7 @@ import { FeatureCard } from "@/components/FeatureCard";
 import { DomainMarquee } from "@/components/DomainMarquee";
 import { StatsRow } from "@/components/StatsRow";
 import { IntegrationsRow } from "@/components/IntegrationsRow";
+import { NameCard } from "@/components/NameCard";
 
 export default function Home() {
   return (
@@ -56,6 +57,21 @@ export default function Home() {
               lapse.
             </p>
           </div>
+        </div>
+
+        {/* Inline NFT-card preview — what you actually get when you mint */}
+        <div className="mt-14 flex flex-col items-center">
+          <p className="mb-4 text-[11px] uppercase tracking-[0.3em] text-white/40">
+            What you get
+          </p>
+          <div className="w-full max-w-[420px]">
+            <Link href="/app?q=igralabs" className="block transition hover:opacity-95">
+              <NameCard label="igralabs" tld="igra" tier="STANDARD · 30 iKAS" tokenId={null} />
+            </Link>
+          </div>
+          <p className="mt-3 text-xs text-white/40">
+            On-chain SVG NFT · rendered live by the registry · no IPFS pin
+          </p>
         </div>
 
         {/* Trust row */}

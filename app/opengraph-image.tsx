@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const alt =
-  "INS — Igra Name Service. Forever .ins names on Igra. Pay once in iKAS, own forever.";
+  "INS — Igra Name Service. Forever .ins / .igra / .ikas names. Pay once in iKAS, own forever.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -126,9 +126,9 @@ export default async function OGImage() {
                   alignItems: "center",
                   padding: "8px 14px",
                   borderRadius: 999,
-                  border: `1px solid ${CYAN}55`,
-                  background: `${CYAN}1a`,
-                  color: CYAN,
+                  border: `1px solid ${PLUM}55`,
+                  background: `${PLUM}1a`,
+                  color: PLUM,
                   fontSize: 13,
                   fontWeight: 700,
                   letterSpacing: 2,
@@ -165,28 +165,28 @@ export default async function OGImage() {
               <div
                 style={{
                   display: "flex",
-                  fontSize: 132,
+                  fontSize: 96,
                   fontWeight: 900,
-                  letterSpacing: -4,
+                  letterSpacing: -3,
                   backgroundImage: `linear-gradient(120deg, ${CYAN} 0%, ${PLUM} 100%)`,
                   backgroundClip: "text",
                   color: "transparent",
                   lineHeight: 1.3,
-                  paddingBottom: 12,
+                  paddingBottom: 8,
                 }}
               >
-                igra
+                igralabs
               </div>
               <div
                 style={{
                   display: "flex",
-                  fontSize: 76,
+                  fontSize: 64,
                   fontWeight: 700,
-                  color: "rgba(255,255,255,0.35)",
+                  color: PLUM,
                   letterSpacing: -2,
                 }}
               >
-                .ins
+                .igra
               </div>
             </div>
 
@@ -228,24 +228,24 @@ export default async function OGImage() {
             <div
               style={{
                 display: "flex",
-                fontSize: 46,
+                fontSize: 38,
                 fontWeight: 900,
-                lineHeight: 1.15,
+                lineHeight: 1.1,
                 letterSpacing: -1.5,
-                marginBottom: 2,
+                marginBottom: 4,
               }}
             >
-              Pay once in iKAS.
+              Pay once.
             </div>
             <div
               style={{
                 display: "flex",
-                fontSize: 46,
+                fontSize: 38,
                 fontWeight: 900,
-                lineHeight: 1.15,
+                lineHeight: 1.1,
                 letterSpacing: -1.5,
                 color: CYAN,
-                marginBottom: 22,
+                marginBottom: 16,
               }}
             >
               Own forever.
@@ -258,9 +258,9 @@ export default async function OGImage() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  padding: "14px 18px",
-                  marginBottom: 8,
-                  borderRadius: 14,
+                  padding: "9px 16px",
+                  marginBottom: 5,
+                  borderRadius: 12,
                   background: "rgba(255,255,255,0.035)",
                   border: "1px solid rgba(255,255,255,0.08)",
                 }}

@@ -8,6 +8,7 @@ import { useAccount, useReadContract, useReadContracts, useWriteContract, useWai
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { NameCard } from "@/components/NameCard";
 import { cleanLabel, isValidLabel } from "@/lib/names";
 import { mockAvailable, TAKEN_NAMES, RESERVED_NAMES } from "@/lib/mock-registry";
 import { rarityFor, tierLabel, formatPrice, type Rarity } from "@/lib/pricing";
@@ -121,6 +122,16 @@ function AppInner() {
 function EmptyHint() {
   return (
     <div className="mt-10 rounded-3xl glass p-8 text-center">
+      {/* Showcase NFT card preview — "this is what you'll mint" */}
+      <div className="mx-auto mb-8 max-w-[340px]">
+        <Link href="/app?q=igralabs" className="block transition hover:opacity-95">
+          <NameCard label="igralabs" tld="igra" tier="STANDARD · 30 iKAS" tokenId={null} />
+        </Link>
+        <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-white/35">
+          Sample · all names mint as on-chain SVG NFTs
+        </p>
+      </div>
+
       <p className="text-white/60">
         Type a name to check availability. Names are lowercase letters, digits, and hyphens — 3–32 chars.
       </p>
