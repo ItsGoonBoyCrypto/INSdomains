@@ -179,7 +179,13 @@ function AdminDashboard() {
         <ReservedNamesCard tld={activeTld} />
         <TierPricingCard tld={activeTld} />
         <PremiumOverridesCard tld={activeTld} />
-        <PreLaunchListingsCard tld={activeTld} />
+        {/* PreLaunchListingsCard temporarily disabled — has a Safe-timing race
+            condition where wagmi returns instantly on Safe-proposed tx, so the
+            step queue fires all 11 steps before earlier ones are mined. Result:
+            createListing reads tokenId=0 because the mint hasn't executed yet,
+            silent inner-call revert, no listing. Manual AdminMint + /domains
+            ListForSaleButton work fine. To-do: make the step queue Safe-aware
+            (poll chain state, not wagmi receipt). */}
         <CleanupCard tld={activeTld} />
         <TreasuryCard tld={activeTld} />
         <MarketplaceCard tld={activeTld} />
