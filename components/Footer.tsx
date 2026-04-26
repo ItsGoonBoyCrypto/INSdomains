@@ -16,14 +16,6 @@ const COLS: { title: string; items: FooterItem[] }[] = [
       { label: "My Domains", href: "/domains" },
       { label: "Marketplace", href: "/marketplace" },
       { label: "About", href: "/about" },
-      { label: "API docs", href: "/docs" },
-    ],
-  },
-  {
-    title: "Showcase",
-    items: [
-      { label: "igralabs.igra", href: "/n/igralabs.igra" },
-      { label: "Search any name", href: "/app" },
     ],
   },
   {
@@ -39,7 +31,7 @@ const COLS: { title: string; items: FooterItem[] }[] = [
 export function Footer() {
   return (
     <footer className="mt-32 border-t border-white/[0.06] bg-[#050505] px-6 py-16">
-      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-10 md:grid-cols-5">
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-10 md:grid-cols-4">
         <div className="col-span-2">
           <div className="flex items-center gap-2">
             <RooftopMark />

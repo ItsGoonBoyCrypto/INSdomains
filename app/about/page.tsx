@@ -124,8 +124,12 @@ export default function AboutPage() {
         <section className="mt-16">
           <h2 className="text-2xl font-bold">How the pricing works</h2>
           <p className="mt-3 text-white/60">
-            Tiered iKAS pricing, baked into the contract. Shorter names are
-            rarer, so they cost more. The fee stream funds the treasury Safe,
+            Tiered iKAS pricing, baked into the contract on every TLD. Shorter
+            names are rarer, so they cost more. <strong className="text-white">Identical
+            schedule across <span className="text-cyan">.ins</span>,{" "}
+            <span className="text-plum">.igra</span>, and{" "}
+            <span className="text-emerald-300">.ikas</span></strong> \u2014 pick the
+            one (or three) you want. The fee stream funds the treasury Safe,
             deployed into grants, liquidity, and ecosystem spend under
             transparent multisig control.
           </p>
@@ -136,6 +140,13 @@ export default function AboutPage() {
             <TierChip color="cyan"    len="4-char"  price="50 iKAS"    tag="uncommon" />
             <TierChip color="emerald" len={"5\u201332"}   price="30 iKAS"    tag="standard" />
           </div>
+          <p className="mt-4 text-xs text-white/45">
+            Paid <span className="text-emerald-300">once</span> in native iKAS at registration.
+            <span className="ml-2 text-white/30">\u00b7</span>{" "}
+            <span className="ml-2">No renewal fee \u2014 the contract has no function to charge one.</span>
+            <span className="ml-2 text-white/30">\u00b7</span>{" "}
+            <span className="ml-2">Marketplace: 2% seller fee on resale, 0% buyer fee.</span>
+          </p>
         </section>
 
         <section className="mt-16">
@@ -189,7 +200,7 @@ export default function AboutPage() {
             <Milestone done title="Reverse resolution" body="primaryName(address) so block explorers, bots and dApps can render a name next to an address. Live per-TLD." />
             <Milestone done title="Multi-TLD: .ins, .igra, .ikas" body="Three sister Registries + Marketplaces + ReverseResolvers. Claim any name on one, two, or all three with a single batch flow on /app." />
             <Milestone done title="Zero-custody marketplace" body="Fixed-price listings, 2% seller fee + 1% optional featured promotion. Buyer pays 0%. Aggregated across all three TLDs on /marketplace." />
-            <Milestone title="Admin across all TLDs" body="First-class TLD switcher on /admin so reservations + pricing + pause can be tuned per-TLD from the UI (currently .ins-only in the UI; Safe can call directly)." />
+            <Milestone done title="Admin across all TLDs" body="First-class TLD switcher on /admin with apply-all-3-TLDs toggle on every admin card. One click reserves / mints / lists across .ins + .igra + .ikas in one batched flow." />
             <Milestone title="Subnames" body="Zero-cost subdomains — alice.ins can mint pay.alice.ins, vault.alice.ins, etc." />
             <Milestone title="Cross-chain reverse resolution" body="Explorer + wallet integrations to render INS names natively across Kaspa L1 + Igra L2 + other EVMs that bridge to Igra." />
             <Milestone title="Renounce admin on parameter knobs" body="Once tier pricing + marketplace fees prove out, renounce the admin ability to change them. The Safe keeps emergency pause; the rest becomes immutable." />
