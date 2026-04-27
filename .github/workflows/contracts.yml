@@ -1,0 +1,97 @@
+name: Contracts (Foundry)
+
+# Build + test the Solidity contracts on every push and PR. Splits into
+# three jobs so a failure in any single area is immediately obvious in the
+# GitHub Actions UI rather than buried in a wall of test output.
+#
+# - build:    `forge build --sizes` — fails the workflow on a compilation
+#             error and surfaces contract bytecode sizes (so the EIP-170
+#             24,576-byte limit is visible at a glance).
+# - test:     full `forge test -vvv` plus a fuzz pass at 512 runs to give
+#             the existing `testFuzz_*` tests a stronger soak in CI than
+#             the default 256-run pass that already runs locally.
+# - coverage: `forge coverage --report summary` — informational only, not
+#             gated. Useful as a PR comment / drift signal.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'contracts/**'
+      - '.github/workflows/contracts.yml'
+  pull_request:
+    paths:
+      - 'contracts/**'
+      - '.github/workflows/contracts.yml'
+
+# Cancel any in-flight run when a new commit lands on the same ref.
+concurrency:
+  group: contracts-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build + size check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Forge build (with sizes)
+        run: forge build --sizes
+
+  test:
+    name: Forge test (+ fuzz @ 512 runs)
+    runs-on: ubuntu-latest
+    needs: build
+    defaults:
+      run:
+        working-directory: contracts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      # Standard test pass — every contract, default fuzz settings.
+      - name: forge test -vvv
+        run: forge test -vvv
+
+      # Stronger fuzz pass on the testFuzz_* tests only. 512 runs catches
+      # rare boundary cases the standard 256-run pass misses, but only on
+      # the fuzz-targeted tests so total CI time stays under ~2 minutes.
+      - name: Fuzz soak (512 runs)
+        run: forge test --match-test "^testFuzz" --fuzz-runs 512 -v
+
+  coverage:
+    name: Coverage (informational)
+    runs-on: ubuntu-latest
+    needs: build
+    # Don't gate merges on coverage; this is a drift signal, not a wall.
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: contracts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: forge coverage --report summary
+        run: forge coverage --report summary
