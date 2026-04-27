@@ -59,8 +59,8 @@ export default function Home() {
             What you get
           </p>
           <div className="w-full max-w-[420px]">
-            <Link href="/app?q=igralabs" className="block transition hover:opacity-95">
-              <NameCard label="igralabs" tld="igra" tier="STANDARD · 30 iKAS" tokenId={null} />
+            <Link href="/app?q=forever" className="block transition hover:opacity-95">
+              <NameCard label="forever" tld="igra" tier="STANDARD · 30 iKAS" tokenId={null} />
             </Link>
           </div>
           <p className="mt-3 text-xs text-white/40">

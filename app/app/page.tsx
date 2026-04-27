@@ -125,8 +125,8 @@ function EmptyHint() {
     <div className="mt-10 rounded-3xl glass p-8 text-center">
       {/* Showcase NFT card preview — "this is what you'll mint" */}
       <div className="mx-auto mb-8 max-w-[340px]">
-        <Link href="/app?q=igralabs" className="block transition hover:opacity-95">
-          <NameCard label="igralabs" tld="igra" tier="STANDARD · 30 iKAS" tokenId={null} />
+        <Link href="/app?q=forever" className="block transition hover:opacity-95">
+          <NameCard label="forever" tld="igra" tier="STANDARD · 30 iKAS" tokenId={null} />
         </Link>
         <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-white/35">
           Sample · all names mint as on-chain SVG NFTs

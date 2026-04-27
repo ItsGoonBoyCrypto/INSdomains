@@ -42,7 +42,7 @@ export function NameCard({
   const gradId = `nc-grad-${tld}-${label}`.replace(/[^a-z0-9-]/gi, "");
 
   // Estimate: Inter / sans bold avg char width ≈ 0.55 × fontSize.
-  // Combined string includes the suffix, so all of "igralabs.igra" must fit.
+  // Combined string includes the suffix, so e.g. all of "forever.igra" must fit.
   const combined = `${label}${suffix}`;
   // SVG viewBox is 400×400. Text container is 360 wide (20px padding ea side).
   // Pick fontSize so combined string fits at ~340 to leave a bit of breathing room.
