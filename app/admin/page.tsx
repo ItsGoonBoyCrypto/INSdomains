@@ -156,7 +156,7 @@ function AdminDashboard() {
   // Which TLD's contracts we're administering right now. Persist the choice
   // across remounts so a switch to /about + back doesn't drop the operator
   // back on .ins unexpectedly.
-  const [activeTld, setActiveTld] = useState<Tld>("ins");
+  const [activeTld, setActiveTld] = useState<Tld>(LIVE_TLDS[0] ?? "igra");
 
   useEffect(() => {
     try {
@@ -203,7 +203,7 @@ function TldSelector({
       <span className="px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/50">
         Admin TLD
       </span>
-      {TLDS.map((t) => {
+      {LIVE_TLDS.map((t) => {
         const live = isTldLive(t);
         const active = t === activeTld;
         const accent: Record<Tld, string> = {
