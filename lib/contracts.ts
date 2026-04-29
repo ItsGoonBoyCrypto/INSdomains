@@ -39,11 +39,27 @@ export const REVERSE_RESOLVER_ADDRESSES: Record<Tld, Address> = {
   ikas: (process.env.NEXT_PUBLIC_INS_REVERSE_RESOLVER_IKAS  ?? ZERO) as Address,
 };
 
-/** True when a TLD has all three contracts deployed + env-wired. */
+/** A TLD whose Registry is deployed and we can READ on-chain state from
+ *  (used for /domains, /api/resolve — anywhere we surface legacy holders'
+ *  NFTs even though new registrations are .igra-only). */
+export function isTldReadable(tld: Tld): boolean {
+  return REGISTRY_ADDRESSES[tld] !== ZERO;
+}
+export const READABLE_TLDS: readonly Tld[] = TLDS.filter(isTldReadable);
+
+/** Platform-paused legacy TLDs — Registry + Marketplace are deployed but
+ *  the dApp UI must not allow new registrations or listings on them. Set
+ *  via .igra-only pivot 2026-04-26. */
+const PAUSED_TLDS: ReadonlySet<Tld> = new Set(["ins", "ikas"]);
+
+/** True when a TLD has all three contracts deployed + env-wired AND is NOT
+ *  in the platform-paused list. Used by /app, /marketplace, /admin to
+ *  decide which TLDs accept new actions. */
 export function isTldLive(tld: Tld): boolean {
   return (
     REGISTRY_ADDRESSES[tld] !== ZERO &&
-    MARKETPLACE_ADDRESSES[tld] !== ZERO
+    MARKETPLACE_ADDRESSES[tld] !== ZERO &&
+    !PAUSED_TLDS.has(tld)
   );
 }
 
