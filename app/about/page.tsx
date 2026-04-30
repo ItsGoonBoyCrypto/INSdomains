@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { RecentMintsCarousel } from "@/components/RecentMintsCarousel";
 
 const REGISTRY_INS  = "0x535ff4A6710C2b0d087c5afF01b16fE10bC34D46";
 const REGISTRY_IGRA = "0x42c2f5AA0c4aACfD07e5fBe65B898212c1c2879c";
@@ -68,6 +69,13 @@ export default function AboutPage() {
             title="Multisig-owned"
             body="Admin surface sits behind an Igra Safe multisig."
           />
+        </section>
+
+        {/* Live mint carousel — pulls from /api/names/recent every 60s. The
+            best social proof on the page since it shows real on-chain
+            activity, not static copy. */}
+        <section className="mt-12">
+          <RecentMintsCarousel />
         </section>
 
         <section className="mt-16">
