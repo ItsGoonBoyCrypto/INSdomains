@@ -1,10 +1,17 @@
 # INSdomains — test suite report
 
-**Generated:** 2026-04-27
-**Commit:** `b0aed9f` (post-Resolver+Integration suite expansion)
-**Foundry:** `1.5.1-stable` (commit `b0a9dd9c`)
+**Generated:** 2026-04-30 (re-run after Next.js 15.5.15 bump + .igra-only enforcement at lib layer)
+**Commit:** `ee83903`
+**Foundry:** `1.6.0-v1.7.0` (forge 1.7.0)
 **solc:** `0.8.24`, optimizer enabled (200 runs)
 **Chain:** Igra L2 mainnet · chain id `38833` · native `iKAS`
+**Run host:** insdomains.org production VPS (Hetzner CPX21, Ubuntu 24.04)
+
+> **For wallet / Igra integrators:** these are the Solidity contracts behind insdomains.org's
+> register, list, buy, transfer, primary-name, and resolver flows. Every code path your wallet
+> will call against `INSRegistry` / `INSMarketplace` / `INSResolver` / `INSReverseResolver`
+> is covered below with happy + sad paths + 1024-run fuzz soak. Reproduce locally with
+> `forge test`; CI runs every push at `.github/workflows/contracts.yml`.
 
 ---
 
@@ -13,12 +20,12 @@
 | | |
 |---|---|
 | **Tests** | **170 passed · 0 failed · 0 skipped** |
-| **Total runtime** | 457 ms (forge in-memory EVM) |
-| **Fuzz runs** | 1024 per testFuzz_* (default 256, soak run at 1024) |
+| **Total runtime** | 81 ms (forge in-memory EVM, single-host) |
+| **Fuzz runs** | 1024 per testFuzz_* (default 256, soak run at 1024 — see below) |
 | **Suites** | 7 — Registry / Marketplace / Resolver / ReverseResolver / SubnameExtension / RegistryTldVariants / Integration |
 
 ```
-Ran 7 test suites in 457.28ms (1.28s CPU time):
+Ran 7 test suites in 81.14ms (151.61ms CPU time):
 170 tests passed, 0 failed, 0 skipped (170 total tests)
 ```
 
@@ -56,18 +63,18 @@ What each suite locks down:
 
 ## Fuzz soak (1024 runs)
 
-Soak pass for the 7 fuzz tests at 4× the default 256 runs:
+Soak pass for the 7 fuzz tests at 4× the default 256 runs (re-run 2026-04-30):
 
 ```
 [PASS] testFuzz_RegisterLabels(bytes32)            (runs: 1024, μ: 193375 gas, ~: 193375)
-[PASS] testFuzz_validLabel_roundTrip(string)       (runs: 1024, μ:  22538 gas, ~:  16148)
+[PASS] testFuzz_validLabel_roundTrip(string)       (runs: 1024, μ:  25380 gas, ~:  16148)
 [PASS] testFuzz_SetPrimaryOnlyOwner(address)       (runs: 1024, μ: 199665 gas, ~: 199665)
-[PASS] testFuzz_BuyerPaysExactPrice(uint128)       (runs: 1024, μ: 304897 gas, ~: 309620)
-[PASS] testFuzz_FeatureFeeCalculation(u16,u128)    (runs: 1024, μ:  17221 gas, ~:  17280)
-[PASS] testFuzz_FeeCalculation(u16,u128)           (runs: 1024, μ:  15758 gas, ~:  15818)
-[PASS] testFuzz_setText_roundTrip(string,string)   (runs: 1024, μ: 280711 gas, ~: 258575)
+[PASS] testFuzz_BuyerPaysExactPrice(uint128)       (runs: 1024, μ: 305363 gas, ~: 309620)
+[PASS] testFuzz_FeatureFeeCalculation(u16,u128)    (runs: 1024, μ:  17206 gas, ~:  17280)
+[PASS] testFuzz_FeeCalculation(u16,u128)           (runs: 1024, μ:  15747 gas, ~:  15818)
+[PASS] testFuzz_setText_roundTrip(string,string)   (runs: 1024, μ: 279824 gas, ~: 258575)
 
-7 tests passed, 0 failed (4096 total runs)
+7 tests passed, 0 failed (7,168 total fuzz iterations, all clean)
 ```
 
 No counter-examples found at 1024 runs. CI runs at 512 runs on every push to keep wall-clock time reasonable; 1024-run soak is documented here as the pre-mainnet floor.
@@ -232,9 +239,9 @@ forge test --fork-url https://rpc.igralabs.com:8545 \
 
 ## Distribution
 
-This report + the test files are public at:
+This report + the test files are at:
 **[github.com/ItsGoonBoyCrypto/INSdomains](https://github.com/ItsGoonBoyCrypto/INSdomains)** under
-`contracts/test/`.
+`contracts/test/`. Repo is private — Igra core has read access; wallet integrators can request access from `@GoonBoyCrypto`.
 
 Source contracts on Igra mainnet:
 
@@ -247,3 +254,26 @@ Source contracts on Igra mainnet:
 | Owner / Treasury (Safe) | `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1` |
 
 All four are explorer-verifiable on `https://explorer.igralabs.com`.
+
+---
+
+## What's NEW since the 2026-04-27 report
+
+Solidity / test-suite layer (no behavioural change — re-tested for confirmation):
+- **No new tests added.** Suite remains at 170 (same coverage % to the percentile).
+- **Fuzz soak re-run** at 1024 runs on a fresh forge 1.6.0 — same medians, no new
+  counter-examples. Wallet devs can read this as: contracts are stable, no
+  regressions from the recent infra work.
+
+Off-chain (frontend / infra) layer — referenced because integrators may notice:
+- `lib/contracts.ts` now bakes a `PAUSED_TLDS = ["ins", "ikas"]` guard so the
+  on-chain Registries for legacy TLDs cannot be reached by the dApp UI even
+  if env vars are populated. The legacy contracts themselves are unchanged
+  on chain (still owned by the Safe).
+- Next.js bumped 15.1.4 → 15.5.15 (CVE-2025-66478 patched).
+- Caddy now serves the Safe Apps SDK manifest with proper CORS so
+  `safe.igralabs.com` can register insdomains.org as a custom Safe App.
+- ins-dapp.service runs as a non-root `insdapp` user with 14 systemd
+  hardening directives (NoNewPrivileges, ProtectSystem=strict,
+  RestrictNamespaces, etc.) on a fresh Hetzner Ubuntu 24.04 box at
+  `91.99.27.76`. None of this affects on-chain behaviour.
