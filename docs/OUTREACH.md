@@ -12,23 +12,23 @@ Pick the version that fits your channel — long for email, medium for TG DM, sh
 >
 > Hey [name],
 >
-> I'm Liam, builder of **INS (Igra Name Service)** — a permanent ENS-style name service native to Igra L2. Names are ERC-721 NFTs with on-chain SVG art, paid once in $Igra, and have no expiry or renewals.
+> I'm Liam, builder of **INS (Igra Name Service)** — the name service native to Igra L2. **V2 just shipped** with a dual tenure model: pick **Forever** (pay once, no renewals — the brand promise) or **Annual** (1-year renewable, 30-day grace period, cheaper entry). Every name is an ERC-721 NFT with on-chain SVG art and a native ENS-compatible namehash surface.
 >
-> Since launch we've had **13 mints** on chain, **2 sales settled**, and organic registrations from Igra core devs (e.g. `emdin.igra`). It's live + verified at [insdomains.org](https://insdomains.org).
+> Live state: 17+ names minted across V1 + V2, real sales settled, and organic registrations from Igra core devs (e.g. `emdin.igra`). The dApp is at [insdomains.org](https://insdomains.org), V2 Registry verified at `0x7E70…f4E9`.
 >
-> I built it specifically to make wallet integration trivial — there's a free public REST API at `https://insdomains.org/api/*` so you don't need to write contract-call or event-scan code. One `fetch()` resolves a name → address. Same for reverse, owned-names list, and marketplace listings.
+> I built it specifically to make wallet integration trivial — there's a free public REST API at `https://insdomains.org/api/*` that **unions V1 + V2 reads transparently**, no flags. One `fetch()` resolves a name → address with the new `tenure` and `expires_at` fields surfaced for renewal-reminder UX. Same for reverse, owned-names list, and marketplace listings.
 >
 > **The two artefacts you probably want first:**
 >
-> - 📘 **Integration guide** — [docs/INTEGRATION.md](https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/docs/INTEGRATION.md) (TS + Python snippets, contract addresses, three integration paths in order of effort)
-> - 🧪 **Test report** — [contracts/test/TEST_REPORT.md](https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/contracts/test/TEST_REPORT.md) (170 Foundry tests, 0 fails, 1024-run fuzz soak clean, full coverage table)
+> - 📘 **Integration guide** — [docs/INTEGRATION.md](https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/docs/INTEGRATION.md) (TS + Python snippets, V1 + V2 contract addresses, three integration paths in order of effort)
+> - 🧪 **Test report** — [contracts/test/TEST_REPORT.md](https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/contracts/test/TEST_REPORT.md) (273 Foundry tests across V1 + V2 + Marketplace + Subnames + Resolver, 0 fails, 1024-run fuzz soak across 15 fuzz tests, full coverage table)
 >
-> The repo is private right now (private just for security ergonomics during launch — happy to grant read access; just send me your GitHub handle). All four contracts are explorer-verified on Igra mainnet and owned by an Igra Safe multisig.
+> The repo is private right now (private just for security ergonomics during launch — happy to grant read access; just send me your GitHub handle). Every contract is explorer-verified on Igra mainnet and owned by the Igra Safe multisig.
 >
 > Happy to do a 15-min integration walk-through if helpful, debug specific calls against the live RPC, or open a PR into your repo.
 >
 > Cheers,
-> Liam (@GoonBoyCrypto on Telegram)
+> Liam (@GoonBoyCrypto on Telegram, @IgraNameService on X)
 
 ---
 
@@ -36,17 +36,17 @@ Pick the version that fits your channel — long for email, medium for TG DM, sh
 
 > Hey [name] 👋
 >
-> Liam here, builder of **INS (Igra Name Service)** — permanent `.igra` names on Igra L2 (ENS-style, ERC-721, on-chain SVG art, no renewals). Live at [insdomains.org](https://insdomains.org).
+> Liam here, builder of **INS (Igra Name Service)** — `.igra` names native to Igra L2. **V2 just shipped** with dual tenure: **Forever** (pay once) or **Annual** (1y renewable, 30-day grace). ENS-style, ERC-721, on-chain SVG art. Live at [insdomains.org](https://insdomains.org).
 >
-> Built it specifically for wallet integration: there's a free public REST API at `insdomains.org/api/*` — one `fetch()` resolves a name → address. No SDK, no auth, no contract-call code on your side.
+> Built specifically for wallet integration: there's a free public REST API at `insdomains.org/api/*` — one `fetch()` resolves a name → address with `tenure` + `expires_at` fields for Annual renewal-reminder UX. No SDK, no auth, no contract-call code on your side.
 >
 > Two links worth your time:
 >
-> 📘 **Integration guide** (TS + Python snippets, 3 integration paths) — [github.com/ItsGoonBoyCrypto/INSdomains/blob/main/docs/INTEGRATION.md](https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/docs/INTEGRATION.md)
+> 📘 **Integration guide** (TS + Python snippets, V1 + V2 contracts, 3 integration paths) — [github.com/ItsGoonBoyCrypto/INSdomains/blob/main/docs/INTEGRATION.md](https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/docs/INTEGRATION.md)
 >
-> 🧪 **Test report** (170 Foundry tests, 0 fails, 1024-run fuzz clean) — [github.com/ItsGoonBoyCrypto/INSdomains/blob/main/contracts/test/TEST_REPORT.md](https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/contracts/test/TEST_REPORT.md)
+> 🧪 **Test report** (273 Foundry tests across V1 + V2, 0 fails, 1024-run fuzz clean) — [github.com/ItsGoonBoyCrypto/INSdomains/blob/main/contracts/test/TEST_REPORT.md](https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/contracts/test/TEST_REPORT.md)
 >
-> 13 names already minted incl. `igranetwork.igra` and `emdin.igra` (Igra dev). Repo is private during launch — happy to add you, just send your GitHub handle.
+> 17+ names minted incl. `igranetwork.igra` and `emdin.igra` (Igra dev). Repo is private during launch — happy to add you, just send your GitHub handle.
 >
 > Happy to walk through it whenever — DM here works, or quick call if you prefer.
 
@@ -54,13 +54,13 @@ Pick the version that fits your channel — long for email, medium for TG DM, sh
 
 ## 📱 Short version — X DM / first-touch (~70 words)
 
-> Hey, just shipped **INS** — permanent `.igra` names on Igra L2. ENS-style, on-chain SVG, no renewals.
+> Hey, just shipped **INS V2** — `.igra` names on Igra L2 with dual tenure: Forever (pay once) or Annual (1y renewable, 30-day grace). ENS-compatible, on-chain SVG.
 >
-> Built a free public REST API for wallet integration: one `fetch()` resolves any name → address. No SDK, no auth.
+> Free public REST API for wallets: one `fetch()` resolves any name → address with `tenure` + `expires_at` fields. No SDK, no auth.
 >
 > Integration guide: [github.com/ItsGoonBoyCrypto/INSdomains/blob/main/docs/INTEGRATION.md](https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/docs/INTEGRATION.md)
 >
-> Test suite (170 tests, 0 fails): [github.com/ItsGoonBoyCrypto/INSdomains/blob/main/contracts/test/TEST_REPORT.md](https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/contracts/test/TEST_REPORT.md)
+> Tests (273 across V1 + V2, 0 fails): [github.com/ItsGoonBoyCrypto/INSdomains/blob/main/contracts/test/TEST_REPORT.md](https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/contracts/test/TEST_REPORT.md)
 >
 > Live at [insdomains.org](https://insdomains.org). Happy to walk through it any time 🟣
 

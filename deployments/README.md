@@ -4,22 +4,31 @@ Canonical registry of INS contract deployments per chain.
 
 ## Igra Mainnet (chain 38833)
 
-### .ins TLD
+### .igra TLD V2 (current — since 2026-05-02)
+| Contract             | Address                                      | Deployed   | Notes |
+|----------------------|----------------------------------------------|------------|-------|
+| **INSRegistryIgraV2** | `0x7E7018959bf44045F01D176D8db1594894CBf4E9` | 2026-05-02 | Dual Forever / Annual tenure, V1 migration via `claimV1Forever`, 30-day grace. **Current canonical Registry**. Spec: `docs/V2_SPEC.md`, deploy artifact: `igra-mainnet-registry-igra-v2-38833.json` |
+
+V2 reuses the existing Marketplace / ReverseResolver / Resolver — they're ERC-721-surface only and the V2 NFT is identical there.
+
+### .igra TLD V1 (legacy — read-only since 2026-05-02)
+| Contract            | Address                                      | Deployed   |
+|---------------------|----------------------------------------------|------------|
+| INSRegistryIgra     | `0x42c2f5AA0c4aACfD07e5fBe65B898212c1c2879c` | 2026-04-24 |
+| INSReverseResolver  | `0x1bbd46aec04330a90832faf1da91889dee67d931` | 2026-04-24 |
+| INSMarketplace      | `0xde8df276e93394c0e5dd9fe7a7ff6fd144a3642a` | 2026-04-24 |
+
+V1 NFTs remain in their holders' wallets indefinitely. Holders can migrate to V2 Forever for **gas only** via `INSRegistryIgraV2.claimV1Forever(v1TokenId, target)`.
+
+### .ins TLD (legacy — paused 2026-04-26)
 | Contract           | Address                                      | Deployed   |
 |--------------------|----------------------------------------------|------------|
 | INSRegistry        | `0x535ff4A6710C2b0d087c5afF01b16fE10bC34D46` | 2026-04-23 |
-| INSResolver        | `0x451D84002cE0eCFd4cc622c72FA40849a8Bb5f2A` | 2026-04-23 |
+| INSResolver (shared with V2 .igra) | `0x451D84002cE0eCFd4cc622c72FA40849a8Bb5f2A` | 2026-04-23 |
 | INSReverseResolver | `0x9afb263be198c35159FafDafa0729Fc8B13562DA` | 2026-04-23 |
 | INSMarketplace     | `0xf9e41e0a6fa04B641F6Cf8C92562C551034Af9F7` | 2026-04-24 |
 
-### .igra TLD (added 2026-04-24)
-| Contract            | Address                                      |
-|---------------------|----------------------------------------------|
-| INSRegistryIgra     | `0x42c2f5AA0c4aACfD07e5fBe65B898212c1c2879c` |
-| INSReverseResolver  | `0x1bbd46aec04330a90832faf1da91889dee67d931` |
-| INSMarketplace      | `0xde8df276e93394c0e5dd9fe7a7ff6fd144a3642a` |
-
-### .ikas TLD (added 2026-04-24)
+### .ikas TLD (legacy — paused 2026-04-26)
 | Contract            | Address                                      |
 |---------------------|----------------------------------------------|
 | INSRegistryIkas     | `0xe705e38DeF4970e23617d30D9774062FEeEBA610` |
@@ -27,11 +36,12 @@ Canonical registry of INS contract deployments per chain.
 | INSMarketplace      | `0x7ec22c238e7392adcc367f332f301629e9f4ec33` |
 
 ### Shared
-| Role               | Address                                          |
-|--------------------|--------------------------------------------------|
-| Owner (all 10)     | Safe `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1` |
-| Treasury (all 10)  | Safe `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1` |
-| Deployer           | `0x3352E8AF21a02A04Bfb9e4E941295B3f8Fa8D044`     |
+| Role                       | Address                                          |
+|----------------------------|--------------------------------------------------|
+| Owner (every contract)     | Safe `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1` |
+| Treasury (every contract)  | Safe `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1` |
+| V1 Deployer (DRAINED — incident 2026-04-25, never reuse) | `0x3352E8AF21a02A04Bfb9e4E941295B3f8Fa8D044` |
+| V2 Deployer (drained + quarantined 2026-05-02) | `0x198e1517858c9C5551b8de348d112931D2651df6` |
 
 **RPC:** `https://rpc.igralabs.com:8545`
 **Explorer:** https://explorer.igralabs.com

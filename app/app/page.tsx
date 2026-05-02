@@ -163,26 +163,41 @@ function EmptyHint() {
         ))}
       </div>
       <div className="mt-8 grid gap-2 text-left text-xs text-white/50 sm:grid-cols-5">
-        <TierSample color="plum"    label="1-char"  price="1,000 iKAS" tag="ultra-premium" />
-        <TierSample color="plum"    label="2-char"  price="500 iKAS"   tag="premium" />
-        <TierSample color="amber"   label="3-char"  price="250 iKAS"   tag="rare" />
-        <TierSample color="cyan"    label="4-char"  price="50 iKAS"    tag="uncommon" />
-        <TierSample color="emerald" label="5–32"    price="30 iKAS"    tag="standard" />
+        <TierSample color="plum"    label="1-char"  forever="4,000" annual="1,000" tag="ultra-premium" />
+        <TierSample color="plum"    label="2-char"  forever="2,000" annual="800"   tag="premium" />
+        <TierSample color="amber"   label="3-char"  forever="1,200" annual="500"   tag="rare" />
+        <TierSample color="cyan"    label="4-char"  forever="800"   annual="250"   tag="uncommon" />
+        <TierSample color="emerald" label="5–32"    forever="500"   annual="50"    tag="standard" />
       </div>
-      <div className="mt-4 flex items-center justify-center gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.04] px-4 py-2.5 text-xs text-emerald-200">
-        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-[10px] font-black">0</span>
-        <span>
-          <span className="font-bold text-emerald-300">Renewal fee: 0 iKAS</span>
-          <span className="text-emerald-200/70"> · every tier, forever. Pay once — no expiry.</span>
-        </span>
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        <div className="flex items-center justify-center gap-3 rounded-xl border border-cyan/25 bg-cyan/[0.04] px-4 py-2.5 text-xs text-cyan/85">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-cyan/20 text-[10px] font-black">∞</span>
+          <span>
+            <span className="font-bold text-cyan">Forever</span>
+            <span className="text-cyan/70"> · pay once, no renewals, no expiry.</span>
+          </span>
+        </div>
+        <div className="flex items-center justify-center gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.04] px-4 py-2.5 text-xs text-emerald-200">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-[10px] font-black">1y</span>
+          <span>
+            <span className="font-bold text-emerald-300">Annual</span>
+            <span className="text-emerald-200/70"> · 1-year renewable, 30-day grace.</span>
+          </span>
+        </div>
       </div>
     </div>
   );
 }
 
 function TierSample({
-  color, label, price, tag,
-}: { color: "plum" | "amber" | "cyan" | "emerald" | "red"; label: string; price: string; tag: string }) {
+  color, label, forever, annual, tag,
+}: {
+  color: "plum" | "amber" | "cyan" | "emerald" | "red";
+  label: string;
+  forever: string;
+  annual: string;
+  tag: string;
+}) {
   const map: Record<typeof color, string> = {
     plum: "border-plum/30 bg-plum/10 text-plum",
     amber: "border-amber-500/30 bg-amber-500/10 text-amber-300",
@@ -193,8 +208,15 @@ function TierSample({
   return (
     <div className={`rounded-xl border px-3 py-2 ${map[color]}`}>
       <div className="text-[11px] uppercase tracking-wider opacity-70">{label}</div>
-      <div className="text-sm font-bold">{price}</div>
-      <div className="text-[10px] opacity-60">{tag}</div>
+      <div className="mt-0.5 flex items-baseline gap-1">
+        <span className="text-sm font-bold">{forever}</span>
+        <span className="text-[9px] opacity-60">iKAS forever</span>
+      </div>
+      <div className="flex items-baseline gap-1">
+        <span className="text-[11px] font-semibold opacity-80">{annual}</span>
+        <span className="text-[9px] opacity-50">iKAS / yr</span>
+      </div>
+      <div className="mt-0.5 text-[10px] opacity-60">{tag}</div>
     </div>
   );
 }
@@ -217,11 +239,11 @@ function MultiTldNameResult({
 }: { label: string; owner?: `0x${string}`; rarity: Rarity }) {
   const isReserved = rarity.kind === "reserved";
 
-  // Batch all 3 TLDs' reads via useReadContracts (one RPC round-trip).
-  // Reads per live TLD: available + priceFor + ownerOfName. The 3rd one
-  // is so we can detect Treasury-held names (free claim) vs marketplace
-  // names (regular taken-but-listed flow).
-  const contracts = TLDS.flatMap((tld) =>
+  // Batch all live TLDs' V1 reads via useReadContracts (one RPC round-trip).
+  // Reads per live TLD: available + priceFor + ownerOfName. ownerOfName so
+  // we can detect Treasury-held names (free claim) vs marketplace names
+  // (regular taken-but-listed flow).
+  const v1Contracts = TLDS.flatMap((tld) =>
     isTldLive(tld)
       ? [
           { address: REGISTRY_ADDRESSES[tld], abi: REGISTRY_ABI, functionName: "available",   args: [label] } as const,
@@ -230,10 +252,29 @@ function MultiTldNameResult({
         ]
       : []
   );
-  const { data: reads, isLoading: readsLoading } = useReadContracts({
-    contracts,
+  const { data: v1Reads, isLoading: v1Loading } = useReadContracts({
+    contracts: v1Contracts,
     query: { enabled: LIVE_TLDS.length > 0 && !isReserved },
   });
+
+  // Mirror reads on the V2 .igra Registry — only fires once V2 is deployed.
+  // We need this so a name minted on V2 (without a V1 mint) shows as Taken
+  // in the search row, and so the Treasury-held detection includes V2 mints
+  // owned by the Safe.
+  const v2Contracts = isV2Deployed()
+    ? [
+        { address: REGISTRY_V2_ADDRESS, abi: REGISTRY_V2_ABI, functionName: "available",   args: [label] } as const,
+        { address: REGISTRY_V2_ADDRESS, abi: REGISTRY_V2_ABI, functionName: "ownerOfName", args: [label] } as const,
+      ]
+    : [];
+  const { data: v2Reads, isLoading: v2Loading } = useReadContracts({
+    contracts: v2Contracts,
+    query: { enabled: isV2Deployed() && !isReserved },
+  });
+  const v2Available = v2Reads?.[0]?.status === "success" ? (v2Reads[0].result as boolean) : null;
+  const v2Owner     = v2Reads?.[1]?.status === "success" ? (v2Reads[1].result as string)  : null;
+
+  const readsLoading = v1Loading || v2Loading;
 
   // Pair up the batched results back to per-TLD status.
   const perTld: Record<Tld, { available: boolean | null; price: bigint | null; owner: string | null }> = {
@@ -251,15 +292,26 @@ function MultiTldNameResult({
       };
       continue;
     }
-    if (!reads || reads.length <= cursor + 2) { cursor += 3; continue; }
-    const a = reads[cursor];
-    const p = reads[cursor + 1];
-    const o = reads[cursor + 2];
+    if (!v1Reads || v1Reads.length <= cursor + 2) { cursor += 3; continue; }
+    const a = v1Reads[cursor];
+    const p = v1Reads[cursor + 1];
+    const o = v1Reads[cursor + 2];
     cursor += 3;
+    let available = a?.status === "success" ? (a.result as boolean) : null;
+    let owner = o?.status === "success" ? (o.result as string) : null;
+    // For .igra, AND-merge with V2 — a name is only "available" if neither
+    // V1 nor V2 has it. Owner falls back to V2 owner if V1 says free + V2
+    // has it (Treasury-held detection on V2-minted names).
+    if (tld === "igra" && isV2Deployed()) {
+      if (v2Available === false) available = false;
+      if ((!owner || owner === "0x0000000000000000000000000000000000000000") && v2Owner) {
+        owner = v2Owner;
+      }
+    }
     perTld[tld] = {
-      available: a?.status === "success" ? (a.result as boolean) : null,
-      price:     p?.status === "success" ? (p.result as bigint)  : null,
-      owner:     o?.status === "success" ? (o.result as string)  : null,
+      available,
+      price: p?.status === "success" ? (p.result as bigint) : null,
+      owner,
     };
   }
 

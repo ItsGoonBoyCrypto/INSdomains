@@ -1,36 +1,48 @@
 # INS — Igra Name Service
 
-**Permanent `.igra` names on the Igra Network.** Pay once, own forever. **0 renewal fees, ever.**
+**Permanent `.igra` names on the Igra Network.** Pay once for Forever, or take the cheaper renewable Annual tier. Native to Igra L2.
 
-Live at **[insdomains.org](https://insdomains.org)** · [sslip fallback](https://ins.178-104-105-0.sslip.io)
+Live at **[insdomains.org](https://insdomains.org)**
 
 Built with Next.js 15, React 19, Tailwind v3, wagmi 2 + RainbowKit, viem, Claude Haiku 4.5, Solidity 0.8.24 (Foundry).
 
 ## Active contracts on Igra mainnet (chain 38833)
 
+### V2 — current (since 2026-05-02)
+
 | | Address |
 |---|---|
-| **Registry (.igra)**        | `0x42c2f5AA0c4aACfD07e5fBe65B898212c1c2879c` |
-| **Marketplace (.igra)**     | `0xde8df276e93394c0e5dd9fe7a7ff6fd144a3642a` |
-| **ReverseResolver (.igra)** | `0x1bbd46aec04330a90832faf1da91889dee67d931` |
-| **Resolver (shared, namehash-keyed)** | `0x451D84002cE0eCFd4cc622c72FA40849a8Bb5f2A` |
-| **Owner / Treasury**        | Safe `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1` |
+| **Registry V2 (.igra)**     | `0x7E7018959bf44045F01D176D8db1594894CBf4E9` |
+| Marketplace (shared)         | `0xde8df276e93394c0e5dd9fe7a7ff6fd144a3642a` |
+| ReverseResolver (shared)     | `0x1bbd46aec04330a90832faf1da91889dee67d931` |
+| Resolver (shared, namehash)  | `0x451D84002cE0eCFd4cc622c72FA40849a8Bb5f2A` |
+| **Owner / Treasury**         | Safe `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1` |
 
-### Legacy contracts (paused 2026-04-26)
+### V1 — legacy, read-only
 
-Earlier this year we shipped sister TLDs `.ins` and `.ikas`. Their Registries + ReverseResolvers remain on chain forever (existing holders' NFTs are permanent, by design). Their Marketplaces are paused. The platform now focuses on `.igra` as the canonical Igra TLD. See `deployments/README.md` for legacy addresses.
+| | Address |
+|---|---|
+| Registry V1 (.igra)         | `0x42c2f5AA0c4aACfD07e5fBe65B898212c1c2879c` |
+
+V1 NFTs remain in their holders' wallets indefinitely. Holders can migrate to V2 Forever for **gas only** via `INSRegistryIgraV2.claimV1Forever(v1TokenId, target)` — see the migration banner on https://insdomains.org/domains.
+
+### Legacy sister TLDs (paused 2026-04-26)
+
+Earlier this year we shipped sister TLDs `.ins` and `.ikas`. Their Registries + ReverseResolvers remain on chain forever (existing holders' NFTs are permanent, by design). Their Marketplaces are paused. The platform focuses on `.igra` as the canonical Igra TLD. See `deployments/README.md` for legacy addresses.
 
 ## Highlights
 
+- **Dual tenure model (V2)** — Forever (pay once, no expiry) **or** Annual (1-year renewable, 30-day grace).
 - **Tiered pricing** in native iKAS — baked into the contract:
-  | Length | Price      | Tag              |
-  |--------|------------|------------------|
-  | 1-char | 1,000 iKAS | ultra-premium    |
-  | 2-char | 500 iKAS   | premium          |
-  | 3-char | 250 iKAS   | rare             |
-  | 4-char | 50 iKAS    | uncommon         |
-  | 5–32   | 30 iKAS    | standard         |
-- **On-chain SVG artwork** (Base64 data URI — no IPFS dependency)
+  | Length | Forever (once) | Annual (per year) | Tag             |
+  |--------|----------------|-------------------|-----------------|
+  | 1-char | 4,000 iKAS     | 1,000 iKAS        | ultra-premium   |
+  | 2-char | 2,000 iKAS     | 800 iKAS          | premium         |
+  | 3-char | 1,200 iKAS     | 500 iKAS          | rare            |
+  | 4-char | 800 iKAS       | 250 iKAS          | uncommon        |
+  | 5–32   | 500 iKAS       | 50 iKAS           | standard        |
+- **V1 → V2 migration** — gas-only `claimV1Forever(v1TokenId, target)` for existing V1 holders. One-click banner on `/domains`.
+- **On-chain SVG artwork** (Base64 data URI — no IPFS dependency). V2 cards show a tenure pill (Forever / Annual · exp May 2027).
 - **Reserved names** for ecosystem partners (admin batch-set)
 - **Reverse resolution** — opt-in `setPrimary(tokenId)` lets wallets + explorers render `foo.igra` for an address.
 - **Zero-custody marketplace** — `setApprovalForAll` once, NFT stays in your wallet until the moment of sale; 2% seller fee + optional 1% featured promotion; buyer pays 0%.
@@ -47,7 +59,7 @@ Earlier this year we shipped sister TLDs `.ins` and `.ikas`. Their Registries + 
 
 ## Stack
 
-- Next.js 15.1.4 · React 19 · TypeScript · Tailwind v3
+- Next.js 15.5.15 · React 19 · TypeScript · Tailwind v3
 - wagmi 2.14 · RainbowKit 2.2 · viem 2.22 (chain = Igra `38833`, native `iKAS`)
 - Foundry · Solidity 0.8.24
 - `@anthropic-ai/sdk` for server-side name ideation
@@ -75,19 +87,20 @@ npm run dev  # http://localhost:3000
 
 ## Contracts
 
-Foundry project under `contracts/`. Four contracts:
+Foundry project under `contracts/`. Six on-chain contracts:
 
-1. **`INSRegistry.sol`** — ERC-721, native-iKAS payment, tiered pricing, reserved names, on-chain SVG tokenURI.
-2. **`INSResolver.sol`** — namehash-keyed ENS-compatible `addr(bytes32)` + `text(bytes32, string)`.
-3. **`INSReverseResolver.sol`** — opt-in `setPrimary(tokenId)` + stale-safe `primaryName(address)`.
-4. **`INSMarketplace.sol`** — zero-custody listings, 2% seller fee + 1% featured upfront, pause kill-switch, fee-cap 500 bps, nonReentrant-guarded.
+1. **`INSRegistryIgraV2.sol`** — current Registry. Dual Forever/Annual tenure, V1 migration via `claimV1Forever`, 30-day grace, ENS-compatible label validator (Punycode-friendly for emoji names). Spec: [`docs/V2_SPEC.md`](./docs/V2_SPEC.md).
+2. **`INSRegistry.sol` / `INSRegistryIgra.sol`** — V1 Registry (legacy, read-only since V2 launch). Same ERC-721 surface.
+3. **`INSResolver.sol`** — namehash-keyed ENS-compatible `addr(bytes32)` + `text(bytes32, string)`.
+4. **`INSReverseResolver.sol`** — opt-in `setPrimary(tokenId)` + stale-safe `primaryName(address)`.
+5. **`INSMarketplace.sol`** — zero-custody listings, 2% seller fee + 1% featured upfront, pause kill-switch, fee-cap 500 bps, nonReentrant-guarded. Works with both V1 and V2 NFTs (identical ERC-721 surface).
+6. **`INSSubnameExtension.sol`** — free child names under any `.igra` parent (e.g. `pay.alice.igra`). Ships feature-flagged off until v1.1 activation.
 
 ```bash
 cd contracts
-forge test                    # 110 tests across 3 suites, 3 fuzz × 256 runs, 0 failures
-forge script script/Deploy.s.sol           --rpc-url $IGRA_RPC --broadcast   # Registry + Resolver
-forge script script/DeployReverseResolver.s.sol --rpc-url $IGRA_RPC --broadcast
-forge script script/DeployMarketplace.s.sol     --rpc-url $IGRA_RPC --broadcast
+forge test                    # 273 tests across 8 suites, 15 fuzz × 1024 runs, 0 failures
+forge script script/DeployRegistryIgraV2.s.sol --rpc-url $IGRA_RPC --broadcast \
+  --legacy --slow --with-gas-price 1100000000000   # Igra has a 1000 gwei floor
 ```
 
 See `contracts/README.md` for the per-contract surface + deploy order.
@@ -135,7 +148,8 @@ Returns JSON with the resolved address / primary name. Integrators needing name 
 
 Internal audit passes ahead of mainnet:
 
-- **INSRegistry** — 55 Foundry tests (incl. fuzz), standalone deploy verified on-chain 2026-04-23.
+- **INSRegistryIgraV2** — 103 Foundry tests (incl. 8 × 1024-run fuzz tests). Deployed + Blockscout-verified 2026-05-02. Covers Forever + Annual mints, anyone-can-renew math, in-grace renewal extends from original `expiresAt` (no value lost), post-grace re-registration burns stale NFT cleanly, V1→V2 migration idempotence, grace-period boundary off-by-one fuzz, Punycode-shape labels accepted.
+- **INSRegistry** (V1) — 55 Foundry tests (incl. fuzz), standalone deploy verified on-chain 2026-04-23.
 - **INSReverseResolver** — 12 Foundry tests, deployed 2026-04-23, stale-safe reads.
 - **INSMarketplace** — 43 Foundry tests (3 fuzz × 256 runs) covering happy + sad paths on every external, plus:
   - `nonReentrant` guard on `createListing` + `buyListing` (defence-in-depth vs. a future Registry with receiver hooks)
@@ -145,8 +159,10 @@ Internal audit passes ahead of mainnet:
   - Nested-reentry attack via `onERC721Received` → guard fires (tested)
   - Revert-path featured-fee rollback → refund guaranteed by EVM, locked in by test
   - Fee math fuzzed across bps + price ranges
-- **Admin blast radius** is capped: fee bps hard-ceiling 500 (5%), zero-custody (no user funds ever held), pausing doesn't trap seller positions.
-- All three core addresses are (or will be) owned by the [Igra Safe](https://safe.igralabs.com/), so every admin action requires multisig consent.
+- **Admin blast radius** is capped: fee bps hard-ceiling 500 (5%), zero-custody (no user funds ever held), pausing doesn't trap seller positions. V2 grace period admin-tunable but capped [7 days, 365 days] so admin can't strand or release names accidentally.
+- Every contract is owned by the [Igra Safe](https://safe.igralabs.com/) — every admin action requires multisig consent. Each deployer EOA was drained immediately after `transferOwnership` and quarantined.
+
+**Repo-wide test count:** 273 passed, 0 failed, 0 skipped. 15 fuzz tests at 1024 runs each (15,360 fuzz iterations). Reproduce: `cd contracts && forge test`.
 
 ## License
 
