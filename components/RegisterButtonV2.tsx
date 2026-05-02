@@ -16,7 +16,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { Check, ExternalLink, Loader2, ChevronDown } from "lucide-react";
+import { Check, ExternalLink, Loader2 } from "lucide-react";
 import {
   REGISTRY_V2_ADDRESS, REGISTRY_V2_ABI, isV2Deployed,
 } from "@/lib/contracts";
@@ -25,7 +25,11 @@ import { ShareToXModal } from "@/components/ShareToXModal";
 const IGRA_EXPLORER =
   process.env.NEXT_PUBLIC_IGRA_EXPLORER ?? "https://explorer.igralabs.com";
 
-const YEAR_CHOICES: readonly number[] = [1, 2, 3, 5, 10];
+// Public Annual tenure is intentionally locked to 1 year — the contract
+// (INSRegistryIgraV2) accepts 1..10 years so admin can still gift multi-year
+// names via adminMintAnnual to ecosystem partners, but the public dApp UI
+// keeps the choice simple: Forever or 1-year. Decision locked 2026-05-02.
+const ANNUAL_YEARS = 1;
 
 function formatIkas(wei: bigint | null | undefined): string {
   if (wei == null) return "—";
@@ -86,17 +90,17 @@ function V2Inner({ label, owner }: { label: string; owner: `0x${string}` }) {
     query: { enabled: !!label },
   });
 
-  // Modal state for Annual year selection + dropdown open
-  const [annualOpen, setAnnualOpen] = useState(false);
-  const [years, setYears] = useState<number>(1);
-
   const { writeContract, data: hash, error, isPending, reset } = useWriteContract();
   const { isLoading: confirming, isSuccess: confirmed } = useWaitForTransactionReceipt({ hash });
   const busy = isPending || confirming;
+  // Track which path the user clicked so the button-level loading state
+  // shows on the right tile, not both.
+  const [activePath, setActivePath] = useState<"forever" | "annual" | null>(null);
 
   const onMintForever = () => {
     if (foreverPrice == null) return;
     reset();
+    setActivePath("forever");
     writeContract({
       address: REGISTRY_V2_ADDRESS,
       abi: REGISTRY_V2_ABI,
@@ -109,13 +113,13 @@ function V2Inner({ label, owner }: { label: string; owner: `0x${string}` }) {
   const onMintAnnual = () => {
     if (annualPerYear == null) return;
     reset();
-    const totalPrice = (annualPerYear as bigint) * BigInt(years);
+    setActivePath("annual");
     writeContract({
       address: REGISTRY_V2_ADDRESS,
       abi: REGISTRY_V2_ABI,
       functionName: "registerAnnual",
-      args: [label, owner, BigInt(years)],
-      value: totalPrice,
+      args: [label, owner, BigInt(ANNUAL_YEARS)],
+      value: (annualPerYear as bigint) * BigInt(ANNUAL_YEARS),
     });
   };
 
@@ -124,87 +128,71 @@ function V2Inner({ label, owner }: { label: string; owner: `0x${string}` }) {
     return <MintedSuccessV2 label={label} hash={hash} />;
   }
 
-  const annualTotal =
-    annualPerYear != null ? (annualPerYear as bigint) * BigInt(years) : null;
+  const foreverBusy = busy && activePath === "forever";
+  const annualBusy = busy && activePath === "annual";
 
   return (
-    <div className="flex flex-col items-end gap-1.5">
-      {/* Primary: Forever (the brand promise — keeps the headline) */}
+    <div className="flex flex-col items-stretch gap-2 sm:min-w-[220px]">
+      {/* Forever — primary brand option. Cyan/plum gradient, big, "pay once". */}
       <button
         onClick={onMintForever}
         disabled={busy || foreverPrice == null}
-        className="btn-primary text-xs"
+        className="group relative overflow-hidden rounded-xl border border-cyan/40 bg-gradient-to-br from-cyan/15 via-cyan/10 to-plum/15 px-4 py-2.5 text-left transition hover:border-cyan/70 hover:from-cyan/25 hover:to-plum/25 disabled:opacity-50"
       >
-        {busy ? (
-          <><Loader2 className="mr-1 inline h-3 w-3 animate-spin" />
-            {isPending ? "Confirm…" : "Minting…"}
-          </>
-        ) : (
-          <>Forever · {formatIkas(foreverPrice as bigint | undefined)} iKAS</>
-        )}
-      </button>
-
-      {/* Secondary: Annual toggle */}
-      <button
-        onClick={() => setAnnualOpen((v) => !v)}
-        disabled={busy}
-        className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/50 transition hover:text-cyan"
-      >
-        or Annual{" "}
-        <ChevronDown
-          className={`h-3 w-3 transition ${annualOpen ? "rotate-180" : ""}`}
-        />
-      </button>
-
-      {/* Annual year picker + mint */}
-      {annualOpen && (
-        <div className="mt-1 w-[260px] rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] p-3">
-          <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-wider text-emerald-300/80">
-            <span>Annual tenure</span>
-            <span className="font-mono text-emerald-300/60">
-              {formatIkas(annualPerYear as bigint | undefined)} iKAS / yr
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {YEAR_CHOICES.map((y) => (
-              <button
-                key={y}
-                onClick={() => setYears(y)}
-                className={`rounded-md border px-2 py-1 text-[11px] font-bold transition ${
-                  years === y
-                    ? "border-emerald-500/60 bg-emerald-500/20 text-emerald-200"
-                    : "border-white/10 bg-white/[0.04] text-white/55 hover:border-emerald-500/30"
-                }`}
-              >
-                {y}y
-              </button>
-            ))}
-          </div>
-          <div className="mt-3 flex items-center justify-between">
-            <div className="text-[11px] text-white/55">
-              Total{" "}
-              <span className="font-bold text-emerald-200">
-                {formatIkas(annualTotal)} iKAS
-              </span>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan">
+              Forever
             </div>
-            <button
-              onClick={onMintAnnual}
-              disabled={busy || annualPerYear == null}
-              className="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-1 text-[11px] font-bold text-emerald-200 transition hover:bg-emerald-500/25 disabled:opacity-50"
-            >
-              {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : `Mint ${years}y →`}
-            </button>
+            <div className="mt-0.5 text-base font-black text-white">
+              {formatIkas(foreverPrice as bigint | undefined)} iKAS
+            </div>
           </div>
-          <p className="mt-2 text-[9px] text-white/40">
-            30-day grace period after expiry. Renew or extend-to-Forever any time.
-          </p>
+          <div className="text-right text-[10px] text-white/55">
+            {foreverBusy ? (
+              <Loader2 className="ml-auto h-4 w-4 animate-spin text-cyan" />
+            ) : (
+              <>
+                pay once<br />
+                no renewals
+              </>
+            )}
+          </div>
         </div>
-      )}
+      </button>
+
+      {/* Annual 1yr — secondary, but visually equal weight. Emerald accent. */}
+      <button
+        onClick={onMintAnnual}
+        disabled={busy || annualPerYear == null}
+        className="group relative overflow-hidden rounded-xl border border-emerald-500/40 bg-gradient-to-br from-emerald-500/12 via-emerald-500/8 to-transparent px-4 py-2.5 text-left transition hover:border-emerald-500/70 hover:from-emerald-500/22 disabled:opacity-50"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">
+              Annual · 1 year
+            </div>
+            <div className="mt-0.5 text-base font-black text-white">
+              {formatIkas(annualPerYear as bigint | undefined)} iKAS
+            </div>
+          </div>
+          <div className="text-right text-[10px] text-white/55">
+            {annualBusy ? (
+              <Loader2 className="ml-auto h-4 w-4 animate-spin text-emerald-300" />
+            ) : (
+              <>
+                renewable<br />
+                30-day grace
+              </>
+            )}
+          </div>
+        </div>
+      </button>
 
       {error && (
         <button
-          onClick={reset}
-          className="max-w-[180px] truncate text-right text-[10px] text-red-300 hover:text-red-200"
+          onClick={() => { reset(); setActivePath(null); }}
+          className="truncate text-right text-[10px] text-red-300 hover:text-red-200"
           title={error.message}
         >
           {error.message.split("\n")[0] || "Tx failed"} — retry

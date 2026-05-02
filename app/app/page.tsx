@@ -11,6 +11,7 @@ import { Footer } from "@/components/Footer";
 import { NameCard } from "@/components/NameCard";
 import { ShareToXModal } from "@/components/ShareToXModal";
 import { RegisterButtonV2 } from "@/components/RegisterButtonV2";
+import { ClaimReservedModal } from "@/components/ClaimReservedModal";
 import { cleanLabel, isValidLabel } from "@/lib/names";
 import { mockAvailable, TAKEN_NAMES, RESERVED_NAMES } from "@/lib/mock-registry";
 import { rarityFor, tierLabel, formatPrice, type Rarity } from "@/lib/pricing";
@@ -19,6 +20,7 @@ import {
   REGISTRY_ADDRESSES, TLDS, LIVE_TLDS, isTldLive, tldSuffix, type Tld,
   isV2Deployed, isV2Enabled,
   REGISTRY_V2_ADDRESS, REGISTRY_V2_ABI,
+  isHeldByTreasury,
 } from "@/lib/contracts";
 import { isAdmin } from "@/lib/admin";
 import { cn } from "@/lib/cn";
@@ -215,12 +217,16 @@ function MultiTldNameResult({
 }: { label: string; owner?: `0x${string}`; rarity: Rarity }) {
   const isReserved = rarity.kind === "reserved";
 
-  // Batch all 3 TLDs' reads via useReadContracts (one RPC round-trip)
+  // Batch all 3 TLDs' reads via useReadContracts (one RPC round-trip).
+  // Reads per live TLD: available + priceFor + ownerOfName. The 3rd one
+  // is so we can detect Treasury-held names (free claim) vs marketplace
+  // names (regular taken-but-listed flow).
   const contracts = TLDS.flatMap((tld) =>
     isTldLive(tld)
       ? [
-          { address: REGISTRY_ADDRESSES[tld], abi: REGISTRY_ABI, functionName: "available", args: [label] } as const,
-          { address: REGISTRY_ADDRESSES[tld], abi: REGISTRY_ABI, functionName: "priceFor",  args: [label] } as const,
+          { address: REGISTRY_ADDRESSES[tld], abi: REGISTRY_ABI, functionName: "available",   args: [label] } as const,
+          { address: REGISTRY_ADDRESSES[tld], abi: REGISTRY_ABI, functionName: "priceFor",    args: [label] } as const,
+          { address: REGISTRY_ADDRESSES[tld], abi: REGISTRY_ABI, functionName: "ownerOfName", args: [label] } as const,
         ]
       : []
   );
@@ -230,10 +236,10 @@ function MultiTldNameResult({
   });
 
   // Pair up the batched results back to per-TLD status.
-  const perTld: Record<Tld, { available: boolean | null; price: bigint | null }> = {
-    ins:  { available: null, price: null },
-    igra: { available: null, price: null },
-    ikas: { available: null, price: null },
+  const perTld: Record<Tld, { available: boolean | null; price: bigint | null; owner: string | null }> = {
+    ins:  { available: null, price: null, owner: null },
+    igra: { available: null, price: null, owner: null },
+    ikas: { available: null, price: null, owner: null },
   };
   let cursor = 0;
   for (const tld of TLDS) {
@@ -241,16 +247,19 @@ function MultiTldNameResult({
       perTld[tld] = {
         available: REGISTRY_LIVE ? null : mockAvailable(label),
         price: null,
+        owner: null,
       };
       continue;
     }
-    if (!reads || reads.length <= cursor + 1) { cursor += 2; continue; }
+    if (!reads || reads.length <= cursor + 2) { cursor += 3; continue; }
     const a = reads[cursor];
     const p = reads[cursor + 1];
-    cursor += 2;
+    const o = reads[cursor + 2];
+    cursor += 3;
     perTld[tld] = {
       available: a?.status === "success" ? (a.result as boolean) : null,
-      price: p?.status === "success" ? (p.result as bigint) : null,
+      price:     p?.status === "success" ? (p.result as bigint)  : null,
+      owner:     o?.status === "success" ? (o.result as string)  : null,
     };
   }
 
@@ -273,6 +282,7 @@ function MultiTldNameResult({
           rarity={rarity}
           available={perTld[tld].available}
           price={perTld[tld].price}
+          nameOwner={perTld[tld].owner}
           owner={owner}
           loading={readsLoading}
         />
@@ -282,18 +292,27 @@ function MultiTldNameResult({
 }
 
 function TldRow({
-  tld, label, rarity, available, price, owner, loading,
+  tld, label, rarity, available, price, nameOwner, owner, loading,
 }: {
   tld: Tld;
   label: string;
   rarity: Rarity;
   available: boolean | null;
   price: bigint | null;
+  /** Current on-chain holder of the name (null if not minted). Used to
+   *  detect Treasury-Safe-held names → free-claim CTA. */
+  nameOwner: string | null;
   owner?: `0x${string}`;
   loading: boolean;
 }) {
   const isReserved = rarity.kind === "reserved";
   const live = isTldLive(tld);
+  // True when an existing mint is owned by the team's Treasury Safe.
+  // We surface a "Claim it free" CTA instead of the marketplace link
+  // because these names are reserved for the rightful owner (project
+  // handles, brand-collision, exchange tickers).
+  const treasuryHeld = available === false && isHeldByTreasury(nameOwner);
+  const [claimOpen, setClaimOpen] = useState(false);
   // V2 routing decision: .igra only, and either the public V2 flag is on
   // OR the caller is admin (so we can dogfood pre-launch). When true, the
   // RegisterButtonV2 takes over (Forever + Annual toggle, V2 contract).
@@ -328,6 +347,8 @@ function TldRow({
         "relative overflow-hidden rounded-2xl border p-5",
         isReserved
           ? "border-red-500/30 bg-red-500/[0.04]"
+          : treasuryHeld
+          ? "border-emerald-500/30 bg-gradient-to-r from-emerald-500/[0.06] to-transparent"
           : available
           ? tldBorder[tld]
           : "border-white/10 bg-white/[0.03]"
@@ -360,6 +381,10 @@ function TldRow({
                 <span className="inline-flex items-center gap-1.5 text-emerald-300">
                   <Check className="h-3 w-3" /> Available · forever
                 </span>
+              ) : treasuryHeld ? (
+                <span className="inline-flex items-center gap-1.5 text-emerald-300">
+                  <Gem className="h-3 w-3" /> Reserved · claim free
+                </span>
               ) : available === false ? (
                 <span className="inline-flex items-center gap-1.5 text-red-300">
                   <X className="h-3 w-3" /> Taken
@@ -376,33 +401,38 @@ function TldRow({
             <div className="text-right text-xs text-red-300">Not for sale</div>
           ) : !live ? (
             <div className="text-right text-xs text-white/40">Coming soon</div>
+          ) : treasuryHeld ? (
+            <button
+              onClick={() => setClaimOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-3 py-2 text-xs font-bold text-emerald-200 transition hover:bg-emerald-500/25"
+            >
+              <Gem className="h-3.5 w-3.5" />
+              Claim it free →
+            </button>
           ) : available === true ? (
-            <>
-              <div className="text-right">
-                <div className="flex items-baseline justify-end gap-1.5">
-                  <div className="text-lg font-black text-white">
-                    {useV2
-                      ? formatPrice(Number(((v2Price as bigint | undefined) ?? price ?? 0n) / 10n ** 18n))
-                      : price != null
-                      ? formatPrice(Number(price / 10n ** 18n))
-                      : "—"}
-                  </div>
-                  {useV2 && (
-                    <span className="rounded-full border border-cyan/30 bg-cyan/10 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-cyan">
-                      V2
-                    </span>
-                  )}
+            useV2 ? (
+              // V2 path — buttons embed their own prices (Forever / Annual 1y),
+              // so the duplicate big-price column is dropped. Small V2 badge
+              // floats above the button stack so admins testing pre-launch
+              // see at a glance that V2 is engaged.
+              <div className="flex flex-col items-stretch gap-1">
+                <div className="flex items-center justify-end gap-1.5 text-[10px] font-bold uppercase tracking-wider text-cyan/80">
+                  <span className="rounded-full border border-cyan/30 bg-cyan/10 px-2 py-0.5">V2</span>
+                  <span>pick a tenure</span>
                 </div>
-                <div className="text-[10px] uppercase tracking-wider text-white/40">
-                  {useV2 ? "Forever · or Annual" : "one-time"}
-                </div>
-              </div>
-              {useV2 ? (
                 <RegisterButtonV2 label={label} owner={owner} />
-              ) : (
+              </div>
+            ) : (
+              <>
+                <div className="text-right">
+                  <div className="text-lg font-black text-white">
+                    {price != null ? formatPrice(Number(price / 10n ** 18n)) : "—"}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-wider text-white/40">one-time</div>
+                </div>
                 <RegisterButton label={label} tld={tld} owner={owner} priceHint={price} />
-              )}
-            </>
+              </>
+            )
           ) : available === false ? (
             <Link href={`/marketplace?name=${label}`} className="btn-ghost text-xs">
               Marketplace <ArrowRight className="ml-1 inline h-3 w-3" />
@@ -410,6 +440,17 @@ function TldRow({
           ) : null}
         </div>
       </div>
+
+      {/* Free-claim modal — only mounts for Treasury-held names; the row
+          renders nothing-extra otherwise. Modal is local per-row so the
+          name prop is always the row's name. */}
+      {treasuryHeld && (
+        <ClaimReservedModal
+          open={claimOpen}
+          onClose={() => setClaimOpen(false)}
+          name={`${label}${tldSuffix(tld)}`}
+        />
+      )}
     </div>
   );
 }

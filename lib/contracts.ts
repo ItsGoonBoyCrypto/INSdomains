@@ -71,6 +71,22 @@ export function tldSuffix(tld: Tld): string {
   return "." + tld;
 }
 
+/* ──────────────────── Treasury Safe ─────────────────────────────────
+ * Same Safe multisig owns every Registry, both Marketplaces, and the
+ * ReverseResolvers. Any name held BY this address is an ecosystem-
+ * allocation reservation — the rightful owner can claim it free of
+ * charge by DMing the team (handled in ClaimReservedModal).
+ */
+export const TREASURY_SAFE_ADDRESS =
+  "0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1" as Address;
+
+/** Case-insensitive comparison — wallet returns checksummed addresses,
+ *  contracts return lowercase. */
+export function isHeldByTreasury(addr: string | null | undefined): boolean {
+  if (!addr) return false;
+  return addr.toLowerCase() === TREASURY_SAFE_ADDRESS.toLowerCase();
+}
+
 /* ──────────────────── V2 Registry (.igra) ───────────────────────────
  * V2 adds the dual Annual / Forever tier model + V1 holder migration.
  * Spec: docs/V2_SPEC.md.
