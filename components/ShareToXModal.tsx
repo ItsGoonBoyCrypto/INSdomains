@@ -28,11 +28,14 @@ export function ShareToXModal({
   onClose,
   names,           // 1+ minted names, e.g. ["alice.igra"] or ["alice.igra", "alice.ins"]
   primaryTokenId,  // tokenId of the headline NFT (used for the visual)
+  registryVersion = "v1", // "v2" for V2 mints — appends ?v=2 to the image URL
+                          // so the right Registry is read (V1+V2 ids collide)
 }: {
   open: boolean;
   onClose: () => void;
   names: string[];
   primaryTokenId: bigint | number | string | null;
+  registryVersion?: "v1" | "v2";
 }) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -59,7 +62,10 @@ export function ShareToXModal({
   // Modal preview + X intent target use the 1200px render so the card stays
   // crisp on retina displays + when X expands the embedded image. The TG bot
   // continues to fetch the default 200px (no `?size=`) for a compact card.
-  const imgSrc = tokenIdStr ? `${SITE}/api/nft-image/${tokenIdStr}?size=1200` : null;
+  // V2 mints pass ?v=2 so the route reads V2's labelOf instead of V1's.
+  const imgSrc = tokenIdStr
+    ? `${SITE}/api/nft-image/${tokenIdStr}?size=1200${registryVersion === "v2" ? "&v=2" : ""}`
+    : null;
 
   const tagLine = X_HANDLE
     ? `Powered by @${X_HANDLE} on ${CHAIN_CASHTAG}.`

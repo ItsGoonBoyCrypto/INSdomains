@@ -255,6 +255,7 @@ function MintedSuccessV2({ label, hash }: { label: string; hash: `0x${string}` }
         onClose={() => setShareOpen(false)}
         names={[fullName]}
         primaryTokenId={typeof tokenId === "bigint" ? tokenId : null}
+        registryVersion="v2"
       />
     </>
   );

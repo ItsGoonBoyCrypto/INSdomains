@@ -1,6 +1,9 @@
 import { ImageResponse } from "next/og";
 import { createPublicClient, http } from "viem";
-import { REGISTRY_ADDRESSES, REGISTRY_ABI } from "@/lib/contracts";
+import {
+  REGISTRY_ADDRESSES, REGISTRY_ABI,
+  REGISTRY_V2_ADDRESS, REGISTRY_V2_ABI,
+} from "@/lib/contracts";
 
 export const runtime = "nodejs";
 
@@ -10,6 +13,7 @@ const client = createPublicClient({ transport: http(RPC) });
 const CYAN = "#00f0ff";
 const PLUM = "#a855f7";
 const INK = "#0a0a0a";
+const EMERALD = "#34d399";
 
 /** Whitelist of allowed render sizes. 200 is the default (TG-friendly compact);
  *  larger sizes drive the on-site Share-to-X modal preview + the X intent
@@ -18,14 +22,17 @@ const ALLOWED_SIZES = [200, 400, 800, 1200] as const;
 type AllowedSize = (typeof ALLOWED_SIZES)[number];
 const DEFAULT_SIZE: AllowedSize = 200;
 
-/** Tier band based on label length — must match the on-chain tiered pricing. */
+/** Tier band based on label length. Prices are the V2 Forever defaults
+ *  locked 2026-05-02 (V1 was bumped to the same numbers via Safe tx the
+ *  same day). The card's headline price = Forever tier; Annual tenure
+ *  shows in the bottom strip via the `?tenure=` overlay below. */
 function tierFor(label: string): { tag: string; price: string; color: string } {
   const n = label.length;
-  if (n <= 1) return { tag: "ULTRA-PREMIUM", price: "1,000", color: "#ff5fa2" };
-  if (n <= 2) return { tag: "PREMIUM",       price: "500",   color: "#fb7185" };
-  if (n <= 3) return { tag: "RARE",          price: "250",   color: "#f59e0b" };
-  if (n <= 4) return { tag: "UNCOMMON",      price: "50",    color: "#34d399" };
-  return        { tag: "STANDARD",      price: "30",    color: PLUM };
+  if (n <= 1) return { tag: "ULTRA-PREMIUM", price: "4,000", color: "#ff5fa2" };
+  if (n <= 2) return { tag: "PREMIUM",       price: "2,000", color: "#fb7185" };
+  if (n <= 3) return { tag: "RARE",          price: "1,200", color: "#f59e0b" };
+  if (n <= 4) return { tag: "UNCOMMON",      price: "800",   color: EMERALD };
+  return        { tag: "STANDARD",      price: "500",   color: PLUM };
 }
 
 /** Auto-fit the label so it never overflows the card. Values returned at the
@@ -90,17 +97,36 @@ export async function GET(
   /** Helper: scale a 200-baseline pixel value to the chosen size. */
   const s = (n: number) => Math.round(n * scale * 100) / 100;
 
-  // Read label from the .igra Registry. If it fails or returns empty, render
-  // a generic placeholder so we never 500 the image route (Telegram would
-  // refuse to attach a broken image).
+  // ── ?v=2 → read from V2 Registry (and surface the V2 badge / tenure
+  // pill). Activity bot sets this for V2 mints + V1 migrations so the
+  // image matches the right token id (V1 + V2 ids collide at low numbers).
+  const versionParam = url.searchParams.get("v");
+  const isV2 = versionParam === "2";
+  const registryAddr = isV2 ? REGISTRY_V2_ADDRESS : REGISTRY_ADDRESSES.igra;
+  const abi = isV2 ? REGISTRY_V2_ABI : REGISTRY_ABI;
+
+  // Read label from the chosen Registry. If it fails or returns empty,
+  // render a generic placeholder so we never 500 the image route
+  // (Telegram would refuse to attach a broken image).
   let label = "";
+  let expiresAt = 0n;
   try {
     label = (await client.readContract({
-      address: REGISTRY_ADDRESSES.igra,
-      abi: REGISTRY_ABI,
+      address: registryAddr,
+      abi,
       functionName: "labelOf",
       args: [tokenId],
     })) as string;
+    if (isV2) {
+      try {
+        expiresAt = (await client.readContract({
+          address: registryAddr,
+          abi: REGISTRY_V2_ABI,
+          functionName: "expiresAt",
+          args: [tokenId],
+        })) as bigint;
+      } catch { /* expiresAt read failed → treat as Forever */ }
+    }
   } catch {
     /* fall through with empty label */
   }
@@ -109,6 +135,11 @@ export async function GET(
   const tier = tierFor(safeLabel);
   const labelSize = s(labelFontSize(safeLabel.length));
   const suffSize  = s(suffixFontSize(safeLabel.length));
+  const isAnnual = isV2 && expiresAt !== 0n;
+  // Format expiresAt as "MMM YYYY" (e.g. "May 2027") for the Annual pill.
+  const expiryText = isAnnual
+    ? new Date(Number(expiresAt) * 1000).toLocaleDateString("en-US", { month: "short", year: "numeric" }).toUpperCase()
+    : "";
 
   return new ImageResponse(
     (
@@ -170,14 +201,16 @@ export async function GET(
               display: "flex",
               padding: `${s(1)}px ${s(5)}px`,
               borderRadius: 999,
-              border: "1px solid rgba(255,255,255,0.1)",
-              background: "rgba(255,255,255,0.04)",
+              border: isV2 ? `1px solid ${CYAN}66` : "1px solid rgba(255,255,255,0.1)",
+              background: isV2 ? `${CYAN}1f` : "rgba(255,255,255,0.04)",
               fontSize: s(7),
               fontFamily: "monospace",
-              color: "rgba(255,255,255,0.55)",
+              color: isV2 ? CYAN : "rgba(255,255,255,0.55)",
+              fontWeight: isV2 ? 800 : 400,
+              letterSpacing: isV2 ? s(0.4) : 0,
             }}
           >
-            #{tokenIdStr}
+            {isV2 ? `V2 #${tokenIdStr}` : `#${tokenIdStr}`}
           </div>
         </div>
 
@@ -262,11 +295,13 @@ export async function GET(
                 width: s(4),
                 height: s(4),
                 borderRadius: 999,
-                background: PLUM,
-                boxShadow: `0 0 ${s(4)}px ${PLUM}`,
+                background: isAnnual ? "#fbbf24" : PLUM,
+                boxShadow: `0 0 ${s(4)}px ${isAnnual ? "#fbbf24" : PLUM}`,
               }}
             />
-            <div style={{ display: "flex" }}>On-chain · Forever</div>
+            <div style={{ display: "flex" }}>
+              {isAnnual ? `Annual · exp ${expiryText}` : "On-chain · Forever"}
+            </div>
           </div>
           <div style={{ display: "flex", color: "rgba(255,255,255,0.7)" }}>
             insdomains.org
