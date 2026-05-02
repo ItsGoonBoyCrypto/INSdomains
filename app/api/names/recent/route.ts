@@ -121,28 +121,26 @@ export async function GET(req: Request) {
     // Per-token reads — route to the correct Registry/ABI based on tag.
     // V1 + V2 share the same read function names and signatures (V2 is a
     // superset), so the only thing we need to switch is the address + abi.
-    // V2 entries also pull expiresAt for tenure metadata.
-    const reads = recent.flatMap((log) => {
+    // V2 entries also pull expiresAt for tenure metadata. We keep exactly
+    // 5 reads per log so the offset math below is uniform; V1's 5th read
+    // is a harmless mintedAt repeat. Typed as `any[]` because each element
+    // mixes V1 and V2 ABI types and we intentionally erase that surface.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const reads: any[] = recent.flatMap((log) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const tokenId = (log as any).args.tokenId as bigint;
       const isV2 = log._version === "v2";
       const abi = isV2 ? REGISTRY_V2_ABI : REGISTRY_ABI;
       const address = log._registry;
-      const base = [
-        { address, abi, functionName: "labelOf" as const,   args: [tokenId] },
-        { address, abi, functionName: "ownerOf" as const,   args: [tokenId] },
-        { address, abi, functionName: "targetOf" as const,  args: [tokenId] },
-        { address, abi, functionName: "mintedAt" as const,  args: [tokenId] },
-      ];
-      // 5th read only for V2 — keeps the per-log offset constant at 5.
-      // V1 still gets a 5th call but it's a harmless `mintedAt` repeat,
-      // so the offset math below is uniform across both.
-      base.push(
+      return [
+        { address, abi, functionName: "labelOf",  args: [tokenId] },
+        { address, abi, functionName: "ownerOf",  args: [tokenId] },
+        { address, abi, functionName: "targetOf", args: [tokenId] },
+        { address, abi, functionName: "mintedAt", args: [tokenId] },
         isV2
-          ? { address, abi: REGISTRY_V2_ABI, functionName: "expiresAt" as const, args: [tokenId] }
-          : { address, abi: REGISTRY_ABI,    functionName: "mintedAt" as const,  args: [tokenId] },
-      );
-      return base;
+          ? { address, abi: REGISTRY_V2_ABI, functionName: "expiresAt", args: [tokenId] }
+          : { address, abi: REGISTRY_ABI,    functionName: "mintedAt",  args: [tokenId] },
+      ];
     });
     const results = await parallelReadContract<unknown>(client, reads);
 

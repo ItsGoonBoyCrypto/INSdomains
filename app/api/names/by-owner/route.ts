@@ -114,22 +114,21 @@ export async function GET(req: Request) {
     const tokenIds = Array.from(tokenIdSet);
     if (tokenIds.length === 0) return [];
 
-    // For V2 we also pull expiresAt; for V1 we keep mintedAt as the 4th read
-    // so the offset math stays uniform (5 reads per token regardless).
-    const reads = tokenIds.flatMap((tokenId) => {
-      const base = [
-        { address: opts.address, abi: opts.abi, functionName: "ownerOf" as const,   args: [tokenId] },
-        { address: opts.address, abi: opts.abi, functionName: "labelOf" as const,   args: [tokenId] },
-        { address: opts.address, abi: opts.abi, functionName: "targetOf" as const,  args: [tokenId] },
-        { address: opts.address, abi: opts.abi, functionName: "mintedAt" as const,  args: [tokenId] },
-      ];
-      base.push(
-        opts.version === "v2"
-          ? { address: opts.address, abi: REGISTRY_V2_ABI, functionName: "expiresAt" as const, args: [tokenId] }
-          : { address: opts.address, abi: REGISTRY_ABI,    functionName: "mintedAt" as const,  args: [tokenId] },
-      );
-      return base;
-    });
+    // For V2 we also pull expiresAt; for V1 we keep mintedAt as the 5th read
+    // (a harmless repeat) so the offset math stays uniform: exactly 5 reads
+    // per token regardless of version. Typed as `unknown[]` because each
+    // element references a different ABI / functionName combo and we
+    // intentionally erase that surface to the helper.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const reads: any[] = tokenIds.flatMap((tokenId) => [
+      { address: opts.address, abi: opts.abi, functionName: "ownerOf",  args: [tokenId] },
+      { address: opts.address, abi: opts.abi, functionName: "labelOf",  args: [tokenId] },
+      { address: opts.address, abi: opts.abi, functionName: "targetOf", args: [tokenId] },
+      { address: opts.address, abi: opts.abi, functionName: "mintedAt", args: [tokenId] },
+      opts.version === "v2"
+        ? { address: opts.address, abi: REGISTRY_V2_ABI, functionName: "expiresAt", args: [tokenId] }
+        : { address: opts.address, abi: REGISTRY_ABI,    functionName: "mintedAt",  args: [tokenId] },
+    ]);
     const results = await parallelReadContract<unknown>(client, reads);
 
     return tokenIds
