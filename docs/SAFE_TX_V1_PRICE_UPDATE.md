@@ -1,5 +1,10 @@
 # Safe transaction — V1 price update (.igra Registry)
 
+> **✅ EXECUTED 2026-05-02.** All 5 calls landed on chain via the Igra Safe;
+> on-chain `priceFor()` reads back 4,000 / 2,000 / 1,200 / 800 / 500 iKAS for
+> length tiers 1–5 respectively. Document kept for the rollback table at the
+> bottom + future V2 reference.
+
 **Goal:** raise the on-chain `lengthPrice[bucket]` values on the live `.igra`
 Registry to match the new **Forever** tier locked for V1.
 
@@ -52,19 +57,30 @@ them in any order — they're independent.
 
 ## How to execute (Safe Web app)
 
-1. Open <https://app.safe.global> and connect to the Igra Safe at
-   `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1` on chain 38833.
+> ⚠️ **Gotcha hit in 2026-05-02 run:** the Igra Safe rejects the Transaction
+> Builder batch with `delegate call is disabled` (Safe ships with a
+> delegatecall guard active). The fix is to **send each setLengthPrice as
+> an individual Contract Interaction tx** instead of a batch — they're
+> regular `call`s and go through fine. 5 sigs per signer instead of 1; same
+> end state on chain.
+
+### Recommended path (worked on the live Safe)
+
+For each of the 5 rows in the table above:
+
+1. Open <https://app.safe.global> connected to the Igra Safe on chain 38833.
+2. **New transaction → Contract interaction**.
+3. Address: `0x42c2f5AA0c4aACfD07e5fBe65B898212c1c2879c`.
+4. Paste the ABI snippet below.
+5. Function: `setLengthPrice`. Fill `bucket` + `price` (wei).
+6. **Create transaction**, sign, co-signers approve, **Execute**.
+
+### Original Transaction Builder path (only if no delegatecall guard)
+
+1. Open <https://app.safe.global> connect to chain 38833.
 2. **Apps** → **Transaction Builder** → **New batch**.
-3. For each of the 5 transactions:
-   - **Address** → `0x42c2f5AA0c4aACfD07e5fBe65B898212c1c2879c`
-   - **ABI** → paste the snippet below (or the contract's full ABI from
-     the explorer if Safe auto-pulls it)
-   - **Function** → `setLengthPrice`
-   - **`bucket (uint8)`** → the bucket number (1-5)
-   - **`price (uint256)`** → the wei value from the table above
-   - Click **Add transaction**
-4. Click **Create batch** → **Send batch** → confirm in your wallet.
-5. Co-signers approve in the Safe, then **Execute**.
+3. For each of the 5 rows: address + ABI + function + bucket + price → **Add transaction**.
+4. **Create batch** → **Send batch** → sign → co-signers → **Execute**.
 
 Minimal ABI snippet to paste into the Transaction Builder:
 
