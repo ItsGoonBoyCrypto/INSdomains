@@ -1414,13 +1414,6 @@ const CANONICAL_TIER_SCHEDULE = [
   { bucket: 5 as const, priceIkas: 30 },
 ] as const;
 
-/** One write in the Sync queue — set a single (TLD, bucket) to a price. */
-type TierSyncStep = {
-  tld: Tld;
-  bucket: number;
-  fromIkas: number | "RESERVED" | null;
-  toIkas: number;
-};
 
 function TierPricingCard({ tld }: { tld: Tld }) {
   const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
@@ -1459,49 +1452,6 @@ function TierPricingCard({ tld }: { tld: Tld }) {
     })),
     query: { enabled: REGISTRY_LIVE },
   });
-
-  // Read all 5 buckets from EVERY live TLD — feeds the canonical Sync diff.
-  // Order: LIVE_TLDS × CANONICAL_TIER_SCHEDULE (5-step stride).
-  const { data: allTldPrices, refetch: refetchAllTlds } = useReadContracts({
-    contracts: LIVE_TLDS.flatMap((t) =>
-      CANONICAL_TIER_SCHEDULE.map((tier) => ({
-        address: REGISTRY_ADDRESSES[t],
-        abi: REGISTRY_ABI,
-        functionName: "lengthPrice" as const,
-        args: [tier.bucket] as const,
-      })),
-    ),
-    query: { enabled: LIVE_TLDS.length > 1 },
-  });
-
-  const decode = (raw: bigint | undefined): number | "RESERVED" | null => {
-    if (raw === undefined) return null;
-    if (raw === BigInt(TIER_RESERVED) || raw > 10n ** 30n) return "RESERVED";
-    return Number(formatEther(raw));
-  };
-
-  // Compute the diff vs canonical for every (live TLD × bucket).
-  // null = still loading; [] = all in sync; non-empty = needs sync.
-  const canonicalDiff = useMemo<TierSyncStep[] | null>(() => {
-    if (LIVE_TLDS.length < 2) return null;
-    if (!allTldPrices || allTldPrices.length === 0) return null;
-    const stride = CANONICAL_TIER_SCHEDULE.length;
-    const out: TierSyncStep[] = [];
-    for (let ti = 0; ti < LIVE_TLDS.length; ti++) {
-      const t = LIVE_TLDS[ti];
-      for (let bi = 0; bi < stride; bi++) {
-        const idx = ti * stride + bi;
-        const raw = allTldPrices[idx]?.result as bigint | undefined;
-        const cur = decode(raw);
-        if (cur === null) return null; // still loading at least one cell
-        const tier = CANONICAL_TIER_SCHEDULE[bi];
-        if (cur === "RESERVED" || cur !== tier.priceIkas) {
-          out.push({ tld: t, bucket: tier.bucket, fromIkas: cur, toIkas: tier.priceIkas });
-        }
-      }
-    }
-    return out;
-  }, [allTldPrices]);
 
   /* ── Multi-TLD batch (per-row Save fan-out) ───────────────── */
   const [batchOp, setBatchOp] = useState<BatchOp | null>(null);
@@ -1552,7 +1502,7 @@ function TierPricingCard({ tld }: { tld: Tld }) {
       setBatchIdx(nextIdx);
       fireNextInBatch(batchOp, nextIdx);
     } else {
-      refetch(); refetchAllTlds();
+      refetch();
       const t = setTimeout(() => {
         setBatchOp(null);
         setBatchTxHashes({});
@@ -1607,97 +1557,8 @@ function TierPricingCard({ tld }: { tld: Tld }) {
     });
   };
 
-  /* ── Canonical-Sync step queue ─────────────────────────────
-   * Step-based (not per-TLD) because a sync can need 0-15 writes
-   * spread unevenly across TLDs. Each step is one (tld,bucket,price)
-   * setLengthPrice call. */
-  const [syncSteps, setSyncSteps] = useState<TierSyncStep[] | null>(null);
-  const [syncIdx, setSyncIdx] = useState(0);
-  const [syncStatuses, setSyncStatuses] = useState<BatchTldStatus[]>([]);
-  const [syncHashes, setSyncHashes] = useState<(`0x${string}` | undefined)[]>([]);
-  const syncProcessedHashRef = useRef<`0x${string}` | null>(null);
-
-  const { writeContract: writeSync, data: syncHash, isPending: syncPending, error: syncError, reset: syncReset } = useWriteContract();
-  const { isLoading: syncConfirming, isSuccess: syncConfirmed } = useWaitForTransactionReceipt({ hash: syncHash });
-
-  const fireNextInSync = (steps: TierSyncStep[], idx: number) => {
-    if (idx >= steps.length) return;
-    const step = steps[idx];
-    setSyncStatuses((arr) => arr.map((s, i) => (i === idx ? "signing" : s)));
-    syncReset();
-    writeSync({
-      address: REGISTRY_ADDRESSES[step.tld],
-      abi: REGISTRY_ABI,
-      functionName: "setLengthPrice",
-      args: [step.bucket, parseEther(String(step.toIkas))],
-    });
-  };
-
-  const startSync = () => {
-    if (!canonicalDiff || canonicalDiff.length === 0 || syncSteps) return;
-    setSyncSteps(canonicalDiff);
-    setSyncIdx(0);
-    setSyncStatuses(canonicalDiff.map(() => "pending"));
-    setSyncHashes(canonicalDiff.map(() => undefined));
-    syncProcessedHashRef.current = null;
-    fireNextInSync(canonicalDiff, 0);
-  };
-
-  useEffect(() => {
-    if (!syncSteps || !syncConfirmed || !syncHash) return;
-    if (syncProcessedHashRef.current === syncHash) return;
-    syncProcessedHashRef.current = syncHash;
-
-    setSyncStatuses((arr) => arr.map((s, i) => (i === syncIdx ? "mined" : s)));
-    setSyncHashes((arr) => arr.map((h, i) => (i === syncIdx ? syncHash : h)));
-    if (syncIdx + 1 < syncSteps.length) {
-      const nextIdx = syncIdx + 1;
-      setSyncIdx(nextIdx);
-      fireNextInSync(syncSteps, nextIdx);
-    } else {
-      refetch(); refetchAllTlds();
-      const t = setTimeout(() => {
-        setSyncSteps(null);
-        setSyncStatuses([]);
-        setSyncHashes([]);
-        setSyncIdx(0);
-        syncProcessedHashRef.current = null;
-        syncReset();
-      }, 3500);
-      return () => clearTimeout(t);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [syncConfirmed, syncHash]);
-
-  useEffect(() => {
-    if (!syncSteps || !syncError) return;
-    setSyncStatuses((arr) => arr.map((s, i) => (i === syncIdx ? "failed" : s)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [syncError]);
-
-  const retrySyncFromFailed = () => {
-    if (!syncSteps) return;
-    const failedIdx = syncStatuses.findIndex((s) => s === "failed");
-    if (failedIdx === -1) return;
-    setSyncStatuses((arr) => arr.map((s, i) => (i === failedIdx ? "pending" : s)));
-    setSyncIdx(failedIdx);
-    syncProcessedHashRef.current = null;
-    syncReset();
-    fireNextInSync(syncSteps, failedIdx);
-  };
-
-  const cancelSync = () => {
-    setSyncSteps(null);
-    setSyncStatuses([]);
-    setSyncHashes([]);
-    setSyncIdx(0);
-    syncProcessedHashRef.current = null;
-    syncReset();
-  };
-
-  const syncBusy = !!syncSteps || syncPending || syncConfirming;
   const batchBusy = !!batchOp || batchPending || batchConfirming;
-  const anyBusy = batchBusy || syncBusy;
+  const anyBusy = batchBusy;
 
   return (
     <Card
@@ -1705,19 +1566,6 @@ function TierPricingCard({ tld }: { tld: Tld }) {
       title="Length tier pricing"
       subtitle="setLengthPrice(bucket, price) · price in iKAS"
     >
-      <CanonicalSyncRow
-        diff={canonicalDiff}
-        liveTldCount={LIVE_TLDS.length}
-        syncSteps={syncSteps}
-        syncStatuses={syncStatuses}
-        syncHashes={syncHashes}
-        syncIdx={syncIdx}
-        syncError={syncError}
-        onStartSync={startSync}
-        onRetry={retrySyncFromFailed}
-        onCancel={cancelSync}
-        disabled={anyBusy && !syncBusy}
-      />
 
       <div className="space-y-2">
         {tiers.map((t, i) => {
@@ -1737,7 +1585,7 @@ function TierPricingCard({ tld }: { tld: Tld }) {
               label={t.label}
               hint={t.hint}
               current={current}
-              onSaved={() => { refetch(); refetchAllTlds(); }}
+              onSaved={() => { refetch(); }}
               applyAllTlds={applyAllTlds && LIVE_TLDS.length > 1}
               onSaveBatch={onRowSaveBatch}
               batchInFlight={anyBusy}
@@ -1749,149 +1597,6 @@ function TierPricingCard({ tld }: { tld: Tld }) {
     </Card>
   );
 }
-
-/** Canonical-sync banner. Shows the diff between on-chain and the canonical
- *  schedule (1000/500/250/50/30). When syncing, shows step-by-step progress. */
-function CanonicalSyncRow({
-  diff, liveTldCount, syncSteps, syncStatuses, syncHashes, syncIdx, syncError,
-  onStartSync, onRetry, onCancel, disabled,
-}: {
-  diff: TierSyncStep[] | null;
-  liveTldCount: number;
-  syncSteps: TierSyncStep[] | null;
-  syncStatuses: BatchTldStatus[];
-  syncHashes: (`0x${string}` | undefined)[];
-  syncIdx: number;
-  syncError: { message: string } | null;
-  onStartSync: () => void;
-  onRetry: () => void;
-  onCancel: () => void;
-  disabled: boolean;
-}) {
-  if (liveTldCount < 2) return null;
-  // Active sync UI takes priority over diff preview.
-  if (syncSteps) {
-    const failed = syncStatuses.some((s) => s === "failed");
-    const allMined = syncStatuses.every((s) => s === "mined");
-    return (
-      <div className={`mb-3 rounded-xl border p-3 transition ${
-        failed   ? "border-red-500/40 bg-red-500/[0.04]" :
-        allMined ? "border-emerald-500/40 bg-emerald-500/[0.05]" :
-                   "border-cyan/40 bg-cyan/[0.04]"
-      }`}>
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="text-xs font-bold text-white">
-              {allMined ? <><Check className="mr-1 inline h-3 w-3 text-emerald-300" />Canonical sync — done</> : "Syncing canonical pricing"}
-            </div>
-            {!allMined && !failed && (
-              <div className="mt-0.5 text-[11px] text-white/55">
-                Step {Math.min(syncIdx + 1, syncSteps.length)} of {syncSteps.length}
-                {syncSteps[syncIdx] && (
-                  <> — {tldSuffix(syncSteps[syncIdx].tld)} · bucket {syncSteps[syncIdx].bucket} → {syncSteps[syncIdx].toIkas} iKAS</>
-                )}
-              </div>
-            )}
-            {allMined && (
-              <div className="mt-0.5 text-[11px] text-emerald-200/80">
-                All {syncSteps.length} writes confirmed on-chain.
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {syncSteps.map((step, i) => {
-            const s = syncStatuses[i];
-            const cls =
-              s === "mined"   ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20" :
-              s === "signing" ? "border-cyan/40 bg-cyan/15 text-cyan" :
-              s === "failed"  ? "border-red-500/40 bg-red-500/10 text-red-300" :
-                                "border-white/10 bg-white/[0.04] text-white/55";
-            const hash = syncHashes[i];
-            const inner = (
-              <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-mono ${cls}`}>
-                {s === "signing" && <Loader2 className="h-2.5 w-2.5 animate-spin" />}
-                {s === "mined"   && <Check className="h-2.5 w-2.5" />}
-                {tldSuffix(step.tld)}·b{step.bucket}
-              </span>
-            );
-            return s === "mined" && hash ? (
-              <a
-                key={i}
-                href={`${IGRA_EXPLORER}/tx/${hash}`}
-                target="_blank"
-                rel="noreferrer"
-                title={`bucket ${step.bucket} → ${step.toIkas} iKAS`}
-                className="transition hover:opacity-90"
-              >
-                {inner}
-              </a>
-            ) : (
-              <span key={i} title={`bucket ${step.bucket} → ${step.toIkas} iKAS`}>{inner}</span>
-            );
-          })}
-        </div>
-        {failed && (
-          <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-red-300">
-            <span className="truncate" title={syncError?.message}>
-              Failed at step {syncIdx + 1} — {syncError?.message?.split("\n")[0] ?? "unknown error"}
-            </span>
-            <span className="flex flex-none gap-1">
-              <button onClick={onRetry} className="rounded-md border border-red-500/40 bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-200 hover:bg-red-500/20">Retry</button>
-              <button onClick={onCancel} className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] text-white/60 hover:text-white">Cancel</button>
-            </span>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // Idle: show diff preview / "all in sync" / "loading" state.
-  if (diff === null) {
-    return (
-      <div className="mb-3 rounded-xl border border-white/10 bg-white/[0.02] p-3 text-[11px] text-white/45">
-        <Loader2 className="mr-1 inline h-3 w-3 animate-spin" /> Reading on-chain prices across {liveTldCount} TLDs…
-      </div>
-    );
-  }
-  if (diff.length === 0) {
-    return (
-      <div className="mb-3 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.04] px-3 py-2 text-[11px] text-emerald-200/80">
-        <Check className="h-3 w-3" /> All {liveTldCount} TLDs match the canonical schedule (1000 / 500 / 250 / 50 / 30 iKAS).
-      </div>
-    );
-  }
-  return (
-    <div className="mb-3 rounded-xl border border-plum/30 bg-plum/[0.04] p-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex-1 text-[11px] text-white/65">
-          <span className="font-bold text-plum">Sync to canonical</span>
-          {" "}— {diff.length} bucket{diff.length === 1 ? "" : "s"} differ from <span className="font-mono text-white/75">1000 / 500 / 250 / 50 / 30</span>.
-        </div>
-        <button
-          onClick={onStartSync}
-          disabled={disabled}
-          className="rounded-lg border border-plum/40 bg-plum/10 px-3 py-1 text-xs font-bold text-plum transition hover:bg-plum/20 disabled:opacity-40"
-        >
-          Apply {diff.length} change{diff.length === 1 ? "" : "s"}
-        </button>
-      </div>
-      <div className="mt-2 space-y-0.5 text-[11px] text-white/55">
-        {diff.map((d, i) => (
-          <div key={i} className="font-mono">
-            <span className="text-white/70">{tldSuffix(d.tld)}</span>
-            {" · b"}{d.bucket}
-            {": "}
-            <span className="text-amber-300/80">{d.fromIkas === "RESERVED" ? "RESERVED" : `${d.fromIkas} iKAS`}</span>
-            {" → "}
-            <span className="text-emerald-300">{d.toIkas} iKAS</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function TierRow({
   tld, bucket, label, hint, current, onSaved,
   applyAllTlds, onSaveBatch, batchInFlight, tldQueueLen,
