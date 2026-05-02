@@ -15,6 +15,7 @@ import { Footer } from "@/components/Footer";
 import { NameHistory } from "@/components/NameHistory";
 import { ListForSaleButton } from "@/components/ListForSaleButton";
 import { SubnamesPanel } from "@/components/SubnamesPanel";
+import { V1MigrationBanner } from "@/components/V1MigrationBanner";
 import { DEMO_OWNED } from "@/lib/mock-registry";
 import { shortAddr } from "@/lib/names";
 import { explorerAddr } from "@/lib/igra-chain";
@@ -110,6 +111,16 @@ function Dashboard({ address }: { address: `0x${string}` }) {
         <Link href="/app" className="btn-primary self-start sm:self-auto">
           <Plus className="mr-1 inline h-4 w-4" /> Register new
         </Link>
+      </div>
+
+      {/* V1 → V2 migration banner — renders nothing if V2 isn't deployed,
+          if the wallet holds no V1 .igra names, or if every name has
+          already been migrated (chain-checked via V2.migrated[v1TokenId]).
+          Pre-launch, gated on admin wallet so we can dogfood it privately. */}
+      <div className="mt-8">
+        <V1MigrationBanner
+          v1TokenIds={owned.list.filter((d) => d.tld === "igra").map((d) => d.tokenId)}
+        />
       </div>
 
       {owned.loading && REGISTRY_LIVE && (

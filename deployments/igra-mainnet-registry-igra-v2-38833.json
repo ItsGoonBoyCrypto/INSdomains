@@ -1,0 +1,46 @@
+{
+  "_comment": "INSRegistryIgraV2 deployed to Igra L2 mainnet on 2026-05-02. Spec: docs/V2_SPEC.md.",
+  "network": "Igra L2 mainnet",
+  "chain_id": 38833,
+  "rpc": "https://rpc.igralabs.com:8545",
+  "explorer": "https://explorer.igralabs.com",
+  "contract_name": "INSRegistryIgraV2",
+  "contract_address": "0x7E7018959bf44045F01D176D8db1594894CBf4E9",
+  "contract_source": "contracts/src/INSRegistryIgraV2.sol",
+  "deploy_script": "contracts/script/DeployRegistryIgraV2.s.sol",
+  "constructor_args": {
+    "_v1Registry": "0x42c2f5AA0c4aACfD07e5fBe65B898212c1c2879c"
+  },
+  "deployer_eoa": "0x198e1517858c9C5551b8de348d112931D2651df6",
+  "deployer_status": "QUARANTINED — drained immediately after deploy + transferOwnership; key file moved to ~insdapp/.foundry-keys/_quarantine/, never reuse",
+  "owner_after_deploy": "0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1",
+  "owner_kind": "Safe multisig (same Safe as V1 contracts)",
+  "deployed_at_unix": 1777722000,
+  "deployed_at_iso": "2026-05-02",
+  "broadcast_artifact": "contracts/broadcast/DeployRegistryIgraV2.s.sol/38833/run-latest.json",
+  "verification": {
+    "explorer_status": "PENDING — manual via explorer.igralabs.com/api forge verify-contract once 5-min indexer lag passes",
+    "etherscan_compatible": true,
+    "compiler": "0.8.24",
+    "optimizer_runs": 2000,
+    "via_ir": true
+  },
+  "post_deploy_state": {
+    "lengthPrice_forever_iKAS": [4000, 2000, 1200, 800, 500],
+    "lengthPriceAnnual_iKAS_per_year": [1000, 800, 500, 250, 50],
+    "gracePeriodSec": 2592000,
+    "totalSupply": 0,
+    "v1Registry": "0x42c2f5AA0c4aACfD07e5fBe65B898212c1c2879c"
+  },
+  "rollout_status": {
+    "INS_V2_ENABLED": false,
+    "note": "V2 contract is live on chain but the dApp UI keeps V1 as default until INS_V2_ENABLED=true. Migration banner only shows for admin wallet during private dogfooding."
+  },
+  "related_contracts": {
+    "v1_registry": "0x42c2f5AA0c4aACfD07e5fBe65B898212c1c2879c",
+    "marketplace_shared": "0xde8df276e93394c0e5dd9fe7a7ff6fd144a3642a",
+    "reverse_resolver_shared": "0x1bbd46aec04330a90832faf1da91889dee67d931",
+    "resolver_shared": "0x451D84002cE0eCFd4cc622c72FA40849a8Bb5f2A",
+    "treasury_safe": "0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1"
+  }
+}

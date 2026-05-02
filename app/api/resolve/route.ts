@@ -2,6 +2,9 @@ import { createPublicClient, http, type Address } from "viem";
 import {
   REGISTRY_ADDRESSES,
   REGISTRY_ABI,
+  REGISTRY_V2_ADDRESS,
+  REGISTRY_V2_ABI,
+  isV2Deployed,
   SUBNAME_EXTENSION_ADDRESS,
   SUBNAME_EXTENSION_ABI,
   TLDS,
@@ -166,7 +169,63 @@ export async function GET(req: Request) {
     );
   }
 
-  // If no TLD specified, try all 3 in preference order (.ins → .igra → .ikas)
+  // V2 .igra preference: if a label exists on V2, that's authoritative
+  // (post-grace re-registration semantics + V1 holders may have migrated).
+  // Falls through to V1 read if not on V2 OR V2 isn't deployed yet.
+  if ((tld === "igra" || tld === null) && isV2Deployed()) {
+    try {
+      const tokenId = (await client.readContract({
+        address: REGISTRY_V2_ADDRESS,
+        abi: REGISTRY_V2_ABI,
+        functionName: "tokenIdOf",
+        args: [label],
+      })) as bigint;
+      if (tokenId !== 0n) {
+        const [target, owner, expiresAt] = await Promise.all([
+          client.readContract({
+            address: REGISTRY_V2_ADDRESS,
+            abi: REGISTRY_V2_ABI,
+            functionName: "targetOf",
+            args: [tokenId],
+          }) as Promise<Address>,
+          client.readContract({
+            address: REGISTRY_V2_ADDRESS,
+            abi: REGISTRY_V2_ABI,
+            functionName: "ownerOf",
+            args: [tokenId],
+          }) as Promise<Address>,
+          client.readContract({
+            address: REGISTRY_V2_ADDRESS,
+            abi: REGISTRY_V2_ABI,
+            functionName: "expiresAt",
+            args: [tokenId],
+          }) as Promise<bigint>,
+        ]);
+        return Response.json(
+          {
+            name: `${label}.igra`,
+            label,
+            tld: "igra" as const,
+            tokenId: tokenId.toString(),
+            address: target,
+            owner,
+            exists: true,
+            // V2-specific tenure metadata
+            registry_version: "v2" as const,
+            tenure: expiresAt === 0n ? ("forever" as const) : ("annual" as const),
+            expires_at: expiresAt === 0n ? null : Number(expiresAt),
+          },
+          { headers: CORS_HEADERS },
+        );
+      }
+    } catch {
+      // V2 RPC hiccup → fall through to V1
+    }
+  }
+
+  // V1 path. Tries all TLDs (or just the requested one). Pre-V2-launch this
+  // is the only path that ever returns hits; post-launch it serves legacy V1
+  // holders whose names haven't been re-minted on V2.
   const tldsToTry: readonly Tld[] = tld ? [tld] : TLDS;
 
   for (const t of tldsToTry) {
@@ -207,6 +266,9 @@ export async function GET(req: Request) {
           address: target,
           owner,
           exists: true,
+          registry_version: "v1" as const,
+          tenure: "forever" as const,
+          expires_at: null,
         },
         { headers: CORS_HEADERS },
       );

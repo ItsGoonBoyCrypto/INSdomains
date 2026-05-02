@@ -7,6 +7,9 @@ import {
 import {
   REGISTRY_ADDRESSES,
   REGISTRY_ABI,
+  REGISTRY_V2_ADDRESS,
+  REGISTRY_V2_ABI,
+  isV2Deployed,
   MARKETPLACE_ADDRESSES,
   MARKETPLACE_ABI,
   LIVE_TLDS,
@@ -136,12 +139,49 @@ export async function GET() {
       totalVolumeWei += tldVolumeWei;
     }
 
+    // V2 Registry stats (no separate marketplace yet — V2 NFTs use the
+    // existing marketplace contract since the ERC-721 surface is identical).
+    let v2Stats: Record<string, unknown> | null = null;
+    if (isV2Deployed()) {
+      try {
+        const v2Reads = await parallelReadContract<unknown>(client, [
+          {
+            address: REGISTRY_V2_ADDRESS,
+            abi: REGISTRY_V2_ABI,
+            functionName: "totalSupply" as const,
+          },
+          {
+            address: REGISTRY_V2_ADDRESS,
+            abi: REGISTRY_V2_ABI,
+            functionName: "gracePeriodSec" as const,
+          },
+        ]);
+        const v2Balance = await client.getBalance({ address: REGISTRY_V2_ADDRESS });
+        const v2Supply =
+          v2Reads[0].status === "success" ? Number(v2Reads[0].result as bigint) : 0;
+        const v2Grace =
+          v2Reads[1].status === "success" ? Number(v2Reads[1].result as bigint) : 0;
+        v2Stats = {
+          registry: REGISTRY_V2_ADDRESS,
+          total_supply: v2Supply,
+          registry_balance_ikas: (Number(v2Balance) / 1e18).toString(),
+          grace_period_sec: v2Grace,
+        };
+        totalNames += v2Supply;
+      } catch {
+        v2Stats = { registry: REGISTRY_V2_ADDRESS, error: "v2_rpc_error" };
+      }
+    }
+
     return Response.json(
       {
         chain_id: 38833,
         network: "Igra L2 mainnet",
         live_tlds: LIVE_TLDS,
         by_tld: byTld,
+        // V2 lives in its own field so existing consumers of by_tld.igra
+        // (V1 stats) don't break. Surfaces null until V2 is deployed.
+        v2: v2Stats,
         totals: {
           names: totalNames,
           sales: totalSales,

@@ -7,6 +7,9 @@ import {
 import {
   REGISTRY_ADDRESSES,
   REGISTRY_ABI,
+  REGISTRY_V2_ADDRESS,
+  REGISTRY_V2_ABI,
+  isV2Deployed,
   LIVE_TLDS,
   tldSuffix,
   type Tld,
@@ -73,19 +76,41 @@ export async function GET(req: Request) {
   const tld = tldParam as Tld;
   const registry = REGISTRY_ADDRESSES[tld];
 
+  // For .igra: include V2 mint events alongside V1 (V2 fires Transfer
+  // from-zero for both fresh mints + V1Migrated claims, which is what
+  // we want — both should appear in the recent-mints feed).
+  const includeV2 = tld === "igra" && isV2Deployed();
+
   try {
     // Mint events = Transfer with from == 0x0. Chunked since Igra RPC caps
-    // eth_getLogs at 100k blocks per call.
-    const logs = await getLogsChunked({
+    // eth_getLogs at 100k blocks per call. Also chunked across V1 + V2.
+    const v1LogsP = getLogsChunked({
       client,
       address: registry,
       event: TRANSFER_EVENT,
       args: { from: ZERO_ADDR as Address },
     });
+    const v2LogsP = includeV2
+      ? getLogsChunked({
+          client,
+          address: REGISTRY_V2_ADDRESS,
+          event: TRANSFER_EVENT,
+          args: { from: ZERO_ADDR as Address },
+        })
+      : Promise.resolve([]);
+    const [v1Logs, v2Logs] = await Promise.all([v1LogsP, v2LogsP]);
+
+    // Tag each log with its source registry so the per-token reads + the
+    // response payload can disambiguate V1 vs V2 entries.
+    type TaggedLog = (typeof v1Logs)[number] & { _registry: Address; _version: "v1" | "v2" };
+    const tagged: TaggedLog[] = [
+      ...v1Logs.map((l) => ({ ...l, _registry: registry, _version: "v1" as const })),
+      ...v2Logs.map((l) => ({ ...l, _registry: REGISTRY_V2_ADDRESS, _version: "v2" as const })),
+    ];
 
     // Most recent first; cap to `limit`. blockNumber is non-null on mined
     // logs (we never query pending).
-    const recent = logs
+    const recent = tagged
       .sort((a, b) => Number((b.blockNumber ?? 0n) - (a.blockNumber ?? 0n)))
       .slice(0, limit);
 
@@ -93,47 +118,46 @@ export async function GET(req: Request) {
       return Response.json({ tld, count: 0, names: [] }, { headers: CORS });
     }
 
-    // Pull label + target + mintedAt + current owner for each tokenId
+    // Per-token reads — route to the correct Registry/ABI based on tag.
+    // V1 + V2 share the same read function names and signatures (V2 is a
+    // superset), so the only thing we need to switch is the address + abi.
+    // V2 entries also pull expiresAt for tenure metadata.
     const reads = recent.flatMap((log) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const tokenId = (log as any).args.tokenId as bigint;
-      return [
-        {
-          address: registry,
-          abi: REGISTRY_ABI,
-          functionName: "labelOf" as const,
-          args: [tokenId],
-        },
-        {
-          address: registry,
-          abi: REGISTRY_ABI,
-          functionName: "ownerOf" as const,
-          args: [tokenId],
-        },
-        {
-          address: registry,
-          abi: REGISTRY_ABI,
-          functionName: "targetOf" as const,
-          args: [tokenId],
-        },
-        {
-          address: registry,
-          abi: REGISTRY_ABI,
-          functionName: "mintedAt" as const,
-          args: [tokenId],
-        },
+      const isV2 = log._version === "v2";
+      const abi = isV2 ? REGISTRY_V2_ABI : REGISTRY_ABI;
+      const address = log._registry;
+      const base = [
+        { address, abi, functionName: "labelOf" as const,   args: [tokenId] },
+        { address, abi, functionName: "ownerOf" as const,   args: [tokenId] },
+        { address, abi, functionName: "targetOf" as const,  args: [tokenId] },
+        { address, abi, functionName: "mintedAt" as const,  args: [tokenId] },
       ];
+      // 5th read only for V2 — keeps the per-log offset constant at 5.
+      // V1 still gets a 5th call but it's a harmless `mintedAt` repeat,
+      // so the offset math below is uniform across both.
+      base.push(
+        isV2
+          ? { address, abi: REGISTRY_V2_ABI, functionName: "expiresAt" as const, args: [tokenId] }
+          : { address, abi: REGISTRY_ABI,    functionName: "mintedAt" as const,  args: [tokenId] },
+      );
+      return base;
     });
     const results = await parallelReadContract<unknown>(client, reads);
 
     const names = recent.map((log, i) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const tokenId = (log as any).args.tokenId as bigint;
-      const labelR = results[i * 4];
-      const ownerR = results[i * 4 + 1];
-      const targetR = results[i * 4 + 2];
-      const mintedAtR = results[i * 4 + 3];
+      const labelR    = results[i * 5];
+      const ownerR    = results[i * 5 + 1];
+      const targetR   = results[i * 5 + 2];
+      const mintedAtR = results[i * 5 + 3];
+      const expiresAtR = results[i * 5 + 4];
       const label = labelR.status === "success" ? (labelR.result as string) : "";
+      const isV2 = log._version === "v2";
+      const expiresAt =
+        isV2 && expiresAtR.status === "success" ? Number(expiresAtR.result as bigint) : 0;
       return {
         tokenId: tokenId.toString(),
         label,
@@ -144,6 +168,10 @@ export async function GET(req: Request) {
           mintedAtR.status === "success" ? Number(mintedAtR.result as bigint) : 0,
         blockNumber: (log.blockNumber ?? 0n).toString(),
         txHash: log.transactionHash,
+        registry_version: log._version,
+        // V2-only — null/omitted for V1 Forever names
+        tenure: isV2 ? (expiresAt === 0 ? "forever" : "annual") : "forever",
+        expires_at: isV2 && expiresAt !== 0 ? expiresAt : null,
       };
     });
 

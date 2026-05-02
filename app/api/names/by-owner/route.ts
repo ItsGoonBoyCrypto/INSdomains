@@ -7,6 +7,9 @@ import {
 import {
   REGISTRY_ADDRESSES,
   REGISTRY_ABI,
+  REGISTRY_V2_ADDRESS,
+  REGISTRY_V2_ABI,
+  isV2Deployed,
   LIVE_TLDS,
   tldSuffix,
   type Tld,
@@ -89,17 +92,19 @@ export async function GET(req: Request) {
   const tld = tldParam as Tld;
   const registry = REGISTRY_ADDRESSES[tld];
 
-  try {
-    // Scan Transfer(_, to=address, _) since the Registry's deploy block.
-    // Chunked because Igra's RPC caps eth_getLogs at 100k blocks.
+  // Helper — scan one Registry, return owned tokens with V2 metadata when applicable.
+  async function scanRegistry(opts: {
+    address: Address;
+    abi: typeof REGISTRY_ABI | typeof REGISTRY_V2_ABI;
+    version: "v1" | "v2";
+  }) {
     const logs = await getLogsChunked({
       client,
-      address: registry,
+      address: opts.address,
       event: TRANSFER_EVENT,
       args: { to: address },
     });
 
-    // Unique tokenIds touched by this address
     const tokenIdSet = new Set<bigint>();
     for (const log of logs) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -107,52 +112,33 @@ export async function GET(req: Request) {
       if (tokenId !== undefined) tokenIdSet.add(tokenId);
     }
     const tokenIds = Array.from(tokenIdSet);
+    if (tokenIds.length === 0) return [];
 
-    if (tokenIds.length === 0) {
-      return Response.json(
-        { address, tld, count: 0, names: [] },
-        { headers: CORS },
+    // For V2 we also pull expiresAt; for V1 we keep mintedAt as the 4th read
+    // so the offset math stays uniform (5 reads per token regardless).
+    const reads = tokenIds.flatMap((tokenId) => {
+      const base = [
+        { address: opts.address, abi: opts.abi, functionName: "ownerOf" as const,   args: [tokenId] },
+        { address: opts.address, abi: opts.abi, functionName: "labelOf" as const,   args: [tokenId] },
+        { address: opts.address, abi: opts.abi, functionName: "targetOf" as const,  args: [tokenId] },
+        { address: opts.address, abi: opts.abi, functionName: "mintedAt" as const,  args: [tokenId] },
+      ];
+      base.push(
+        opts.version === "v2"
+          ? { address: opts.address, abi: REGISTRY_V2_ABI, functionName: "expiresAt" as const, args: [tokenId] }
+          : { address: opts.address, abi: REGISTRY_ABI,    functionName: "mintedAt" as const,  args: [tokenId] },
       );
-    }
-
-    // For each candidate tokenId, fetch current owner + label + target +
-    // mintedAt. We use parallelReadContract instead of multicall3 because
-    // Igra doesn't have multicall3 deployed at the canonical address.
-    const reads = tokenIds.flatMap((tokenId) => [
-      {
-        address: registry,
-        abi: REGISTRY_ABI,
-        functionName: "ownerOf" as const,
-        args: [tokenId],
-      },
-      {
-        address: registry,
-        abi: REGISTRY_ABI,
-        functionName: "labelOf" as const,
-        args: [tokenId],
-      },
-      {
-        address: registry,
-        abi: REGISTRY_ABI,
-        functionName: "targetOf" as const,
-        args: [tokenId],
-      },
-      {
-        address: registry,
-        abi: REGISTRY_ABI,
-        functionName: "mintedAt" as const,
-        args: [tokenId],
-      },
-    ]);
+      return base;
+    });
     const results = await parallelReadContract<unknown>(client, reads);
 
-    // Re-assemble: only include tokens the address still owns
-    const names = tokenIds
+    return tokenIds
       .map((tokenId, i) => {
-        const ownerR = results[i * 4];
-        const labelR = results[i * 4 + 1];
-        const targetR = results[i * 4 + 2];
-        const mintedAtR = results[i * 4 + 3];
+        const ownerR    = results[i * 5];
+        const labelR    = results[i * 5 + 1];
+        const targetR   = results[i * 5 + 2];
+        const mintedAtR = results[i * 5 + 3];
+        const expiresAtR = results[i * 5 + 4];
         if (
           ownerR.status !== "success" ||
           (ownerR.result as Address).toLowerCase() !== address
@@ -162,8 +148,10 @@ export async function GET(req: Request) {
         const label = labelR.status === "success" ? (labelR.result as string) : "";
         const target = targetR.status === "success" ? (targetR.result as Address) : null;
         const mintedAt =
-          mintedAtR.status === "success"
-            ? Number((mintedAtR.result as bigint))
+          mintedAtR.status === "success" ? Number(mintedAtR.result as bigint) : 0;
+        const expiresAt =
+          opts.version === "v2" && expiresAtR.status === "success"
+            ? Number(expiresAtR.result as bigint)
             : 0;
         return {
           tokenId: tokenId.toString(),
@@ -171,10 +159,25 @@ export async function GET(req: Request) {
           name: `${label}${tldSuffix(tld)}`,
           target,
           mintedAt,
+          registry_version: opts.version,
+          tenure: opts.version === "v2" ? (expiresAt === 0 ? "forever" : "annual") : "forever",
+          expires_at: opts.version === "v2" && expiresAt !== 0 ? expiresAt : null,
         };
       })
-      .filter((x): x is NonNullable<typeof x> => x !== null)
-      // Latest mints first
+      .filter((x): x is NonNullable<typeof x> => x !== null);
+  }
+
+  try {
+    const v1Results = await scanRegistry({ address: registry, abi: REGISTRY_ABI, version: "v1" });
+
+    // V2 union — only for .igra (V2 is .igra-only), only when V2 is deployed.
+    const v2Results =
+      tld === "igra" && isV2Deployed()
+        ? await scanRegistry({ address: REGISTRY_V2_ADDRESS, abi: REGISTRY_V2_ABI, version: "v2" })
+        : [];
+
+    const names = [...v1Results, ...v2Results]
+      // Latest mints first across both versions
       .sort((a, b) => b.mintedAt - a.mintedAt);
 
     return Response.json(
