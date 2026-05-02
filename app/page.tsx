@@ -83,6 +83,24 @@ export default function Home() {
           <span className="text-emerald-300">Pay once · own forever</span>
         </div>
 
+        {/* Wide promo card — same artwork that ships in outreach DMs to
+            wallet/explorer integrators. Pulled live from /api/promo-image
+            (1920×1080 source, edge-cached 6h). Cache-bust query bumps when
+            the design changes so visitors don't sit on a stale render. */}
+        <div className="mt-16 w-full">
+          <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] shadow-[0_0_80px_rgba(0,240,255,0.08),0_0_120px_rgba(168,85,247,0.06)]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/api/promo-image?size=hd&v=20260502clean"
+              alt="INS — Igra Name Service. Free public REST API, ENS-compatible namehash, on-chain SVG art, 170 audited Foundry tests."
+              width={1920}
+              height={1080}
+              loading="lazy"
+              className="block h-auto w-full"
+            />
+          </div>
+        </div>
+
         {/* Feature cards */}
         <div className="mt-24 grid w-full grid-cols-1 gap-6 md:grid-cols-3">
           <FeatureCard
