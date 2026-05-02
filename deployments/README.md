@@ -8,8 +8,10 @@ Canonical registry of INS contract deployments per chain.
 | Contract             | Address                                      | Deployed   | Notes |
 |----------------------|----------------------------------------------|------------|-------|
 | **INSRegistryIgraV2** | `0x7E7018959bf44045F01D176D8db1594894CBf4E9` | 2026-05-02 | Dual Forever / Annual tenure, V1 migration via `claimV1Forever`, 30-day grace. **Current canonical Registry**. Spec: `docs/V2_SPEC.md`, deploy artifact: `igra-mainnet-registry-igra-v2-38833.json` |
-
-V2 reuses the existing Marketplace / ReverseResolver / Resolver — they're ERC-721-surface only and the V2 NFT is identical there.
+| **INSMarketplace V2** | `0xd641dadd503d8beba2395cd72367cf4edaf4674f` | 2026-05-02 | V2-bound Marketplace. Same `INSMarketplace.sol` source as V1 — the contract's `registry` is `IERC721Min immutable`, so V2 needed a fresh deploy. Same fee schedule (2% sale, 1% featured, 5% cap). Owner = Treasury Safe. Artifact: `igra-mainnet-marketplace-igra-v2-38833.json` |
+| **INSReverseResolver V2** | `0xef449f577255ee1d6df37d982da086a7e22a6853` | 2026-05-02 | V2-bound Reverse Resolver. No owner / no admin functions — pure user-controlled primary-name mapping. Artifact: `igra-mainnet-reverse-resolver-igra-v2-38833.json` |
+| **INSSubnameExtension V2** | `0x7E103668E40aeA3d3698f8D72cD6A8847FcCf280` | 2026-05-02 | V2-targeted subname extension. enabled=false on chain — flips on for v1.1 activation (~3-4 weeks post-launch). Artifact: `igra-mainnet-subname-extension-v2-38833.json` |
+| Resolver (shared, ENS-compatible) | `0x451D84002cE0eCFd4cc622c72FA40849a8Bb5f2A` | 2026-04-23 | Unchanged — namehash-keyed, works across V1 + V2 |
 
 ### .igra TLD V1 (legacy — read-only since 2026-05-02)
 | Contract            | Address                                      | Deployed   |

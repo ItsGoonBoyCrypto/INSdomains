@@ -105,6 +105,14 @@ export function isHeldByTreasury(addr: string | null | undefined): boolean {
  * deploy commit is the same one that ships migration UI.
  */
 export const REGISTRY_V2_ADDRESS = (process.env.NEXT_PUBLIC_INS_REGISTRY_IGRA_V2 ?? ZERO) as Address;
+/** V2-bound Marketplace — deployed 2026-05-02. Same `INSMarketplace` contract
+ *  source as the V1-bound instance; the contract's `registry` is immutable so
+ *  V2 needed a fresh deploy. Listings created here MUST be against V2 NFTs;
+ *  V1 NFTs continue to list against `MARKETPLACE_ADDRESSES.igra`. */
+export const MARKETPLACE_V2_ADDRESS = (process.env.NEXT_PUBLIC_INS_MARKETPLACE_IGRA_V2 ?? ZERO) as Address;
+/** V2-bound ReverseResolver — deployed 2026-05-02. Independent storage from
+ *  the V1 RR; users set their V2 primary name via this contract. */
+export const REVERSE_RESOLVER_V2_ADDRESS = (process.env.NEXT_PUBLIC_INS_REVERSE_RESOLVER_IGRA_V2 ?? ZERO) as Address;
 
 /** True when the V2 Registry is deployed AND the platform has flipped
  *  `NEXT_PUBLIC_INS_V2_ENABLED=true`. Code paths that should only run

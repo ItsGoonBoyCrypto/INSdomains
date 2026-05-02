@@ -11,11 +11,14 @@ import {
   REGISTRY_V2_ABI,
   isV2Deployed,
   MARKETPLACE_ADDRESSES,
+  MARKETPLACE_V2_ADDRESS,
   MARKETPLACE_ABI,
   LIVE_TLDS,
   type Tld,
 } from "@/lib/contracts";
 import { getLogsChunked, parallelReadContract } from "@/lib/api-utils";
+
+const ZERO_ADDR = "0x0000000000000000000000000000000000000000";
 
 export const runtime = "nodejs";
 
@@ -139,8 +142,10 @@ export async function GET() {
       totalVolumeWei += tldVolumeWei;
     }
 
-    // V2 Registry stats (no separate marketplace yet — V2 NFTs use the
-    // existing marketplace contract since the ERC-721 surface is identical).
+    // V2 stats — Registry plus V2 Marketplace (when deployed). V2
+    // Marketplace has its own deploy, listings, and treasury balance
+    // separate from V1; the dApp + activity bot route V2 NFT listings
+    // through it automatically based on registryVersion.
     let v2Stats: Record<string, unknown> | null = null;
     if (isV2Deployed()) {
       try {
@@ -161,11 +166,47 @@ export async function GET() {
           v2Reads[0].status === "success" ? Number(v2Reads[0].result as bigint) : 0;
         const v2Grace =
           v2Reads[1].status === "success" ? Number(v2Reads[1].result as bigint) : 0;
+
+        // V2 Marketplace stats (when its env var is set + non-zero address)
+        let v2Marketplace: Record<string, unknown> | null = null;
+        if (MARKETPLACE_V2_ADDRESS !== ZERO_ADDR) {
+          try {
+            const v2MktReads = await parallelReadContract<unknown>(client, [
+              { address: MARKETPLACE_V2_ADDRESS, abi: MARKETPLACE_ABI, functionName: "paused" as const },
+              { address: MARKETPLACE_V2_ADDRESS, abi: MARKETPLACE_ABI, functionName: "saleFeeBps" as const },
+              { address: MARKETPLACE_V2_ADDRESS, abi: MARKETPLACE_ABI, functionName: "featureFeeBps" as const },
+            ]);
+            const v2MktSold = await getLogsChunked({
+              client,
+              address: MARKETPLACE_V2_ADDRESS,
+              event: LISTING_SOLD,
+            });
+            const v2MktVolWei = v2MktSold.reduce(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (sum, l) => sum + (((l as any).args?.price as bigint | undefined) ?? 0n),
+              0n,
+            );
+            v2Marketplace = {
+              address: MARKETPLACE_V2_ADDRESS,
+              paused: v2MktReads[0].status === "success" ? (v2MktReads[0].result as boolean) : false,
+              sale_fee_bps: v2MktReads[1].status === "success" ? Number(v2MktReads[1].result as number) : 0,
+              feature_fee_bps: v2MktReads[2].status === "success" ? Number(v2MktReads[2].result as number) : 0,
+              total_sales: v2MktSold.length,
+              total_volume_ikas: (Number(v2MktVolWei) / 1e18).toString(),
+            };
+            totalSales += v2MktSold.length;
+            totalVolumeWei += v2MktVolWei;
+          } catch {
+            v2Marketplace = { address: MARKETPLACE_V2_ADDRESS, error: "v2_mkt_rpc_error" };
+          }
+        }
+
         v2Stats = {
           registry: REGISTRY_V2_ADDRESS,
           total_supply: v2Supply,
           registry_balance_ikas: (Number(v2Balance) / 1e18).toString(),
           grace_period_sec: v2Grace,
+          marketplace: v2Marketplace,
         };
         totalNames += v2Supply;
       } catch {

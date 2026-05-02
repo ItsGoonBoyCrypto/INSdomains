@@ -1,0 +1,48 @@
+{
+  "_comment": "INSMarketplace V2-bound instance, deployed to Igra L2 mainnet on 2026-05-02. Same contract as the V1-bound instance — the contract's `registry` is `IERC721Min immutable`, so swapping registries needs a fresh deploy. Owns/charges are identical: 2% seller fee, 1% featured upfront, 5% hard fee cap, pause kill-switch.",
+  "network": "Igra L2 mainnet",
+  "chain_id": 38833,
+  "rpc": "https://rpc.igralabs.com:8545",
+  "explorer": "https://explorer.igralabs.com",
+  "contract_name": "INSMarketplace",
+  "contract_address": "0xd641dadd503d8beba2395cd72367cf4edaf4674f",
+  "contract_source": "contracts/src/INSMarketplace.sol",
+  "deploy_script": "contracts/script/DeployMarketplaceV2.s.sol",
+  "constructor_args": {
+    "_registry": "0x7E7018959bf44045F01D176D8db1594894CBf4E9",
+    "_treasury": "0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1"
+  },
+  "deployer_eoa": "0x86FaDe25054959279924aDa4E210FF0Eee69D58F",
+  "deployer_status": "QUARANTINED — drained to Safe immediately after the RR deploy in the same broadcast batch; key file moved to ~insdapp/.foundry-keys/_quarantine/USED-2026-05-02-v2-mkt-rr-deployer-...DO-NOT-REUSE.json",
+  "owner_after_deploy": "0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1",
+  "owner_kind": "Safe multisig (same Safe as every other INS contract)",
+  "deployed_at_iso": "2026-05-02",
+  "broadcast_artifact": "contracts/broadcast/DeployMarketplaceV2.s.sol/38833/run-latest.json",
+  "verification": {
+    "explorer_status": "VERIFIED 2026-05-02 (Pass - Verified)",
+    "compiler": "0.8.24",
+    "optimizer_runs": 2000,
+    "via_ir": true
+  },
+  "post_deploy_state": {
+    "owner": "0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1",
+    "registry": "0x7E7018959bf44045F01D176D8db1594894CBf4E9",
+    "treasury": "0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1",
+    "saleFeeBps": 200,
+    "featureFeeBps": 100,
+    "feeCapBps": 500,
+    "paused": false
+  },
+  "rollout_status": {
+    "live": true,
+    "note": "Used by V2 NFTs only — V2 holders' ListForSaleButton routes here automatically based on registryVersion. V1 NFTs continue listing on the original V1-bound Marketplace (0xde8df276...3642a)."
+  },
+  "env_vars_wired": {
+    "dapp_vps": "NEXT_PUBLIC_INS_MARKETPLACE_IGRA_V2=0xd641dadd503d8beba2395cd72367cf4edaf4674f"
+  },
+  "related_contracts": {
+    "v1_marketplace": "0xde8df276e93394c0e5dd9fe7a7ff6fd144a3642a",
+    "v2_registry": "0x7E7018959bf44045F01D176D8db1594894CBf4E9",
+    "treasury_safe": "0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1"
+  }
+}

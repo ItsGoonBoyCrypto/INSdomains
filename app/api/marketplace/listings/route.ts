@@ -7,13 +7,18 @@ import {
 import {
   REGISTRY_ADDRESSES,
   REGISTRY_ABI,
+  REGISTRY_V2_ADDRESS,
+  REGISTRY_V2_ABI,
   MARKETPLACE_ADDRESSES,
+  MARKETPLACE_V2_ADDRESS,
   MARKETPLACE_ABI,
   LIVE_TLDS,
   tldSuffix,
   type Tld,
 } from "@/lib/contracts";
 import { getLogsChunked, parallelReadContract } from "@/lib/api-utils";
+
+const ZERO_ADDR = "0x0000000000000000000000000000000000000000";
 
 export const runtime = "nodejs";
 
@@ -42,13 +47,13 @@ export async function OPTIONS() {
  * means: contract's `getActiveListing(tokenId)` returns a non-empty seller
  * (it checks active flag + expiry + seller-still-owns the NFT).
  *
- * **V1-only by design.** The Marketplace contract's `registry` is an
- * `IERC721Min immutable` set to V1 at deploy time, so V2 NFTs cannot be
- * listed there. Until v2.1 ships a V2-aware Marketplace, this endpoint
- * legitimately returns only V1 listings — V2 names have no marketplace
- * presence. The `/domains` UI hides the "List for sale" button for V2
- * NFTs with explanatory copy. Once v2.1 lands, the response shape stays
- * the same and V2 listings will start appearing here automatically.
+ * Unions V1 + V2 marketplace listings transparently. Each listing is
+ * tagged with `registry_version` ("v1" | "v2") so consumers can render
+ * the V2 badge or filter as needed. Each Marketplace instance is bound
+ * to its own Registry by immutable constructor arg — V1 listings live
+ * on the V1 Marketplace, V2 listings on the V2 Marketplace (deployed
+ * 2026-05-02). The unified response is sorted featured-first then
+ * by price descending.
  *
  * Useful for explorers + wallet "browse for sale" panes.
  *
@@ -87,65 +92,106 @@ export async function GET(req: Request) {
     );
   }
   const tld = tldParam as Tld;
-  const registry = REGISTRY_ADDRESSES[tld];
-  const marketplace = MARKETPLACE_ADDRESSES[tld];
+
+  // Build the per-marketplace work list. For .igra we union V1 + V2
+  // (when V2 Marketplace is deployed); other TLDs are V1-only.
+  const v1Marketplace = MARKETPLACE_ADDRESSES[tld];
+  const v1Registry = REGISTRY_ADDRESSES[tld];
+  const includeV2 = tld === "igra" && MARKETPLACE_V2_ADDRESS !== ZERO_ADDR;
+  const sources = [
+    { marketplace: v1Marketplace, registry: v1Registry, registryAbi: REGISTRY_ABI as typeof REGISTRY_ABI, version: "v1" as const },
+    ...(includeV2
+      ? [{ marketplace: MARKETPLACE_V2_ADDRESS, registry: REGISTRY_V2_ADDRESS, registryAbi: REGISTRY_V2_ABI as typeof REGISTRY_V2_ABI, version: "v2" as const }]
+      : []),
+  ];
 
   try {
-    // Pull every ListingCreated event since deploy (chunked for the 100k
-    // block range cap), dedupe to latest per tokenId — a tokenId can be
-    // re-listed multiple times, only the most recent emission matters
-    // since the contract overwrites the slot on re-list.
-    const logs = await getLogsChunked({
-      client,
-      address: marketplace,
-      event: LISTING_CREATED,
-    });
+    // Pull every ListingCreated event for each Marketplace (chunked for
+    // the 100k block range cap), dedupe to latest per tokenId — a tokenId
+    // can be re-listed multiple times, only the most recent emission
+    // matters since the contract overwrites the slot on re-list.
+    type TaggedLog = (Awaited<ReturnType<typeof getLogsChunked>>)[number] & {
+      _marketplace: typeof v1Marketplace;
+      _registry: typeof v1Registry;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      _registryAbi: any;
+      _version: "v1" | "v2";
+    };
+    const logsBySrc = await Promise.all(
+      sources.map(async (s) => {
+        const ll = await getLogsChunked({
+          client,
+          address: s.marketplace,
+          event: LISTING_CREATED,
+        });
+        return ll.map((l) => ({
+          ...l,
+          _marketplace: s.marketplace,
+          _registry: s.registry,
+          _registryAbi: s.registryAbi,
+          _version: s.version,
+        })) as TaggedLog[];
+      }),
+    );
+    const logs: TaggedLog[] = logsBySrc.flat();
 
-    const latestPerToken = new Map<bigint, (typeof logs)[number]>();
+    // Dedupe per (version, tokenId) — V1 + V2 token ids collide so we
+    // can't merge keys naively. Only the most recent ListingCreated for a
+    // given (version, tokenId) matters since the contract overwrites the
+    // slot on re-list.
+    const latestPerToken = new Map<string, TaggedLog>();
     for (const log of logs) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const tokenId = (log as any).args.tokenId as bigint;
-      const existing = latestPerToken.get(tokenId);
-      // blockNumber is non-null on mined logs (we never query pending)
+      const key = `${log._version}:${tokenId.toString()}`;
+      const existing = latestPerToken.get(key);
       const a = log.blockNumber ?? 0n;
       const b = existing?.blockNumber ?? 0n;
       if (!existing || a > b) {
-        latestPerToken.set(tokenId, log);
+        latestPerToken.set(key, log);
       }
     }
-    const tokenIds = Array.from(latestPerToken.keys());
-    if (tokenIds.length === 0) {
+    const entries = Array.from(latestPerToken.values());
+    if (entries.length === 0) {
       return Response.json(
-        { tld, marketplace, count: 0, listings: [] },
+        { tld, marketplaces: sources.map((s) => s.marketplace), count: 0, listings: [] },
         { headers: CORS },
       );
     }
 
-    // Pull live state for each tokenId via the contract's
-    // `getActiveListing` which encapsulates active+expiry+seller-owns
-    // checks. If the returned struct has a zero seller, the listing is
-    // dead — drop it.
-    const reads = tokenIds.flatMap((tokenId) => [
-      {
-        address: marketplace,
-        abi: MARKETPLACE_ABI,
-        functionName: "getActiveListing" as const,
-        args: [tokenId],
-      },
-      {
-        address: registry,
-        abi: REGISTRY_ABI,
-        functionName: "labelOf" as const,
-        args: [tokenId],
-      },
-    ]);
+    // Pull live state for each entry via that marketplace's
+    // `getActiveListing` (active + expiry + seller-still-owns checks).
+    // Read labelOf from the matching Registry — V1 and V2 expose the same
+    // labelOf signature so the call shape is identical apart from the
+    // ABI / address pair routed via the log's tag.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const reads: any[] = entries.flatMap((log) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tokenId = (log as any).args.tokenId as bigint;
+      return [
+        {
+          address: log._marketplace,
+          abi: MARKETPLACE_ABI,
+          functionName: "getActiveListing",
+          args: [tokenId],
+        },
+        {
+          address: log._registry,
+          abi: log._registryAbi,
+          functionName: "labelOf",
+          args: [tokenId],
+        },
+      ];
+    });
     const results = await parallelReadContract<unknown>(client, reads);
 
     const now = Math.floor(Date.now() / 1000);
     const ZERO = "0x0000000000000000000000000000000000000000";
 
-    const listings = tokenIds
-      .map((tokenId, i) => {
+    const listings = entries
+      .map((log, i) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const tokenId = (log as any).args.tokenId as bigint;
         const lr = results[i * 2];
         const labelR = results[i * 2 + 1];
         if (lr.status !== "success") return null;
@@ -171,6 +217,8 @@ export async function GET(req: Request) {
           expiry: expiryNum,
           expires_in_seconds: Math.max(0, expiryNum - now),
           featured: l.featured,
+          registry_version: log._version,
+          marketplace: log._marketplace,
         };
       })
       .filter((x): x is NonNullable<typeof x> => x !== null)
@@ -183,7 +231,12 @@ export async function GET(req: Request) {
       .slice(0, limit);
 
     return Response.json(
-      { tld, marketplace, count: listings.length, listings },
+      {
+        tld,
+        marketplaces: sources.map((s) => s.marketplace),
+        count: listings.length,
+        listings,
+      },
       { headers: CORS },
     );
   } catch (err) {

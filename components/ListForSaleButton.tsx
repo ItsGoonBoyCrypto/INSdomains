@@ -16,6 +16,8 @@ import {
   MARKETPLACE_ABI,
   REGISTRY_ADDRESSES,
   MARKETPLACE_ADDRESSES,
+  REGISTRY_V2_ADDRESS, REGISTRY_V2_ABI,
+  MARKETPLACE_V2_ADDRESS,
   isTldLive,
   tldSuffix,
   type Tld,
@@ -37,14 +39,28 @@ type Listing = {
 };
 
 export function ListForSaleButton({
-  tokenId, label, tld, onChange,
-}: { tokenId: bigint; label: string; tld: Tld; onChange?: () => void }) {
+  tokenId, label, tld, registryVersion = "v1", onChange,
+}: {
+  tokenId: bigint;
+  label: string;
+  tld: Tld;
+  /** V2 NFTs route to MARKETPLACE_V2_ADDRESS + REGISTRY_V2_ADDRESS (V2-bound
+   *  Marketplace deployed 2026-05-02). V1 NFTs continue to use the V1
+   *  Marketplace at MARKETPLACE_ADDRESSES[tld]. Defaults to "v1" so existing
+   *  call sites that don't pass the prop keep working unchanged. */
+  registryVersion?: "v1" | "v2";
+  onChange?: () => void;
+}) {
   const { address } = useAccount();
   const [open, setOpen] = useState(false);
 
-  const marketplaceAddr = MARKETPLACE_ADDRESSES[tld];
-  const registryAddr = REGISTRY_ADDRESSES[tld];
-  const tldLive = isTldLive(tld);
+  const isV2 = registryVersion === "v2";
+  const marketplaceAddr = isV2 ? MARKETPLACE_V2_ADDRESS : MARKETPLACE_ADDRESSES[tld];
+  const registryAddr = isV2 ? REGISTRY_V2_ADDRESS : REGISTRY_ADDRESSES[tld];
+  const registryAbi = isV2 ? REGISTRY_V2_ABI : REGISTRY_ABI;
+  const tldLive = isV2
+    ? marketplaceAddr !== "0x0000000000000000000000000000000000000000"
+    : isTldLive(tld);
 
   const { data: listingRaw, refetch: refetchListing } = useReadContract({
     address: marketplaceAddr,
@@ -87,6 +103,7 @@ export function ListForSaleButton({
           tld={tld}
           marketplaceAddr={marketplaceAddr}
           registryAddr={registryAddr}
+          registryAbi={registryAbi}
           currentListing={listing}
           seller={address}
           onClose={() => setOpen(false)}
@@ -100,13 +117,17 @@ export function ListForSaleButton({
 /* ─────────────────────────── Modal ─────────────────────────── */
 
 function ListingModal({
-  tokenId, label, tld, marketplaceAddr, registryAddr, currentListing, seller, onClose, onChange,
+  tokenId, label, tld, marketplaceAddr, registryAddr, registryAbi, currentListing, seller, onClose, onChange,
 }: {
   tokenId: bigint;
   label: string;
   tld: Tld;
   marketplaceAddr: `0x${string}`;
   registryAddr: `0x${string}`;
+  /** REGISTRY_ABI for V1, REGISTRY_V2_ABI for V2. Both expose the same
+   *  setApprovalForAll surface so the modal calls are signature-identical. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  registryAbi: any;
   currentListing: Listing | undefined;
   seller: `0x${string}`;
   onClose: () => void;
@@ -118,7 +139,7 @@ function ListingModal({
 
   const { data: approvedForAll, refetch: refetchApproval } = useReadContract({
     address: registryAddr,
-    abi: REGISTRY_ABI,
+    abi: registryAbi,
     functionName: "isApprovedForAll",
     args: [seller, marketplaceAddr],
   });
@@ -213,7 +234,7 @@ function ListingModal({
     setActiveStep("approve");
     writeContract({
       address: registryAddr,
-      abi: REGISTRY_ABI,
+      abi: registryAbi,
       functionName: "setApprovalForAll",
       args: [marketplaceAddr, true],
     });

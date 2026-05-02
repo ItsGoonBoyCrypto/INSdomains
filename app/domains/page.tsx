@@ -8,7 +8,7 @@ import { isAddress } from "viem";
 import {
   Copy, Check, Wallet, ExternalLink, Plus, Star,
   Settings2, Send, GitBranch, Image as ImageIcon, Save, Loader2, History,
-  AlertTriangle, StarOff, Hourglass, Tag,
+  AlertTriangle, StarOff, Hourglass,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -24,6 +24,7 @@ import {
   REVERSE_RESOLVER_ADDRESS, REVERSE_RESOLVER_ABI,
   REGISTRY_ADDRESSES, REVERSE_RESOLVER_ADDRESSES,
   REGISTRY_V2_ADDRESS, REGISTRY_V2_ABI, isV2Deployed,
+  REVERSE_RESOLVER_V2_ADDRESS,
   TLDS, LIVE_TLDS, isTldLive, tldSuffix, type Tld,
 } from "@/lib/contracts";
 
@@ -328,11 +329,14 @@ function LiveDomainCard({
   const isV2 = name.registryVersion === "v2";
   const tldRegistry = isV2 ? REGISTRY_V2_ADDRESS : REGISTRY_ADDRESSES[name.tld];
   const tldRegistryAbi = isV2 ? REGISTRY_V2_ABI : REGISTRY_ABI;
-  // Reverse Resolver + Marketplace are V1-bound by immutable constructor arg —
-  // they only work with V1 NFTs. Hide both for V2 holders with explanatory
-  // copy until v2.1 ships V2-aware versions.
-  const tldReverseResolver = REVERSE_RESOLVER_ADDRESSES[name.tld];
-  const tldReverseLive = !isV2 && tldReverseResolver !== "0x0000000000000000000000000000000000000000";
+  // V2-aware Reverse Resolver routing. V2 ships its own RR (deployed
+  // 2026-05-02 at REVERSE_RESOLVER_V2_ADDRESS); V1 holders continue using
+  // the V1 RR. Both expose identical setPrimary / clearPrimary / primaryName
+  // surfaces.
+  const tldReverseResolver = isV2
+    ? REVERSE_RESOLVER_V2_ADDRESS
+    : REVERSE_RESOLVER_ADDRESSES[name.tld];
+  const tldReverseLive = tldReverseResolver !== "0x0000000000000000000000000000000000000000";
 
   const isPrimary =
     tldReverseLive && primaryTokenId !== undefined && primaryTokenId === name.tokenId;
@@ -614,26 +618,15 @@ function LiveDomainCard({
             )}
           </button>
         )}
-        {isV2 && (
-          <span
-            title="V2 ReverseResolver ships in v2.1 — set-primary not available yet for V2 NFTs"
-            className="inline-flex cursor-default items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-1.5 text-[11px] text-white/40"
-          >
-            <Star className="h-3.5 w-3.5" /> Primary · v2.1
-          </span>
-        )}
         <IconBtn title="Edit target" icon={<Settings2 className="h-3.5 w-3.5" />} onClick={() => setExpanded(!expanded)} />
         <IconBtn title="History" icon={<History className="h-3.5 w-3.5" />} onClick={() => setShowHistory(!showHistory)} />
-        {!isV2 ? (
-          <ListForSaleButton tokenId={name.tokenId} label={name.label} tld={name.tld} onChange={onChainUpdate} />
-        ) : (
-          <span
-            title="V2 Marketplace ships in v2.1 — V2 NFTs can't be listed yet on the V1-bound Marketplace"
-            className="inline-flex cursor-default items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-1.5 text-[11px] text-white/40"
-          >
-            <Tag className="h-3.5 w-3.5" /> Sell · v2.1
-          </span>
-        )}
+        <ListForSaleButton
+          tokenId={name.tokenId}
+          label={name.label}
+          tld={name.tld}
+          registryVersion={name.registryVersion}
+          onChange={onChainUpdate}
+        />
         <a
           href={explorerAddr(name.target)}
           target="_blank"

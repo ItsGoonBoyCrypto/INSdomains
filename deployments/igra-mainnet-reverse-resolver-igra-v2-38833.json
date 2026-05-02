@@ -1,0 +1,39 @@
+{
+  "_comment": "INSReverseResolver V2-bound instance, deployed to Igra L2 mainnet on 2026-05-02. Same contract code as the V1-bound instance — RR's `registry` is immutable, so V2 needs a fresh deploy. RR has no owner, no admin functions — pure user-controlled primary-name mapping per address.",
+  "network": "Igra L2 mainnet",
+  "chain_id": 38833,
+  "rpc": "https://rpc.igralabs.com:8545",
+  "explorer": "https://explorer.igralabs.com",
+  "contract_name": "INSReverseResolver",
+  "contract_address": "0xef449f577255ee1d6df37d982da086a7e22a6853",
+  "contract_source": "contracts/src/INSReverseResolver.sol",
+  "deploy_script": "contracts/script/DeployReverseResolverV2.s.sol",
+  "constructor_args": {
+    "_registry": "0x7E7018959bf44045F01D176D8db1594894CBf4E9"
+  },
+  "deployer_eoa": "0x86FaDe25054959279924aDa4E210FF0Eee69D58F",
+  "deployer_status": "QUARANTINED — same shared deployer as the V2 Marketplace; both deployed in one session, drained, key quarantined to ~insdapp/.foundry-keys/_quarantine/",
+  "owner_kind": "(no owner — RR is fully decentralised, anyone can setPrimary on tokens they own)",
+  "deployed_at_iso": "2026-05-02",
+  "broadcast_artifact": "contracts/broadcast/DeployReverseResolverV2.s.sol/38833/run-latest.json",
+  "verification": {
+    "explorer_status": "VERIFIED 2026-05-02 (took --via-ir flag)",
+    "compiler": "0.8.24",
+    "optimizer_runs": 2000,
+    "via_ir": true
+  },
+  "post_deploy_state": {
+    "registry": "0x7E7018959bf44045F01D176D8db1594894CBf4E9"
+  },
+  "rollout_status": {
+    "live": true,
+    "note": "V2 NFT holders' setPrimary button on /domains routes here automatically based on registryVersion. V1 NFT holders continue using the V1 RR (0x1bbd46aec...d931)."
+  },
+  "env_vars_wired": {
+    "dapp_vps": "NEXT_PUBLIC_INS_REVERSE_RESOLVER_IGRA_V2=0xef449f577255ee1d6df37d982da086a7e22a6853"
+  },
+  "related_contracts": {
+    "v1_reverse_resolver": "0x1bbd46aec04330a90832faf1da91889dee67d931",
+    "v2_registry": "0x7E7018959bf44045F01D176D8db1594894CBf4E9"
+  }
+}
