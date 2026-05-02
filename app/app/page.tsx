@@ -10,13 +10,17 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { NameCard } from "@/components/NameCard";
 import { ShareToXModal } from "@/components/ShareToXModal";
+import { RegisterButtonV2 } from "@/components/RegisterButtonV2";
 import { cleanLabel, isValidLabel } from "@/lib/names";
 import { mockAvailable, TAKEN_NAMES, RESERVED_NAMES } from "@/lib/mock-registry";
 import { rarityFor, tierLabel, formatPrice, type Rarity } from "@/lib/pricing";
 import {
   REGISTRY_ADDRESS, REGISTRY_ABI,
   REGISTRY_ADDRESSES, TLDS, LIVE_TLDS, isTldLive, tldSuffix, type Tld,
+  isV2Deployed, isV2Enabled,
+  REGISTRY_V2_ADDRESS, REGISTRY_V2_ABI,
 } from "@/lib/contracts";
+import { isAdmin } from "@/lib/admin";
 import { cn } from "@/lib/cn";
 
 const REGISTRY_LIVE = REGISTRY_ADDRESS !== "0x0000000000000000000000000000000000000000";
@@ -290,6 +294,23 @@ function TldRow({
 }) {
   const isReserved = rarity.kind === "reserved";
   const live = isTldLive(tld);
+  // V2 routing decision: .igra only, and either the public V2 flag is on
+  // OR the caller is admin (so we can dogfood pre-launch). When true, the
+  // RegisterButtonV2 takes over (Forever + Annual toggle, V2 contract).
+  const useV2 =
+    tld === "igra" &&
+    isV2Deployed() &&
+    (isV2Enabled() || isAdmin(owner ?? null));
+  // V2 price for the headline display when V2 is in play. Pre-V2-launch
+  // V2 is empty, so V1's `available` check still drives the row state;
+  // once V2 has names we'll union both via MultiTldNameResult.
+  const { data: v2Price } = useReadContract({
+    address: REGISTRY_V2_ADDRESS,
+    abi: REGISTRY_V2_ABI,
+    functionName: "priceFor",
+    args: [label],
+    query: { enabled: useV2 && !!label },
+  });
   const tldAccent: Record<Tld, string> = {
     ins:  "text-cyan",
     igra: "text-plum",
@@ -358,10 +379,29 @@ function TldRow({
           ) : available === true ? (
             <>
               <div className="text-right">
-                <div className="text-lg font-black text-white">{price != null ? formatPrice(Number(price / 10n ** 18n)) : "—"}</div>
-                <div className="text-[10px] uppercase tracking-wider text-white/40">one-time</div>
+                <div className="flex items-baseline justify-end gap-1.5">
+                  <div className="text-lg font-black text-white">
+                    {useV2
+                      ? formatPrice(Number(((v2Price as bigint | undefined) ?? price ?? 0n) / 10n ** 18n))
+                      : price != null
+                      ? formatPrice(Number(price / 10n ** 18n))
+                      : "—"}
+                  </div>
+                  {useV2 && (
+                    <span className="rounded-full border border-cyan/30 bg-cyan/10 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-cyan">
+                      V2
+                    </span>
+                  )}
+                </div>
+                <div className="text-[10px] uppercase tracking-wider text-white/40">
+                  {useV2 ? "Forever · or Annual" : "one-time"}
+                </div>
               </div>
-              <RegisterButton label={label} tld={tld} owner={owner} priceHint={price} />
+              {useV2 ? (
+                <RegisterButtonV2 label={label} owner={owner} />
+              ) : (
+                <RegisterButton label={label} tld={tld} owner={owner} priceHint={price} />
+              )}
             </>
           ) : available === false ? (
             <Link href={`/marketplace?name=${label}`} className="btn-ghost text-xs">
