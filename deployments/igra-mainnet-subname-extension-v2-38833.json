@@ -1,0 +1,46 @@
+{
+  "_comment": "INSSubnameExtension (V2-targeted) deployed to Igra L2 mainnet on 2026-05-02. Same contract as the V1-targeted instance — parent Registry passed via constructor. Ships enabled=false; v1.1 activation flips via Safe setEnabled(true).",
+  "network": "Igra L2 mainnet",
+  "chain_id": 38833,
+  "rpc": "https://rpc.igralabs.com:8545",
+  "explorer": "https://explorer.igralabs.com",
+  "contract_name": "INSSubnameExtension",
+  "contract_address": "0x7E103668E40aeA3d3698f8D72cD6A8847FcCf280",
+  "contract_source": "contracts/src/INSSubnameExtension.sol",
+  "deploy_script": "contracts/script/DeploySubnameExtensionV2.s.sol",
+  "constructor_args": {
+    "_parentRegistry": "0x7E7018959bf44045F01D176D8db1594894CBf4E9",
+    "_owner": "0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1"
+  },
+  "deployer_eoa": "0x52f2b9607E91aaA8451094a8b94b1911d5239969",
+  "deployer_status": "QUARANTINED — drained immediately after deploy; key file moved to ~insdapp/.foundry-keys/_quarantine/USED-2026-05-02-subname-v2-deployer-...DO-NOT-REUSE.json",
+  "owner_after_deploy": "0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1",
+  "owner_kind": "Safe multisig (same Safe as every other INS contract)",
+  "deployed_at_iso": "2026-05-02",
+  "broadcast_artifact": "contracts/broadcast/DeploySubnameExtensionV2.s.sol/38833/run-latest.json",
+  "verification": {
+    "explorer_status": "PENDING — run forge verify-contract --verifier blockscout --verifier-url https://explorer.igralabs.com/api once 5-min indexer lag passes",
+    "compiler": "0.8.24",
+    "optimizer_runs": 2000,
+    "via_ir": true
+  },
+  "post_deploy_state": {
+    "enabled": false,
+    "totalSupply": 0,
+    "parentRegistry": "0x7E7018959bf44045F01D176D8db1594894CBf4E9",
+    "owner": "0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1"
+  },
+  "rollout_status": {
+    "enabled_on_chain": false,
+    "v1_1_activation_planned": "~3-4 weeks post-V2-launch (per project_ins_dapp.md)",
+    "activation_call": "Safe → setEnabled(true) on this contract"
+  },
+  "env_vars_wired": {
+    "dapp_vps": "NEXT_PUBLIC_INS_SUBNAME_EXTENSION_IGRA=0x7E103668E40aeA3d3698f8D72cD6A8847FcCf280 (in /home/insdapp/ins-dapp/.env.local)",
+    "activity_bot_vps": "SUBNAME_EXTENSION_IGRA=0x7E103668E40aeA3d3698f8D72cD6A8847FcCf280 (in /home/insbot/ins-activity-bot/.env)"
+  },
+  "related_contracts": {
+    "parent_registry_v2": "0x7E7018959bf44045F01D176D8db1594894CBf4E9",
+    "treasury_safe": "0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1"
+  }
+}
