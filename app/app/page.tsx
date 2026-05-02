@@ -132,7 +132,7 @@ function EmptyHint() {
       {/* Showcase NFT card preview — "this is what you'll mint" */}
       <div className="mx-auto mb-8 max-w-[340px]">
         <Link href="/app?q=forever" className="block transition hover:opacity-95">
-          <NameCard label="forever" tld="igra" tier="STANDARD · 30 iKAS" tokenId={null} />
+          <NameCard label="forever" tld="igra" tier="FOREVER · 500 iKAS" tokenId={null} />
         </Link>
         <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-white/35">
           Sample · all names mint as on-chain SVG NFTs
