@@ -8,7 +8,7 @@ import { isAddress } from "viem";
 import {
   Copy, Check, Wallet, ExternalLink, Plus, Star,
   Settings2, Send, GitBranch, Image as ImageIcon, Save, Loader2, History,
-  AlertTriangle, StarOff,
+  AlertTriangle, StarOff, Hourglass, Tag,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -23,6 +23,7 @@ import {
   REGISTRY_ADDRESS, REGISTRY_ABI,
   REVERSE_RESOLVER_ADDRESS, REVERSE_RESOLVER_ABI,
   REGISTRY_ADDRESSES, REVERSE_RESOLVER_ADDRESSES,
+  REGISTRY_V2_ADDRESS, REGISTRY_V2_ABI, isV2Deployed,
   TLDS, LIVE_TLDS, isTldLive, tldSuffix, type Tld,
 } from "@/lib/contracts";
 
@@ -34,6 +35,15 @@ type OwnedName = {
   label: string;
   target: `0x${string}`;
   tld: Tld;
+  /** "v1" = legacy V1 Registry. "v2" = V2 Registry (current default for new
+   *  mints). LiveDomainCard branches on this for: which Registry to call
+   *  setTarget against, whether to expose Marketplace+setPrimary (V1 only —
+   *  those contracts are V1-bound by immutable constructor arg), whether to
+   *  show Annual expiry + renew/extend-to-Forever controls (V2 only). */
+  registryVersion: "v1" | "v2";
+  /** 0 for Forever (V1 always; V2 Forever mints). Unix timestamp for V2
+   *  Annual mints. */
+  expiresAt: bigint;
 };
 
 export default function DomainsPage() {
@@ -166,59 +176,97 @@ function Dashboard({ address }: { address: `0x${string}` }) {
 }
 
 function useOwnedNames(address: `0x${string}`) {
-  // 1. Read totalSupply on every live Registry in parallel.
+  // 1. Read totalSupply on every live V1 Registry + V2 (when deployed) in parallel.
+  const v1Tlds = TLDS.filter(isTldLive);
+  const v2Active = isV2Deployed();
   const supplyReads = useReadContracts({
-    contracts: TLDS.filter(isTldLive).map((tld) => ({
-      address: REGISTRY_ADDRESSES[tld],
-      abi: REGISTRY_ABI,
-      functionName: "totalSupply",
-    } as const)),
-    query: { enabled: LIVE_TLDS.length > 0 },
+    contracts: [
+      ...v1Tlds.map((tld) => ({
+        address: REGISTRY_ADDRESSES[tld],
+        abi: REGISTRY_ABI,
+        functionName: "totalSupply",
+      } as const)),
+      ...(v2Active ? [{
+        address: REGISTRY_V2_ADDRESS,
+        abi: REGISTRY_V2_ABI,
+        functionName: "totalSupply",
+      } as const] : []),
+    ],
+    query: { enabled: LIVE_TLDS.length > 0 || v2Active },
   });
 
   const supplyByTld: Record<Tld, number> = { ins: 0, igra: 0, ikas: 0 };
-  LIVE_TLDS.forEach((tld, i) => {
+  v1Tlds.forEach((tld, i) => {
     const r = supplyReads.data?.[i];
     if (r?.status === "success") supplyByTld[tld] = Number(r.result as bigint);
   });
+  const v2Supply = (() => {
+    if (!v2Active) return 0;
+    const r = supplyReads.data?.[v1Tlds.length];
+    return r?.status === "success" ? Number(r.result as bigint) : 0;
+  })();
 
-  // 2. Build the full (tld, tokenId) × {ownerOf, labelOf, targetOf} grid and
-  //    batch it in one useReadContracts call so viem multicall coalesces it.
+  // 2. Build the full (tld, tokenId, version) grid. V1 reads via REGISTRY_ABI,
+  //    V2 reads via REGISTRY_V2_ABI (which adds expiresAt). Batched in one
+  //    useReadContracts call so viem multicall coalesces.
   const tokenGrid = useMemo(() => {
-    const grid: Array<{ tld: Tld; tokenId: bigint }> = [];
+    const grid: Array<{ tld: Tld; tokenId: bigint; version: "v1" | "v2" }> = [];
     for (const tld of LIVE_TLDS) {
       for (let i = 1; i <= supplyByTld[tld]; i++) {
-        grid.push({ tld, tokenId: BigInt(i) });
+        grid.push({ tld, tokenId: BigInt(i), version: "v1" });
+      }
+    }
+    if (v2Active) {
+      for (let i = 1; i <= v2Supply; i++) {
+        grid.push({ tld: "igra", tokenId: BigInt(i), version: "v2" });
       }
     }
     return grid;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [supplyByTld.ins, supplyByTld.igra, supplyByTld.ikas]);
+  }, [supplyByTld.ins, supplyByTld.igra, supplyByTld.ikas, v2Supply, v2Active]);
 
+  // V2 reads add a 4th call (expiresAt), so we standardise on 4 reads per token
+  // for offset arithmetic. V1's 4th read is a harmless `mintedAt` repeat.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const contracts: any[] = tokenGrid.flatMap(({ tld, tokenId, version }) => {
+    const isV2 = version === "v2";
+    const addr = isV2 ? REGISTRY_V2_ADDRESS : REGISTRY_ADDRESSES[tld];
+    const abi = isV2 ? REGISTRY_V2_ABI : REGISTRY_ABI;
+    return [
+      { address: addr, abi, functionName: "ownerOf",  args: [tokenId] },
+      { address: addr, abi, functionName: "labelOf",  args: [tokenId] },
+      { address: addr, abi, functionName: "targetOf", args: [tokenId] },
+      isV2
+        ? { address: addr, abi: REGISTRY_V2_ABI, functionName: "expiresAt", args: [tokenId] }
+        : { address: addr, abi: REGISTRY_ABI,    functionName: "ownerOf",  args: [tokenId] }, // placeholder
+    ];
+  });
   const { data: batched, isLoading, refetch } = useReadContracts({
-    contracts: tokenGrid.flatMap(({ tld, tokenId }) => [
-      { address: REGISTRY_ADDRESSES[tld], abi: REGISTRY_ABI, functionName: "ownerOf",  args: [tokenId] } as const,
-      { address: REGISTRY_ADDRESSES[tld], abi: REGISTRY_ABI, functionName: "labelOf",  args: [tokenId] } as const,
-      { address: REGISTRY_ADDRESSES[tld], abi: REGISTRY_ABI, functionName: "targetOf", args: [tokenId] } as const,
-    ]),
-    query: { enabled: LIVE_TLDS.length > 0 && tokenGrid.length > 0 },
+    contracts,
+    query: { enabled: tokenGrid.length > 0 },
   });
 
   const list: OwnedName[] = [];
   if (batched) {
     for (let i = 0; i < tokenGrid.length; i++) {
-      const { tld, tokenId } = tokenGrid[i];
-      const o = batched[i * 3]?.result as `0x${string}` | undefined;
-      const label = batched[i * 3 + 1]?.result as string | undefined;
-      const target = batched[i * 3 + 2]?.result as `0x${string}` | undefined;
+      const { tld, tokenId, version } = tokenGrid[i];
+      const o = batched[i * 4]?.result as `0x${string}` | undefined;
+      const label = batched[i * 4 + 1]?.result as string | undefined;
+      const target = batched[i * 4 + 2]?.result as `0x${string}` | undefined;
+      const expiresAt = version === "v2"
+        ? (batched[i * 4 + 3]?.result as bigint | undefined) ?? 0n
+        : 0n;
       if (o && label && target && o.toLowerCase() === address.toLowerCase()) {
-        list.push({ tokenId, label, target, tld });
+        list.push({ tokenId, label, target, tld, registryVersion: version, expiresAt });
       }
     }
   }
 
-  // Sort by TLD order, then tokenId ascending.
+  // Sort: V2 first (current Registry, most relevant), then V1, then by tokenId.
   list.sort((a, b) => {
+    if (a.registryVersion !== b.registryVersion) {
+      return a.registryVersion === "v2" ? -1 : 1;
+    }
     const aIdx = TLDS.indexOf(a.tld);
     const bIdx = TLDS.indexOf(b.tld);
     if (aIdx !== bIdx) return aIdx - bIdx;
@@ -273,13 +321,45 @@ function LiveDomainCard({
     if (primaryConfirmed && onPrimaryChange) onPrimaryChange();
   }, [primaryConfirmed, onPrimaryChange]);
 
-  const tldRegistry = REGISTRY_ADDRESSES[name.tld];
+  // V2-aware Registry routing. setTarget on V2 lives at REGISTRY_V2_ADDRESS;
+  // V1 holders keep talking to their V1 contract (immutable).
+  const isV2 = name.registryVersion === "v2";
+  const tldRegistry = isV2 ? REGISTRY_V2_ADDRESS : REGISTRY_ADDRESSES[name.tld];
+  const tldRegistryAbi = isV2 ? REGISTRY_V2_ABI : REGISTRY_ABI;
+  // Reverse Resolver + Marketplace are V1-bound by immutable constructor arg —
+  // they only work with V1 NFTs. Hide both for V2 holders with explanatory
+  // copy until v2.1 ships V2-aware versions.
   const tldReverseResolver = REVERSE_RESOLVER_ADDRESSES[name.tld];
-  const tldReverseLive = tldReverseResolver !== "0x0000000000000000000000000000000000000000";
+  const tldReverseLive = !isV2 && tldReverseResolver !== "0x0000000000000000000000000000000000000000";
 
   const isPrimary =
     tldReverseLive && primaryTokenId !== undefined && primaryTokenId === name.tokenId;
   const primaryBusy = primaryPending || primaryConfirming;
+
+  // V2 Annual tenure metadata
+  const isAnnual = isV2 && name.expiresAt > 0n;
+  const expirySec = Number(name.expiresAt);
+  const nowSec = Math.floor(Date.now() / 1000);
+  const daysLeft = isAnnual ? Math.floor((expirySec - nowSec) / 86400) : 0;
+  const isExpiringSoon = isAnnual && daysLeft <= 60 && daysLeft > 0;
+  const isExpired = isAnnual && daysLeft <= 0;
+
+  // V2 price reads — needed for the renew + extend-to-Forever buttons.
+  // Only fetch when this is a V2 Annual NFT (the only tenure that has them).
+  const { data: renewalPrice } = useReadContract({
+    address: REGISTRY_V2_ADDRESS,
+    abi: REGISTRY_V2_ABI,
+    functionName: "priceAnnualFor",
+    args: [name.label],
+    query: { enabled: isV2 && isAnnual },
+  }) as { data: bigint | undefined };
+  const { data: foreverPrice } = useReadContract({
+    address: REGISTRY_V2_ADDRESS,
+    abi: REGISTRY_V2_ABI,
+    functionName: "priceFor",
+    args: [name.label],
+    query: { enabled: isV2 && isAnnual },
+  }) as { data: bigint | undefined };
 
   const onTogglePrimary = () => {
     if (isPrimary) {
@@ -302,7 +382,7 @@ function LiveDomainCard({
     if (!isAddress(target)) return;
     writeContract({
       address: tldRegistry,
-      abi: REGISTRY_ABI,
+      abi: tldRegistryAbi,
       functionName: "setTarget",
       args: [name.label, target as `0x${string}`],
     });
@@ -316,9 +396,33 @@ function LiveDomainCard({
   const onFixTarget = () => {
     writeContract({
       address: tldRegistry,
-      abi: REGISTRY_ABI,
+      abi: tldRegistryAbi,
       functionName: "setTarget",
       args: [name.label, owner],
+    });
+  };
+
+  // V2 Annual: renew 1y / extend-to-Forever
+  const onRenewOneYear = () => {
+    if (!isV2 || !isAnnual) return;
+    // Read the per-year price live from V2 — match what the wallet will charge.
+    // Caller pays years_to_add * priceAnnualFor(label). For 1y, just the per-year price.
+    writeContract({
+      address: REGISTRY_V2_ADDRESS,
+      abi: REGISTRY_V2_ABI,
+      functionName: "renew",
+      args: [name.tokenId, 1n],
+      value: renewalPrice ?? 0n,
+    });
+  };
+  const onExtendToForever = () => {
+    if (!isV2 || !isAnnual) return;
+    writeContract({
+      address: REGISTRY_V2_ADDRESS,
+      abi: REGISTRY_V2_ABI,
+      functionName: "extendToForever",
+      args: [name.tokenId],
+      value: foreverPrice ?? 0n,
     });
   };
 
@@ -345,6 +449,23 @@ function LiveDomainCard({
           >
             {tldSuffix(name.tld)}
           </span>
+          {/* V2 vs V1 registry-version badge — visually disambiguates the
+              two registries when a holder owns names on both. */}
+          {isV2 ? (
+            <span
+              title="V2 Registry NFT"
+              className="inline-flex items-center gap-1 rounded-full border border-cyan/40 bg-cyan/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-cyan"
+            >
+              V2 {isAnnual ? "Annual" : "Forever"}
+            </span>
+          ) : (
+            <span
+              title="V1 Registry NFT (legacy — migrate to V2 for free)"
+              className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/[0.04] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white/55"
+            >
+              V1
+            </span>
+          )}
           {isPrimary ? (
             <span
               title={`Primary name for your address on ${tldSuffix(name.tld)} reverse resolver`}
@@ -361,10 +482,70 @@ function LiveDomainCard({
             title="ERC-721 token ID"
             className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-[10px] font-semibold text-white/60"
           >
-            #{name.tokenId.toString()}
+            {isV2 ? "V2 #" : "#"}{name.tokenId.toString()}
           </span>
         </div>
       </div>
+
+      {/* V2 Annual: expiry banner + renewal CTAs. Surfaces inline above the
+          buttons row so users can't miss it. Color-coded:
+            green = comfortable runway (>60 days)
+            amber = expiring soon (<=60 days, >0)
+            red   = expired (in 30-day grace period)
+      */}
+      {isAnnual && (
+        <div className={`relative mt-4 rounded-xl border p-3 ${
+          isExpired
+            ? "border-red-500/30 bg-red-500/[0.06]"
+            : isExpiringSoon
+            ? "border-amber-400/30 bg-amber-400/[0.06]"
+            : "border-emerald-500/25 bg-emerald-500/[0.04]"
+        }`}>
+          <div className="flex items-start gap-2">
+            <Hourglass className={`mt-0.5 h-4 w-4 flex-none ${
+              isExpired ? "text-red-300" : isExpiringSoon ? "text-amber-300" : "text-emerald-300"
+            }`} />
+            <div className="flex-1 text-[11px] leading-relaxed">
+              <div className={`font-bold ${
+                isExpired ? "text-red-200" : isExpiringSoon ? "text-amber-200" : "text-emerald-200"
+              }`}>
+                {isExpired
+                  ? `Expired — ${Math.abs(daysLeft)} days into 30-day grace`
+                  : `Annual · ${daysLeft} ${daysLeft === 1 ? "day" : "days"} left`}
+              </div>
+              <p className="mt-0.5 text-white/55">
+                {isExpired
+                  ? "Renew now to keep this name. After 30 days post-expiry, it returns to public availability."
+                  : `Expires ${new Date(expirySec * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}. Renew or convert to Forever any time.`}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  onClick={onRenewOneYear}
+                  disabled={busy || renewalPrice == null}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-1 text-[11px] font-bold text-emerald-200 transition hover:bg-emerald-500/25 disabled:opacity-40"
+                >
+                  {busy ? (
+                    <><Loader2 className="h-3 w-3 animate-spin" /> Renewing…</>
+                  ) : (
+                    <>+1 year · {renewalPrice != null ? `${Number(renewalPrice / 10n ** 18n)} iKAS` : "—"}</>
+                  )}
+                </button>
+                <button
+                  onClick={onExtendToForever}
+                  disabled={busy || foreverPrice == null}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-cyan/40 bg-cyan/15 px-2.5 py-1 text-[11px] font-bold text-cyan transition hover:bg-cyan/25 disabled:opacity-40"
+                >
+                  {busy ? (
+                    <><Loader2 className="h-3 w-3 animate-spin" /> Locking…</>
+                  ) : (
+                    <>Lock Forever · {foreverPrice != null ? `${Number(foreverPrice / 10n ** 18n)} iKAS` : "—"}</>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <h3 className="relative mt-5 text-2xl font-bold">
         <span className="ins-gradient-text">{name.label}</span>
@@ -431,9 +612,26 @@ function LiveDomainCard({
             )}
           </button>
         )}
+        {isV2 && (
+          <span
+            title="V2 ReverseResolver ships in v2.1 — set-primary not available yet for V2 NFTs"
+            className="inline-flex cursor-default items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-1.5 text-[11px] text-white/40"
+          >
+            <Star className="h-3.5 w-3.5" /> Primary · v2.1
+          </span>
+        )}
         <IconBtn title="Edit target" icon={<Settings2 className="h-3.5 w-3.5" />} onClick={() => setExpanded(!expanded)} />
         <IconBtn title="History" icon={<History className="h-3.5 w-3.5" />} onClick={() => setShowHistory(!showHistory)} />
-        <ListForSaleButton tokenId={name.tokenId} label={name.label} tld={name.tld} onChange={onChainUpdate} />
+        {!isV2 ? (
+          <ListForSaleButton tokenId={name.tokenId} label={name.label} tld={name.tld} onChange={onChainUpdate} />
+        ) : (
+          <span
+            title="V2 Marketplace ships in v2.1 — V2 NFTs can't be listed yet on the V1-bound Marketplace"
+            className="inline-flex cursor-default items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-1.5 text-[11px] text-white/40"
+          >
+            <Tag className="h-3.5 w-3.5" /> Sell · v2.1
+          </span>
+        )}
         <a
           href={explorerAddr(name.target)}
           target="_blank"

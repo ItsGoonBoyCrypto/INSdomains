@@ -28,8 +28,10 @@ export default function Home() {
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-lg text-white/60 sm:text-xl animate-fade-up">
-          Permanent on-chain identity for every wallet, contract, and community
-          on the Igra Network. No renewals. No expiry. Send crypto to{" "}
+          On-chain identity for every wallet, contract, and community on the
+          Igra Network. Pick <span className="text-cyan font-medium">Forever</span>{" "}
+          (pay once, no renewals) or <span className="text-emerald-300 font-medium">Annual</span>{" "}
+          (1-year renewable). Send crypto to{" "}
           <span className="font-medium text-plum">alice.igra</span>{" "}
           instead of <span className="font-mono text-white/50">0x71C4…f3a2</span>.
         </p>
@@ -114,7 +116,7 @@ export default function Home() {
             icon={<Sparkles className="h-6 w-6" />}
             tint="plum"
             title="Register"
-            body="Mint your name forever. Pay once in iKAS, own for life. 0 renewal fees — ever. No expiry, no grace-period auctions, no hidden costs."
+            body="Mint Forever (pay once in iKAS, no renewals) or Annual (1-year renewable, 30-day grace). Both render as on-chain SVG NFTs you fully own."
             href="/app"
           />
           <FeatureCard

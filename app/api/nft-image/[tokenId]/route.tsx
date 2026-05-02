@@ -105,11 +105,15 @@ export async function GET(
   const registryAddr = isV2 ? REGISTRY_V2_ADDRESS : REGISTRY_ADDRESSES.igra;
   const abi = isV2 ? REGISTRY_V2_ABI : REGISTRY_ABI;
 
-  // Read label from the chosen Registry. If it fails or returns empty,
-  // render a generic placeholder so we never 500 the image route
-  // (Telegram would refuse to attach a broken image).
+  // Read label from the chosen Registry. If it fails or returns empty AND
+  // the caller specified ?v=2, fall through to V1 — V1+V2 token-id spaces
+  // collide so a stale ?v=2 link should still render meaningfully against
+  // V1 if the V2 token doesn't exist. (And vice-versa if no ?v= was set.)
+  // If both registries miss, render a generic placeholder so we never 500
+  // the image route (Telegram would refuse to attach a broken image).
   let label = "";
   let expiresAt = 0n;
+  let renderedAsV2 = isV2;
   try {
     label = (await client.readContract({
       address: registryAddr,
@@ -131,11 +135,47 @@ export async function GET(
     /* fall through with empty label */
   }
 
+  // Fallback path — try the OTHER registry if the first lookup returned
+  // nothing meaningful. Means a `?v=2` link to a non-existent V2 id will
+  // still render the V1 token at that id (better UX than the placeholder).
+  if (!label || !/^[a-z0-9-]{1,32}$/.test(label)) {
+    const fallbackAddr = isV2 ? REGISTRY_ADDRESSES.igra : REGISTRY_V2_ADDRESS;
+    const fallbackAbi = isV2 ? REGISTRY_ABI : REGISTRY_V2_ABI;
+    if (fallbackAddr !== "0x0000000000000000000000000000000000000000") {
+      try {
+        const fbLabel = (await client.readContract({
+          address: fallbackAddr,
+          abi: fallbackAbi,
+          functionName: "labelOf",
+          args: [tokenId],
+        })) as string;
+        if (fbLabel && /^[a-z0-9-]{1,32}$/.test(fbLabel)) {
+          label = fbLabel;
+          renderedAsV2 = !isV2; // we ended up rendering the OTHER registry
+          if (renderedAsV2) {
+            try {
+              expiresAt = (await client.readContract({
+                address: fallbackAddr,
+                abi: REGISTRY_V2_ABI,
+                functionName: "expiresAt",
+                args: [tokenId],
+              })) as bigint;
+            } catch { /* keep expiresAt = 0 */ }
+          } else {
+            expiresAt = 0n;
+          }
+        }
+      } catch { /* both registries miss — placeholder rendering below */ }
+    }
+  }
+
   const safeLabel = label && /^[a-z0-9-]{1,32}$/.test(label) ? label : "igra";
   const tier = tierFor(safeLabel);
   const labelSize = s(labelFontSize(safeLabel.length));
   const suffSize  = s(suffixFontSize(safeLabel.length));
-  const isAnnual = isV2 && expiresAt !== 0n;
+  // Use renderedAsV2 (post-fallback) — ensures the V2 badge + Annual pill
+  // render correctly even when a ?v=2 link was satisfied from V1, or vice-versa.
+  const isAnnual = renderedAsV2 && expiresAt !== 0n;
   // Format expiresAt as "MMM YYYY" (e.g. "May 2027") for the Annual pill.
   const expiryText = isAnnual
     ? new Date(Number(expiresAt) * 1000).toLocaleDateString("en-US", { month: "short", year: "numeric" }).toUpperCase()
@@ -201,16 +241,16 @@ export async function GET(
               display: "flex",
               padding: `${s(1)}px ${s(5)}px`,
               borderRadius: 999,
-              border: isV2 ? `1px solid ${CYAN}66` : "1px solid rgba(255,255,255,0.1)",
-              background: isV2 ? `${CYAN}1f` : "rgba(255,255,255,0.04)",
+              border: renderedAsV2 ? `1px solid ${CYAN}66` : "1px solid rgba(255,255,255,0.1)",
+              background: renderedAsV2 ? `${CYAN}1f` : "rgba(255,255,255,0.04)",
               fontSize: s(7),
               fontFamily: "monospace",
-              color: isV2 ? CYAN : "rgba(255,255,255,0.55)",
-              fontWeight: isV2 ? 800 : 400,
-              letterSpacing: isV2 ? s(0.4) : 0,
+              color: renderedAsV2 ? CYAN : "rgba(255,255,255,0.55)",
+              fontWeight: renderedAsV2 ? 800 : 400,
+              letterSpacing: renderedAsV2 ? s(0.4) : 0,
             }}
           >
-            {isV2 ? `V2 #${tokenIdStr}` : `#${tokenIdStr}`}
+            {renderedAsV2 ? `V2 #${tokenIdStr}` : `#${tokenIdStr}`}
           </div>
         </div>
 

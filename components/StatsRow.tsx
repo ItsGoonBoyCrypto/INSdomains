@@ -111,7 +111,7 @@ export function StatsRow() {
           value={listingsReady ? activeListings.toLocaleString() : <Skeleton />}
           label="active listings"
         />
-        <Stat value="0" label="renewal fees, ever" />
+        <Stat value="∞" label="Forever tier · pay once" sub="Annual tier renewable" />
       </div>
     </section>
   );

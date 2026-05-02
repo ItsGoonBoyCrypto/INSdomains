@@ -42,6 +42,14 @@ export async function OPTIONS() {
  * means: contract's `getActiveListing(tokenId)` returns a non-empty seller
  * (it checks active flag + expiry + seller-still-owns the NFT).
  *
+ * **V1-only by design.** The Marketplace contract's `registry` is an
+ * `IERC721Min immutable` set to V1 at deploy time, so V2 NFTs cannot be
+ * listed there. Until v2.1 ships a V2-aware Marketplace, this endpoint
+ * legitimately returns only V1 listings — V2 names have no marketplace
+ * presence. The `/domains` UI hides the "List for sale" button for V2
+ * NFTs with explanatory copy. Once v2.1 lands, the response shape stays
+ * the same and V2 listings will start appearing here automatically.
+ *
  * Useful for explorers + wallet "browse for sale" panes.
  *
  * Query:
