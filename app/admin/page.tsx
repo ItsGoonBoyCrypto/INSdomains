@@ -302,7 +302,9 @@ function AdminMintCard({ tld }: { tld: Tld }) {
   const targetValid = /^0x[a-fA-F0-9]{40}$/.test(target.trim());
   const busy = isPending || isConfirming;
 
-  // "Mint on all 3 TLDs to same recipient" toggle. Persisted across sessions.
+  // Multi-TLD apply-all toggle state — dormant since the .igra-only pivot
+  // (LIVE_TLDS = ["igra"]). Kept for future multi-TLD revival; the toggle UI
+  // was deleted 2026-05-02 since ApplyAllTldsToggle returns null in single-TLD mode.
   const [applyAllTlds, setApplyAllTlds] = useState(false);
   useEffect(() => {
     try {
@@ -451,26 +453,6 @@ function AdminMintCard({ tld }: { tld: Tld }) {
       title="Gift a name"
       subtitle="adminMint — bypasses payment + reservation"
     >
-      <ApplyAllTldsToggle
-        on={applyAllTlds}
-        onToggle={onToggleApplyAll}
-        currentTld={tld}
-        liveTldCount={LIVE_TLDS.length}
-        disabled={busy || !!batchOp}
-      />
-
-      {batchOp && (
-        <MultiTldBatchProgress
-          op={batchOp}
-          statuses={batchStatuses}
-          txHashes={batchTxHashes}
-          activeIdx={batchIdx}
-          error={error}
-          onRetry={retryBatchFromFailed}
-          onCancel={cancelBatch}
-        />
-      )}
-
       <div className="space-y-3">
         <Field label="Label">
           <div className="flex items-center rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
@@ -582,7 +564,8 @@ function saveBlocklist(labels: string[]) {
 }
 
 /**
- * Multi-TLD batch state machine — used for "Apply to all 3 TLDs" reserve
+ * Multi-TLD batch state machine — dormant since the .igra-only pivot.
+ * Originally drove the "Apply to all 3 TLDs" reserve
  * actions and the one-shot Sync button. Queues a sequence of (TLD →
  * function args) operations, fires them sequentially via writeContract,
  * tracks per-TLD status, and pauses on error so the operator can retry.
@@ -605,8 +588,10 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
   const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
   const REGISTRY_LIVE = isTldLive(tld);
 
-  // "Apply to all 3 TLDs" toggle. When ON, every reserve / unreserve /
-  // batch-seed action fires on .ins → .igra → .ikas in sequence (mined-first
+  // Multi-TLD apply-all toggle — dormant in single-TLD mode (post-pivot).
+  // Code retained but the toggle UI never renders. When eventually re-enabled,
+  // every reserve / unreserve / batch-seed action would fire on each live TLD
+  // in sequence (mined-first
   // proceed-to-next pattern). Persisted across sessions so the operator's
   // preference sticks.
   const [applyAllTlds, setApplyAllTlds] = useState(false);
@@ -869,24 +854,6 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
     reset();
   };
 
-  // When a batch finishes, dismiss the Sync banner (if it was the trigger)
-  // with a success message. Triggered by batchOp going non-null → null.
-  const wasBatching = useRef(false);
-  useEffect(() => {
-    if (batchOp) wasBatching.current = true;
-    else if (wasBatching.current) {
-      wasBatching.current = false;
-      setSyncStatus((s) => {
-        if (s.kind === "running" && s.missingByTld) {
-          const total = Object.values(s.missingByTld).reduce((sum, a) => sum + (a?.length ?? 0), 0);
-          const tlds = (Object.keys(s.missingByTld) as Tld[]).map(tldSuffix).join(", ");
-          return { kind: "done", message: `Synced ${total} label${total === 1 ? "" : "s"} to ${tlds}.` };
-        }
-        return s;
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [batchOp]);
 
   // List of TLDs to apply an action to. Always starts with the active TLD
   // so the operator sees their primary target progress first.
@@ -969,54 +936,6 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
     });
   };
 
-  /**
-   * One-shot Sync — copy this TLD's full reserved list to the other 2 TLDs.
-   * Reads each other TLD's reserved labels via /api/reserved-labels?tld=,
-   * computes the diff (labels reserved here but not there), and submits
-   * setReservedBatch(diff, true) on each missing TLD. Skips TLDs that are
-   * already in sync.
-   */
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>({ kind: "idle" });
-  const onSync = async () => {
-    setSyncStatus({ kind: "computing" });
-    try {
-      const sourceLabels = Array.from(reservedSet);
-      if (sourceLabels.length === 0) {
-        setSyncStatus({ kind: "done", error: "No reserved labels on the current TLD to sync." });
-        return;
-      }
-      const otherTlds = (TLDS as readonly Tld[]).filter((t) => t !== tld && isTldLive(t));
-      const missingByTld: Partial<Record<Tld, string[]>> = {};
-      for (const otherTld of otherTlds) {
-        const res = await fetch(`/api/reserved-labels?tld=${otherTld}`, { cache: "no-store" });
-        const data = (await res.json()) as { labels?: string[] };
-        const existing = new Set(data.labels ?? []);
-        const missing = sourceLabels.filter((l) => !existing.has(l));
-        if (missing.length > 0) missingByTld[otherTld] = missing;
-      }
-      const totalMissing = Object.values(missingByTld).reduce((s, arr) => s + (arr?.length ?? 0), 0);
-      if (totalMissing === 0) {
-        setSyncStatus({ kind: "done", error: "All reserved labels already mirrored on the other TLDs. Nothing to sync." });
-        return;
-      }
-      setSyncStatus({ kind: "ready", missingByTld });
-    } catch (e) {
-      setSyncStatus({ kind: "done", error: (e as Error).message ?? "sync diff failed" });
-    }
-  };
-  const startSync = () => {
-    if (syncStatus.kind !== "ready" || !syncStatus.missingByTld) return;
-    const tldsToHit = (Object.keys(syncStatus.missingByTld) as Tld[]).filter(
-      (t) => (syncStatus.missingByTld![t]?.length ?? 0) > 0,
-    );
-    setSyncStatus({ ...syncStatus, kind: "running" });
-    startBatch({
-      fn: "setReservedBatch",
-      argsForTld: (t) => [syncStatus.missingByTld![t] ?? [], true],
-      label: `Sync ${Object.values(syncStatus.missingByTld!).reduce((s, a) => s + (a?.length ?? 0), 0)} labels to ${tldsToHit.join(", ")}`,
-      tlds: tldsToHit,
-    });
-  };
 
   const onImport = () => {
     const parsed = parseBulkInput(importRaw, []);
@@ -1048,38 +967,10 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
     >
       {/* Multi-TLD apply toggle + sync — sits at the top so it's seen
           before any reserve action is taken. */}
-      <ApplyAllTldsToggle
-        on={applyAllTlds}
-        onToggle={onToggleApplyAll}
-        currentTld={tld}
-        liveTldCount={LIVE_TLDS.length}
-        disabled={busy || !!batchOp}
-      />
 
       {/* One-shot Sync — copies current TLD's reservations to the other 2 */}
-      <SyncReservationsRow
-        currentTld={tld}
-        liveTldCount={LIVE_TLDS.length}
-        status={syncStatus}
-        onSync={onSync}
-        onStartSync={startSync}
-        onDismiss={() => setSyncStatus({ kind: "idle" })}
-        disabled={busy || !!batchOp}
-      />
 
       {/* Batch progress display when a multi-TLD op is in flight. */}
-      {batchOp && (
-        <MultiTldBatchProgress
-          op={batchOp}
-          statuses={batchStatuses}
-          txHashes={batchTxHashes}
-          activeIdx={batchIdx}
-          error={error}
-          onRetry={retryBatchFromFailed}
-          onCancel={cancelBatch}
-        />
-      )}
-
       <div className="mt-3 flex gap-2">
         <input
           value={newLabel}
@@ -1814,26 +1705,6 @@ function TierPricingCard({ tld }: { tld: Tld }) {
       title="Length tier pricing"
       subtitle="setLengthPrice(bucket, price) · price in iKAS"
     >
-      <ApplyAllTldsToggle
-        on={applyAllTlds}
-        onToggle={onToggleApplyAll}
-        currentTld={tld}
-        liveTldCount={LIVE_TLDS.length}
-        disabled={anyBusy}
-      />
-
-      {batchOp && (
-        <MultiTldBatchProgress
-          op={batchOp}
-          statuses={batchStatuses}
-          txHashes={batchTxHashes}
-          activeIdx={batchIdx}
-          error={batchError}
-          onRetry={retryBatchFromFailed}
-          onCancel={cancelBatch}
-        />
-      )}
-
       <CanonicalSyncRow
         diff={canonicalDiff}
         liveTldCount={LIVE_TLDS.length}
@@ -2132,7 +2003,8 @@ function PremiumOverridesCard({ tld }: { tld: Tld }) {
   const parsed = Number(price);
   const valid = isValidLabel(clean) && Number.isFinite(parsed) && parsed >= 0;
 
-  // "Apply premium override to all 3 TLDs" toggle — persisted across sessions.
+  // Multi-TLD apply-all toggle for premium overrides — dormant since the
+  // .igra-only pivot. Toggle UI was deleted; state retained for future use.
   const [applyAllTlds, setApplyAllTlds] = useState(false);
   useEffect(() => {
     try {
@@ -2316,26 +2188,6 @@ function PremiumOverridesCard({ tld }: { tld: Tld }) {
       title="Premium overrides"
       subtitle="setPremiumPrice(label, price) · 0 clears the override"
     >
-      <ApplyAllTldsToggle
-        on={applyAllTlds}
-        onToggle={onToggleApplyAll}
-        currentTld={tld}
-        liveTldCount={LIVE_TLDS.length}
-        disabled={busy || !!batchOp}
-      />
-
-      {batchOp && (
-        <MultiTldBatchProgress
-          op={batchOp}
-          statuses={batchStatuses}
-          txHashes={batchTxHashes}
-          activeIdx={batchIdx}
-          error={error}
-          onRetry={retryBatchFromFailed}
-          onCancel={cancelBatch}
-        />
-      )}
-
       <div className="grid grid-cols-[1fr_auto_auto] gap-2">
         <input
           value={label}
@@ -3279,13 +3131,6 @@ function PreLaunchListingsCard({ tld }: { tld: Tld }) {
       title="Pre-launch listings"
       subtitle="reserve → mint → approve → list, fan-out across TLDs, featured"
     >
-      <ApplyAllTldsToggle
-        on={applyAllTlds}
-        onToggle={onToggleApplyAll}
-        currentTld={tld}
-        liveTldCount={LIVE_TLDS.length}
-        disabled={busy}
-      />
 
       {/* Inputs */}
       <div className="grid grid-cols-[1fr_auto] gap-2">
@@ -3665,7 +3510,7 @@ function CleanupCard({ tld: _tld }: { tld: Tld }) {
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="text-[11px] text-white/50">
           {scanning
-            ? "Scanning all 3 TLDs…"
+            ? "Scanning live TLDs…"
             : activeListings === null
             ? "Click Refresh to scan."
             : `Last scan: ${activeListings.length} active listing${activeListings.length === 1 ? "" : "s"}, ${premiumLabels?.length ?? 0} premium override${(premiumLabels?.length ?? 0) === 1 ? "" : "s"} found.`}
@@ -4016,228 +3861,3 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-/* ─────────────────────────── Multi-TLD helpers ─────────────────── */
-
-/** Toggle that controls whether subsequent reserve / unreserve / batch
- *  actions on this card fan out to every live TLD. State persists across
- *  sessions via localStorage. */
-function ApplyAllTldsToggle({
-  on, onToggle, currentTld, liveTldCount, disabled,
-}: {
-  on: boolean;
-  onToggle: (v: boolean) => void;
-  currentTld: Tld;
-  liveTldCount: number;
-  disabled: boolean;
-}) {
-  if (liveTldCount < 2) return null; // nothing to fan out to
-  return (
-    <div className={`mb-3 flex items-center justify-between gap-3 rounded-xl border p-3 transition ${
-      on ? "border-cyan/40 bg-cyan/[0.05]" : "border-white/10 bg-white/[0.02]"
-    }`}>
-      <div className="flex-1">
-        <div className="text-xs font-bold text-white">
-          Apply to all {liveTldCount} TLDs
-          {on && <span className="ml-2 rounded-full border border-cyan/40 bg-cyan/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-cyan">on</span>}
-        </div>
-        <div className="mt-0.5 text-[11px] text-white/55">
-          {on
-            ? `Each reserve / unreserve / batch sends ${liveTldCount} sequential txs (one per TLD).`
-            : `Currently writes to ${tldSuffix(currentTld)} only. Toggle on to fan out to .ins / .igra / .ikas in one click.`}
-        </div>
-      </div>
-      <button
-        onClick={() => onToggle(!on)}
-        disabled={disabled}
-        aria-pressed={on}
-        className={`relative inline-flex h-6 w-11 flex-none items-center rounded-full transition disabled:opacity-40 ${
-          on ? "bg-cyan" : "bg-white/15"
-        }`}
-      >
-        <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition ${
-          on ? "translate-x-6" : "translate-x-1"
-        }`} />
-      </button>
-    </div>
-  );
-}
-
-/** Inline row that exposes the one-shot Sync flow: read this TLD's
- *  reserved labels, diff against the other live TLDs, and offer to
- *  setReservedBatch the missing labels onto each. */
-type SyncStatus =
-  | { kind: "idle" }
-  | { kind: "computing" }
-  | { kind: "ready"; missingByTld?: Partial<Record<Tld, string[]>> }
-  | { kind: "running"; missingByTld?: Partial<Record<Tld, string[]>> }
-  | { kind: "done"; missingByTld?: Partial<Record<Tld, string[]>>; error?: string; message?: string };
-
-function SyncReservationsRow({
-  currentTld, liveTldCount, status, onSync, onStartSync, onDismiss, disabled,
-}: {
-  currentTld: Tld;
-  liveTldCount: number;
-  status: SyncStatus;
-  onSync: () => void;
-  onStartSync: () => void;
-  onDismiss: () => void;
-  disabled: boolean;
-}) {
-  if (liveTldCount < 2) return null;
-  return (
-    <div className="mb-3 rounded-xl border border-plum/30 bg-plum/[0.04] p-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex-1 text-[11px] text-white/65">
-          <span className="font-bold text-plum">Sync</span> — copy {tldSuffix(currentTld)}&rsquo;s on-chain reserved list onto the other {liveTldCount - 1} TLD{liveTldCount - 1 > 1 ? "s" : ""}.
-        </div>
-        {status.kind === "idle" && (
-          <button
-            onClick={onSync}
-            disabled={disabled}
-            className="rounded-lg border border-plum/40 bg-plum/10 px-3 py-1 text-xs font-bold text-plum transition hover:bg-plum/20 disabled:opacity-40"
-          >
-            Compute diff
-          </button>
-        )}
-        {status.kind === "computing" && (
-          <span className="inline-flex items-center gap-1.5 text-xs text-plum">
-            <Loader2 className="h-3 w-3 animate-spin" /> Reading other TLDs…
-          </span>
-        )}
-        {status.kind === "ready" && status.missingByTld && (
-          <button
-            onClick={onStartSync}
-            disabled={disabled}
-            className="rounded-lg border border-plum/40 bg-plum/10 px-3 py-1 text-xs font-bold text-plum transition hover:bg-plum/20 disabled:opacity-40"
-          >
-            Apply diff
-          </button>
-        )}
-        {status.kind === "running" && (
-          <span className="inline-flex items-center gap-1.5 text-xs text-plum">
-            <Loader2 className="h-3 w-3 animate-spin" /> Syncing…
-          </span>
-        )}
-        {status.kind === "done" && (
-          <button
-            onClick={onDismiss}
-            className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/60 hover:text-white"
-          >
-            Dismiss
-          </button>
-        )}
-      </div>
-      {status.kind === "ready" && status.missingByTld && (
-        <div className="mt-2 space-y-1 text-[11px] text-white/55">
-          {(Object.keys(status.missingByTld) as Tld[]).map((t) => (
-            <div key={t}>
-              <span className="font-mono text-white/70">{tldSuffix(t)}</span> ← {status.missingByTld![t]?.length ?? 0} label{(status.missingByTld![t]?.length ?? 0) === 1 ? "" : "s"} to add
-            </div>
-          ))}
-        </div>
-      )}
-      {status.kind === "done" && status.message && (
-        <div className="mt-2 text-[11px] text-emerald-300">{status.message}</div>
-      )}
-      {status.kind === "done" && status.error && (
-        <div className="mt-2 text-[11px] text-amber-300">{status.error}</div>
-      )}
-    </div>
-  );
-}
-
-/** Visual progress strip while a multi-TLD batch is in flight.
- *  Per-TLD chips: pending / signing / mined / failed. */
-function MultiTldBatchProgress({
-  op, statuses, txHashes, activeIdx, error, onRetry, onCancel,
-}: {
-  op: BatchOp;
-  statuses: Record<Tld, BatchTldStatus>;
-  /** hash of each TLD's confirmed tx (set as each step mines) */
-  txHashes: Partial<Record<Tld, `0x${string}`>>;
-  activeIdx: number;
-  error: { message: string } | null;
-  onRetry: () => void;
-  onCancel: () => void;
-}) {
-  const failed = op.tlds.find((t) => statuses[t] === "failed");
-  const allMined = op.tlds.every((t) => statuses[t] === "mined");
-  return (
-    <div className={`mb-3 rounded-xl border p-3 transition ${
-      failed   ? "border-red-500/40 bg-red-500/[0.04]" :
-      allMined ? "border-emerald-500/40 bg-emerald-500/[0.05]" :
-                 "border-cyan/40 bg-cyan/[0.04]"
-    }`}>
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="text-xs font-bold text-white">
-            {allMined ? <><Check className="mr-1 inline h-3 w-3 text-emerald-300" />{op.label} — done</> : op.label}
-          </div>
-          {!allMined && !failed && (
-            <div className="mt-0.5 text-[11px] text-white/55">
-              Step {Math.min(activeIdx + 1, op.tlds.length)} of {op.tlds.length}
-            </div>
-          )}
-          {allMined && (
-            <div className="mt-0.5 text-[11px] text-emerald-200/80">
-              All {op.tlds.length} TLDs confirmed on-chain.
-            </div>
-          )}
-        </div>
-        <div className="flex items-center gap-1.5">
-          {op.tlds.map((t) => {
-            const s = statuses[t];
-            const cls =
-              s === "mined"   ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20" :
-              s === "signing" ? "border-cyan/40 bg-cyan/15 text-cyan" :
-              s === "failed"  ? "border-red-500/40 bg-red-500/10 text-red-300" :
-                                "border-white/15 bg-white/[0.04] text-white/55";
-            const hash = txHashes[t];
-            const inner = (
-              <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${cls}`}>
-                {s === "signing" && <Loader2 className="h-2.5 w-2.5 animate-spin" />}
-                {s === "mined"   && <Check className="h-2.5 w-2.5" />}
-                {tldSuffix(t)}
-              </span>
-            );
-            return s === "mined" && hash ? (
-              <a
-                key={t}
-                href={`${IGRA_EXPLORER}/tx/${hash}`}
-                target="_blank"
-                rel="noreferrer"
-                title={`View ${tldSuffix(t)} tx on Igra explorer`}
-                className="transition hover:opacity-90"
-              >
-                {inner}
-              </a>
-            ) : (
-              <span key={t}>{inner}</span>
-            );
-          })}
-        </div>
-      </div>
-      {failed && (
-        <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-red-300">
-          <span className="truncate" title={error?.message}>
-            Failed on {tldSuffix(failed)} — {error?.message?.split("\n")[0] ?? "unknown error"}
-          </span>
-          <span className="flex flex-none gap-1">
-            <button
-              onClick={onRetry}
-              className="rounded-md border border-red-500/40 bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-200 hover:bg-red-500/20"
-            >
-              Retry
-            </button>
-            <button
-              onClick={onCancel}
-              className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] text-white/60 hover:text-white"
-            >
-              Cancel
-            </button>
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
