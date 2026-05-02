@@ -1,17 +1,17 @@
 # INSdomains — test suite report
 
-**Generated:** 2026-04-30 (re-run after Next.js 15.5.15 bump + .igra-only enforcement at lib layer)
-**Commit:** `ee83903`
+**Generated:** 2026-05-02 (re-run after V2 Registry contract + dual-tier test suite added)
+**Commit:** `<post-Phase-2-push>`
 **Foundry:** `1.6.0-v1.7.0` (forge 1.7.0)
-**solc:** `0.8.24`, optimizer enabled (200 runs)
+**solc:** `0.8.24`, optimizer enabled (2000 runs, via_ir on)
 **Chain:** Igra L2 mainnet · chain id `38833` · native `iKAS`
-**Run host:** insdomains.org production VPS (Hetzner CPX21, Ubuntu 24.04)
+**Run host:** Liam's local Windows + insdomains.org VPS (Hetzner CPX21, Ubuntu 24.04)
 
 > **For wallet / Igra integrators:** these are the Solidity contracts behind insdomains.org's
 > register, list, buy, transfer, primary-name, and resolver flows. Every code path your wallet
-> will call against `INSRegistry` / `INSMarketplace` / `INSResolver` / `INSReverseResolver`
-> is covered below with happy + sad paths + 1024-run fuzz soak. Reproduce locally with
-> `forge test`; CI runs every push at `.github/workflows/contracts.yml`.
+> will call against `INSRegistry` / `INSRegistryIgraV2` / `INSMarketplace` / `INSResolver` /
+> `INSReverseResolver` is covered below with happy + sad paths + 1024-run fuzz soak. Reproduce
+> locally with `forge test`; CI runs every push at `.github/workflows/contracts.yml`.
 
 ---
 
@@ -19,14 +19,14 @@
 
 | | |
 |---|---|
-| **Tests** | **170 passed · 0 failed · 0 skipped** |
-| **Total runtime** | 81 ms (forge in-memory EVM, single-host) |
-| **Fuzz runs** | 1024 per testFuzz_* (default 256, soak run at 1024 — see below) |
-| **Suites** | 7 — Registry / Marketplace / Resolver / ReverseResolver / SubnameExtension / RegistryTldVariants / Integration |
+| **Tests** | **273 passed · 0 failed · 0 skipped** |
+| **Total runtime** | 204 ms (forge in-memory EVM, single-host) |
+| **Fuzz runs** | 1024 per testFuzz_* (V1 + V2 — 15 fuzz tests total = 15,360 fuzz iterations, no counter-examples) |
+| **Suites** | 8 — Registry V1 / Registry V2 (NEW) / Marketplace / Resolver / ReverseResolver / SubnameExtension / RegistryTldVariants / Integration |
 
 ```
-Ran 7 test suites in 81.14ms (151.61ms CPU time):
-170 tests passed, 0 failed, 0 skipped (170 total tests)
+Ran 8 test suites in 204.53ms (625.50ms CPU time):
+273 tests passed, 0 failed, 0 skipped (273 total tests)
 ```
 
 ---
@@ -37,6 +37,7 @@ Ran 7 test suites in 81.14ms (151.61ms CPU time):
 ╭----------------------------+--------+--------+---------╮
 | Test Suite                 | Passed | Failed | Skipped |
 +========================================================+
+| INSRegistryIgraV2Test (NEW)| 103    | 0      | 0       |
 | INSRegistryTest            | 55     | 0      | 0       |
 | INSMarketplaceTest         | 43     | 0      | 0       |
 | INSSubnameExtensionTest    | 27     | 0      | 0       |
@@ -51,6 +52,7 @@ What each suite locks down:
 
 | Suite | What it proves |
 |---|---|
+| `INSRegistryIgraV2Test` | **(NEW for V2)** Forever + Annual register paths, renew-anyone math, extendToForever proration-free price, 30-day grace boundary semantics, post-grace re-registration with correct burn/mint/Transfer-to-zero events, V1→V2 migration (gas-only `claimV1Forever` + double-claim guard + label-collision revert), grace-period admin bounds [7d, 365d], Annual length-tier admin batch, Punycode-shape labels (`xn--…`) accepted by validator, ERC-721 surface, tokenURI for both Forever + Annual pills. **8 fuzz tests @ 1024 runs**: years-math, renewal monotonicity, overpay refund, length-bucket assignment, premium override precedence, grace boundary off-by-one, migration idempotence, Punycode-shape labels. |
 | `INSRegistryTest` | Tiered pricing, reserved-name semantics, ERC-721 mechanics, refund-on-overpay, admin price-tuning, custom-error reverts, label validity (regex + length), 256-run fuzz on bytes32→label round-trip |
 | `INSMarketplaceTest` | Zero-custody listing flow, 2% sale + 1% feature fee math, expiry, approval-revocation kill, paused-cancel-still-works, contract-receiver acceptance/rejection, **3 fuzz suites @ 256 runs**: fee math, feature-fee math, buyer-pays-exact-price |
 | `INSResolverTest` | `addr(node)` via cacheNode, text records, owner-gated `setText`, ENS-namehash round-trip fuzz, ownership-follows-token-transfer, empty-key revert, no-owner revert |
