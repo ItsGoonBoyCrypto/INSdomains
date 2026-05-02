@@ -129,7 +129,9 @@ function Dashboard({ address }: { address: `0x${string}` }) {
           Pre-launch, gated on admin wallet so we can dogfood it privately. */}
       <div className="mt-8">
         <V1MigrationBanner
-          v1TokenIds={owned.list.filter((d) => d.tld === "igra").map((d) => d.tokenId)}
+          v1TokenIds={owned.list
+            .filter((d) => d.tld === "igra" && d.registryVersion === "v1")
+            .map((d) => d.tokenId)}
         />
       </div>
 

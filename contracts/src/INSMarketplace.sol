@@ -10,7 +10,11 @@ interface IERC721Min {
 
 /**
  * @title INSMarketplace
- * @notice Zero-custody marketplace for .ins names.
+ * @notice Zero-custody marketplace for INS names. Originally deployed for
+ *         .ins; the live mainnet instance at
+ *         0xde8df276e93394c0e5dd9fe7a7ff6fd144a3642a is bound to the V1
+ *         .igra Registry by immutable constructor arg. A V2-aware
+ *         instance lands in v2.1 (see docs/V2_SPEC.md).
  *
  * @dev Design notes:
  *   - The NFT never leaves the seller's wallet while listed. Sellers grant
