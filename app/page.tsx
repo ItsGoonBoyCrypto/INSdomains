@@ -36,19 +36,21 @@ export default function Home() {
 
         <HeroSearch />
 
-        {/* Zero-renewal callout — the product's core promise */}
+        {/* Zero-renewal callout — the product's core promise. New copy
+            references the dual model that lands in V2 (Annual coming soon),
+            keeping Forever as the headline. */}
         <div className="mx-auto mt-10 inline-flex max-w-xl items-center gap-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.06] px-5 py-4 text-left shadow-[0_0_40px_rgba(52,211,153,0.08)]">
           <div className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-emerald-500/15 text-2xl font-black text-emerald-300">
-            0
+            ∞
           </div>
           <div>
             <div className="text-sm font-bold text-white">
-              0 iKAS renewal fee · forever
+              Forever from <span className="text-cyan">500 iKAS</span> · Annual tier coming soon
             </div>
             <p className="mt-0.5 text-xs text-white/60">
-              Pay once. No annual rent, no expiry, no grace-period auctions.
-              The Registry has no renewal function — your name can&rsquo;t
-              lapse.
+              Pick Forever to lock your name in for life with no renewals
+              ever. Cheaper 1-year Annual tier launches with V2; current
+              holders get the new Forever tier grandfathered for gas only.
             </p>
           </div>
         </div>
@@ -60,7 +62,7 @@ export default function Home() {
           </p>
           <div className="w-full max-w-[420px]">
             <Link href="/app?q=forever" className="block transition hover:opacity-95">
-              <NameCard label="forever" tld="igra" tier="STANDARD · 30 iKAS" tokenId={null} />
+              <NameCard label="forever" tld="igra" tier="FOREVER · 500 iKAS" tokenId={null} />
             </Link>
           </div>
           <p className="mt-3 text-xs text-white/40">
@@ -78,7 +80,7 @@ export default function Home() {
           <span className="dot-sep" />
           <span>Kaspa-secured</span>
           <span className="dot-sep" />
-          <span className="text-emerald-300">0 renewal · forever</span>
+          <span className="text-emerald-300">Pay once · own forever</span>
         </div>
 
         {/* Feature cards */}
@@ -87,7 +89,7 @@ export default function Home() {
             icon={<Search className="h-6 w-6" />}
             tint="cyan"
             title="Search"
-            body="Find any INS name instantly across all three TLDs. Check availability on the Igra registry in milliseconds."
+            body="Find any .igra name instantly. Check availability on the Igra registry in milliseconds — no signups, no rate limits."
             href="/app"
           />
           <FeatureCard
@@ -122,7 +124,7 @@ export default function Home() {
 
         {/* Resolve demo */}
         <div className="mt-20 inline-flex flex-wrap items-center justify-center gap-4 rounded-2xl glass px-6 py-4">
-          <span className="ins-gradient-text text-xl font-bold">grok.ins</span>
+          <span className="ins-gradient-text text-xl font-bold">alice.igra</span>
           <ArrowRight className="h-4 w-4 text-cyan" />
           <span className="font-mono text-sm text-white/70">0x71C4…f3a2</span>
           <span className="ml-2 rounded-full bg-cyan/10 px-2 py-0.5 text-[10px] font-medium text-cyan">

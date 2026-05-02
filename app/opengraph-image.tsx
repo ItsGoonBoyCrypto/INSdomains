@@ -9,12 +9,15 @@ const CYAN = "#00f0ff";
 const PLUM = "#a855f7";
 const INK = "#0a0a0a";
 
+/** Pricing structure (V2 dual model). For now V1 ships Forever-only at the
+ *  Forever prices below; V2 adds Annual. The OG card shows both columns so
+ *  social previews communicate the full pricing at a glance. */
 const TIERS = [
-  { len: "1-char", price: "1,000", tag: "ultra-premium" },
-  { len: "2-char", price: "500",   tag: "premium" },
-  { len: "3-char", price: "250",   tag: "rare" },
-  { len: "4-char", price: "50",    tag: "uncommon" },
-  { len: "5–32",   price: "30",    tag: "standard" },
+  { len: "1-char", annual: "1,000", forever: "4,000", tag: "ultra-premium" },
+  { len: "2-char", annual: "800",   forever: "2,000", tag: "premium" },
+  { len: "3-char", annual: "500",   forever: "1,200", tag: "rare" },
+  { len: "4-char", annual: "250",   forever: "800",   tag: "uncommon" },
+  { len: "5–32",   annual: "50",    forever: "500",   tag: "standard" },
 ];
 
 export default async function OGImage() {
@@ -134,7 +137,7 @@ export default async function OGImage() {
                   letterSpacing: 2,
                 }}
               >
-                STANDARD · 30 iKAS
+                FOREVER · 500 iKAS
               </div>
               <div
                 style={{
@@ -222,7 +225,7 @@ export default async function OGImage() {
             </div>
           </div>
 
-          {/* ── RIGHT: headline + pricing table ─────────────────── */}
+          {/* ── RIGHT: headline + dual-tier pricing table ─────────── */}
           <div
             style={{
               display: "flex",
@@ -233,11 +236,11 @@ export default async function OGImage() {
             <div
               style={{
                 display: "flex",
-                fontSize: 38,
+                fontSize: 34,
                 fontWeight: 900,
-                lineHeight: 1.1,
+                lineHeight: 1.05,
                 letterSpacing: -1.5,
-                marginBottom: 4,
+                marginBottom: 2,
               }}
             >
               Pay once.
@@ -245,15 +248,68 @@ export default async function OGImage() {
             <div
               style={{
                 display: "flex",
-                fontSize: 38,
+                fontSize: 34,
                 fontWeight: 900,
-                lineHeight: 1.1,
+                lineHeight: 1.05,
                 letterSpacing: -1.5,
                 color: CYAN,
-                marginBottom: 16,
+                marginBottom: 12,
               }}
             >
               Own forever.
+            </div>
+
+            {/* Column header — Annual / Forever labels above the pricing rows */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                padding: "0 14px 6px 14px",
+                fontSize: 9,
+                fontWeight: 800,
+                letterSpacing: 2,
+                color: "rgba(255,255,255,0.45)",
+                textTransform: "uppercase",
+              }}
+            >
+              <div style={{ display: "flex", width: 110 }}>Length</div>
+              <div
+                style={{
+                  display: "flex",
+                  width: 105,
+                  alignItems: "center",
+                  gap: 5,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    width: 5,
+                    height: 5,
+                    borderRadius: 999,
+                    background: "#34d399",
+                  }}
+                />
+                Annual
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    width: 5,
+                    height: 5,
+                    borderRadius: 999,
+                    background: CYAN,
+                  }}
+                />
+                Forever
+              </div>
             </div>
 
             {TIERS.map((t) => (
@@ -262,22 +318,26 @@ export default async function OGImage() {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "9px 16px",
-                  marginBottom: 5,
-                  borderRadius: 12,
+                  padding: "7px 14px",
+                  marginBottom: 4,
+                  borderRadius: 11,
                   background: "rgba(255,255,255,0.035)",
                   border: "1px solid rgba(255,255,255,0.08)",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    width: 110,
+                    flexDirection: "column",
+                  }}
+                >
                   <div
                     style={{
                       display: "flex",
-                      width: 78,
-                      fontSize: 15,
-                      fontWeight: 700,
-                      color: "rgba(255,255,255,0.85)",
+                      fontSize: 14,
+                      fontWeight: 800,
+                      color: "rgba(255,255,255,0.9)",
                     }}
                   >
                     {t.len}
@@ -285,8 +345,8 @@ export default async function OGImage() {
                   <div
                     style={{
                       display: "flex",
-                      fontSize: 11,
-                      letterSpacing: 2,
+                      fontSize: 9,
+                      letterSpacing: 1.5,
                       color: "rgba(255,255,255,0.4)",
                       textTransform: "uppercase",
                     }}
@@ -294,29 +354,77 @@ export default async function OGImage() {
                     {t.tag}
                   </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    width: 105,
+                    alignItems: "baseline",
+                    gap: 4,
+                  }}
+                >
                   <div
                     style={{
                       display: "flex",
-                      fontSize: 22,
+                      fontSize: 18,
+                      fontWeight: 800,
+                      color: "rgba(52,211,153,0.85)",
+                    }}
+                  >
+                    {t.annual}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      fontSize: 11,
+                      color: "rgba(255,255,255,0.4)",
+                    }}
+                  >
+                    /yr
+                  </div>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "baseline",
+                    gap: 4,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      fontSize: 20,
                       fontWeight: 900,
                       color: CYAN,
                     }}
                   >
-                    {t.price}
+                    {t.forever}
                   </div>
                   <div
                     style={{
                       display: "flex",
-                      fontSize: 13,
+                      fontSize: 11,
                       color: "rgba(255,255,255,0.45)",
                     }}
                   >
-                    iKAS
+                    once
                   </div>
                 </div>
               </div>
             ))}
+
+            {/* Footnote — "all prices in iKAS" + V2 disclaimer */}
+            <div
+              style={{
+                display: "flex",
+                marginTop: 8,
+                paddingLeft: 14,
+                fontSize: 11,
+                color: "rgba(255,255,255,0.45)",
+                letterSpacing: 0.3,
+              }}
+            >
+              All prices in iKAS · Annual launches with V2
+            </div>
           </div>
         </div>
 

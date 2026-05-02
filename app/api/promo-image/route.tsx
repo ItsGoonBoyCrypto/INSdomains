@@ -28,6 +28,16 @@ const SIZES: Record<string, { w: number; h: number; scale: number }> = {
   "4k": { w: 3840, h: 2160, scale: 2.0 },
 };
 
+/** V2 pricing — Annual (1-year renewable) + Forever (pay once). All in iKAS.
+ *  Mirrors the table on /about + the OG card so all three stay in sync. */
+const TIERS = [
+  { len: "1-char", annual: "1,000", forever: "4,000" },
+  { len: "2-char", annual: "800",   forever: "2,000" },
+  { len: "3-char", annual: "500",   forever: "1,200" },
+  { len: "4-char", annual: "250",   forever: "800"   },
+  { len: "5–32",   annual: "50",    forever: "500"   },
+];
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const sizeParam = (url.searchParams.get("size") ?? "hd").toLowerCase();
@@ -213,14 +223,133 @@ export async function GET(req: Request) {
           </div>
         </div>
 
+        {/* ── Pricing strip — Annual / Forever per length tier ──── */}
+        <div
+          style={{
+            display: "flex",
+            marginTop: s(40),
+            padding: `${s(22)}px ${s(28)}px`,
+            borderRadius: s(28),
+            border: "1px solid rgba(255,255,255,0.08)",
+            background: "linear-gradient(120deg, rgba(0,240,255,0.05) 0%, rgba(168,85,247,0.06) 100%)",
+            alignItems: "center",
+            gap: s(20),
+          }}
+        >
+          {/* Section label */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              width: s(180),
+              flex: "0 0 auto",
+              gap: s(4),
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                fontSize: s(11),
+                fontWeight: 800,
+                letterSpacing: s(3),
+                color: "rgba(255,255,255,0.45)",
+                textTransform: "uppercase",
+              }}
+            >
+              Pricing · iKAS
+            </div>
+            <div
+              style={{
+                display: "flex",
+                fontSize: s(13),
+                color: "rgba(255,255,255,0.55)",
+              }}
+            >
+              Annual launches V2
+            </div>
+          </div>
+
+          {/* Tier chips, one per length */}
+          {TIERS.map((t, i) => (
+            <div
+              key={t.len}
+              style={{
+                display: "flex",
+                flex: 1,
+                flexDirection: "column",
+                gap: s(4),
+                padding: `${s(10)}px ${s(14)}px`,
+                borderRadius: s(14),
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.06)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: s(11),
+                  fontWeight: 800,
+                  color: "rgba(255,255,255,0.55)",
+                  letterSpacing: s(1.5),
+                  textTransform: "uppercase",
+                }}
+              >
+                {t.len}
+              </div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: s(5) }}>
+                <div
+                  style={{
+                    display: "flex",
+                    fontSize: s(15),
+                    fontWeight: 800,
+                    color: "rgba(52,211,153,0.85)",
+                  }}
+                >
+                  {t.annual}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    fontSize: s(10),
+                    color: "rgba(255,255,255,0.4)",
+                  }}
+                >
+                  /yr
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: s(5) }}>
+                <div
+                  style={{
+                    display: "flex",
+                    fontSize: s(17),
+                    fontWeight: 900,
+                    color: CYAN,
+                  }}
+                >
+                  {t.forever}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    fontSize: s(10),
+                    color: "rgba(255,255,255,0.45)",
+                  }}
+                >
+                  once
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
         {/* ── Bottom strip: site / chain / handle ────────────────── */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            marginTop: s(60),
-            paddingTop: s(36),
+            marginTop: s(28),
+            paddingTop: s(24),
             borderTop: "1px solid rgba(255,255,255,0.08)",
           }}
         >

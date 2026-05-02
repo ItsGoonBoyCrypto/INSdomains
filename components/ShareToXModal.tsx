@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { X, Check, Sparkles, ExternalLink } from "lucide-react";
+import { REGISTRY_ADDRESSES } from "@/lib/contracts";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://insdomains.org";
 // Once the official @ handle exists, set NEXT_PUBLIC_X_HANDLE in env (e.g. "InsDomains")
@@ -11,6 +12,8 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://insdomains.org";
 // $Igra cashtag (better discovery on X than the @IgraNetwork mention).
 const X_HANDLE = process.env.NEXT_PUBLIC_X_HANDLE?.replace(/^@/, "") || "";
 const CHAIN_CASHTAG = "$Igra";
+const EXPLORER =
+  process.env.NEXT_PUBLIC_IGRA_EXPLORER ?? "https://explorer.igralabs.com";
 
 /**
  * Share-to-X modal that auto-pops on a successful mint. Pre-loads the NFT
@@ -75,6 +78,14 @@ export function ShareToXModal({
   const intentUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(
     tweetText,
   )}&url=${encodeURIComponent(SITE)}`;
+
+  // Igra explorer (Blockscout-flavoured) deep-link for this specific NFT.
+  // Path: /token/<registry>/instance/<tokenId>. Falls back to the contract
+  // page if we somehow don't have a token id.
+  const igraRegistry = REGISTRY_ADDRESSES.igra;
+  const explorerUrl = tokenIdStr
+    ? `${EXPLORER}/token/${igraRegistry}/instance/${tokenIdStr}`
+    : `${EXPLORER}/address/${igraRegistry}`;
 
   return (
     <div
@@ -165,6 +176,15 @@ export function ShareToXModal({
             <Sparkles className="h-4 w-4 text-cyan" />
             View in My Names
           </Link>
+          <a
+            href={explorerUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-5 py-2.5 text-xs font-semibold text-white/65 transition hover:border-cyan/40 hover:text-cyan"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            View on Igra Explorer
+          </a>
           <button
             onClick={onClose}
             className="block w-full pt-1 text-center text-xs text-white/40 hover:text-white/70"

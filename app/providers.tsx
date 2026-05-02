@@ -6,6 +6,7 @@ import { WagmiProvider } from "wagmi";
 import { useState } from "react";
 import { wagmiConfig } from "@/lib/wagmi";
 import { SafeAppInit } from "@/components/SafeAppInit";
+import { WalletReconnectPrompt } from "@/components/WalletReconnectPrompt";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -28,6 +29,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
           modalSize="compact"
         >
           {children}
+          {/* Sits inside RainbowKitProvider so it can call useConnectModal().
+              Floats globally; renders nothing unless the user looks like a
+              returning visitor whose session has lapsed (we don't auto-
+              reconnect — see WalletReconnectPrompt's docblock). */}
+          <WalletReconnectPrompt />
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { label: "My Domains", href: "/domains" },
   { label: "Marketplace", href: "/marketplace" },
   { label: "About", href: "/about" },
+  { label: "FAQ", href: "/faq" },
 ];
 
 export function Navbar() {

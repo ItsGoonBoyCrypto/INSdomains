@@ -2412,6 +2412,24 @@ function TreasuryCard({ tld }: { tld: Tld }) {
   const busy = isPending || isConfirming;
   const valid = /^0x[a-fA-F0-9]{40}$/.test(to.trim());
 
+  // ── DAO handoff sub-state. Transfers Registry ownership to a DAO multisig
+  // in one click — same on-chain call as OwnershipCard's Transfer, surfaced
+  // here so it lives next to "where the money goes" in the admin UX. Two-
+  // step confirm because it's irreversible.
+  const [daoAddr, setDaoAddr] = useState("");
+  const [daoConfirming, setDaoConfirming] = useState(false);
+  const {
+    writeContract: writeDao,
+    data: daoHash,
+    isPending: daoPending,
+    error: daoError,
+    reset: daoReset,
+  } = useWriteContract();
+  const { isLoading: daoConfirming2, isSuccess: daoConfirmed } =
+    useWaitForTransactionReceipt({ hash: daoHash });
+  const daoBusy = daoPending || daoConfirming2;
+  const daoValid = /^0x[a-fA-F0-9]{40}$/.test(daoAddr.trim());
+
   useEffect(() => {
     if (isConfirmed) {
       refetch();
@@ -2420,6 +2438,15 @@ function TreasuryCard({ tld }: { tld: Tld }) {
       return () => clearTimeout(t);
     }
   }, [isConfirmed, refetch, reset]);
+
+  useEffect(() => {
+    if (daoConfirmed) {
+      setDaoAddr("");
+      setDaoConfirming(false);
+      const t = setTimeout(daoReset, 1500);
+      return () => clearTimeout(t);
+    }
+  }, [daoConfirmed, daoReset]);
 
   const onWithdraw = () => {
     if (!valid) return;
@@ -2431,13 +2458,27 @@ function TreasuryCard({ tld }: { tld: Tld }) {
     });
   };
 
+  const onTransferToDao = () => {
+    if (!daoValid) return;
+    if (!daoConfirming) {
+      setDaoConfirming(true);
+      return;
+    }
+    writeDao({
+      address: REGISTRY_ADDRESS,
+      abi: REGISTRY_ABI,
+      functionName: "transferOwnership",
+      args: [daoAddr.trim() as `0x${string}`],
+    });
+  };
+
   const displayBalance = REGISTRY_LIVE && balance ? `${Number(balance.formatted).toFixed(4)} iKAS` : "0 iKAS";
 
   return (
     <Card
       icon={<Wallet className="h-5 w-5 text-cyan" />}
       title="Treasury"
-      subtitle="withdraw contract balance to a destination"
+      subtitle="withdraw contract balance · hand off to DAO"
     >
       <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
         <div className="text-xs uppercase tracking-wider text-white/40">Registry balance</div>
@@ -2468,6 +2509,60 @@ function TreasuryCard({ tld }: { tld: Tld }) {
       <div className="mt-2 flex items-center justify-between">
         <TxError message={error?.message} onReset={reset} />
         <TxLink hash={hash} />
+      </div>
+
+      {/* ── DAO Handoff ────────────────────────────────────
+           One-click ownership transfer of THIS Registry to a DAO multisig.
+           Same on-chain call as the Ownership card below; this is the
+           shorthand surfaced next to Treasury so the "hand it to the
+           community" path is the obvious one when the time comes. */}
+      <div className="mt-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.03] p-4">
+        <div className="flex items-center gap-2">
+          <Gift className="h-4 w-4 text-emerald-300" />
+          <h4 className="text-sm font-bold text-white">Transfer to DAO</h4>
+          <span className="ml-auto rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-200">
+            irreversible
+          </span>
+        </div>
+        <p className="mt-1 text-xs text-white/50">
+          Hand <span className="font-mono text-white/70">{tld}</span> Registry
+          ownership to the DAO multisig. After this tx, only the DAO can
+          adjust pricing, reservations, treasury withdrawals, and pause —
+          this admin console will no longer have admin rights.
+        </p>
+        <div className="mt-3 flex gap-2">
+          <input
+            value={daoAddr}
+            onChange={(e) => { setDaoAddr(e.target.value); setDaoConfirming(false); }}
+            placeholder="0x… DAO multisig address"
+            className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 font-mono text-sm placeholder:text-white/30 focus:outline-none focus:border-emerald-500/40"
+            spellCheck={false}
+          />
+          <button
+            onClick={onTransferToDao}
+            disabled={!daoValid || !REGISTRY_LIVE || daoBusy}
+            className={`inline-flex items-center gap-1 rounded-xl border px-4 text-sm font-semibold transition disabled:opacity-40 ${
+              daoConfirming
+                ? "border-red-500/40 bg-red-500/20 text-red-200 hover:bg-red-500/30"
+                : "border-emerald-500/30 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20"
+            }`}
+          >
+            {daoBusy ? <><Loader2 className="h-4 w-4 animate-spin" />Handing over…</>
+              : daoConfirming ? <>Confirm DAO handoff →</>
+              : <>Transfer to DAO</>}
+          </button>
+        </div>
+        <div className="mt-2 flex items-center justify-between">
+          <TxError message={daoError?.message} onReset={daoReset} />
+          <TxLink hash={daoHash} />
+        </div>
+        <p className="mt-3 text-[10px] text-white/35">
+          Hands <code className="font-mono">{shortAddr(REGISTRY_ADDRESS)}</code> to
+          the address above via <code className="font-mono">transferOwnership(newOwner)</code>.
+          Marketplace + ReverseResolver have their own ownership — transfer
+          those separately from the Marketplace card / Ownership card if
+          you want full ecosystem handoff.
+        </p>
       </div>
     </Card>
   );

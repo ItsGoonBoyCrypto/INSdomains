@@ -16,6 +16,7 @@ const COLS: { title: string; items: FooterItem[] }[] = [
       { label: "My Domains", href: "/domains" },
       { label: "Marketplace", href: "/marketplace" },
       { label: "About", href: "/about" },
+      { label: "FAQ", href: "/faq" },
     ],
   },
   {
@@ -26,12 +27,20 @@ const COLS: { title: string; items: FooterItem[] }[] = [
       { label: "GitHub", href: "https://github.com/ItsGoonBoyCrypto/INSdomains", external: true },
     ],
   },
+  {
+    title: "Network",
+    items: [
+      { label: "Igra Explorer", href: "https://explorer.igralabs.com", external: true },
+      { label: "Igra Labs", href: "https://igralabs.com", external: true },
+      { label: "Treasury Safe", href: "https://explorer.igralabs.com/address/0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1", external: true },
+    ],
+  },
 ];
 
 export function Footer() {
   return (
     <footer className="mt-32 border-t border-white/[0.06] bg-[#050505] px-6 py-16">
-      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-10 md:grid-cols-4">
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-10 md:grid-cols-5">
         <div className="col-span-2">
           <div className="flex items-center gap-2">
             <RooftopMark />

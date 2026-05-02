@@ -6,6 +6,7 @@ import {
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { RecentMintsCarousel } from "@/components/RecentMintsCarousel";
+import { PartnersSection } from "@/components/PartnersSection";
 
 const REGISTRY_INS  = "0x535ff4A6710C2b0d087c5afF01b16fE10bC34D46";
 const REGISTRY_IGRA = "0x42c2f5AA0c4aACfD07e5fBe65B898212c1c2879c";
@@ -45,8 +46,8 @@ export default function AboutPage() {
         <div className="mt-10 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] shadow-[0_0_80px_rgba(0,240,255,0.08),0_0_120px_rgba(168,85,247,0.06)]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/opengraph-image?v=20260426e"
-            alt="INS — Igra Name Service overview: sample forever.igra NFT and tiered iKAS pricing"
+            src="/opengraph-image?v=20260502dual"
+            alt="INS — Igra Name Service overview: sample forever.igra NFT and the dual Annual / Forever iKAS pricing tiers"
             width={1200}
             height={630}
             className="block h-auto w-full"
@@ -77,6 +78,10 @@ export default function AboutPage() {
         <section className="mt-12">
           <RecentMintsCarousel />
         </section>
+
+        {/* Partners — orgs/teams formally collaborating. Day-1 = Igra Labs
+            only; new tiles auto-add as integrations land. */}
+        <PartnersSection />
 
         <section className="mt-16">
           <h2 className="text-2xl font-bold">Why forever?</h2>
@@ -132,25 +137,38 @@ export default function AboutPage() {
         <section className="mt-16">
           <h2 className="text-2xl font-bold">How the pricing works</h2>
           <p className="mt-3 text-white/60">
-            Tiered iKAS pricing, baked into the contract. Shorter names are
-            rarer, so they cost more. The fee stream funds the treasury Safe,
-            deployed into grants, liquidity, and ecosystem spend under
-            transparent multisig control.
+            Two tiers per name length. Pick <span className="text-cyan font-semibold">Forever</span> at
+            registration to lock the name in for life with no renewals; the cheaper{" "}
+            <span className="text-emerald-300 font-semibold">Annual</span> tier launches
+            with V2 (this quarter). Today every mint is Forever \u2014 V1 holders are
+            grandfathered into V2 Forever for gas only.
           </p>
-          <div className="mt-5 grid gap-3 sm:grid-cols-5">
-            <TierChip color="plum"    len="1-char"  price="1,000 iKAS" tag="ultra-premium" />
-            <TierChip color="plum"    len="2-char"  price="500 iKAS"   tag="premium" />
-            <TierChip color="amber"   len="3-char"  price="250 iKAS"   tag="rare" />
-            <TierChip color="cyan"    len="4-char"  price="50 iKAS"    tag="uncommon" />
-            <TierChip color="emerald" len={"5\u201332"}   price="30 iKAS"    tag="standard" />
+
+          <div className="mt-5 overflow-hidden rounded-2xl border border-white/10">
+            <div className="grid grid-cols-[1.2fr_1fr_1fr] items-center gap-3 bg-white/[0.04] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-white/45">
+              <div>Length tier</div>
+              <div className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                Annual <span className="text-white/30 normal-case tracking-normal text-[9px]">(V2 \u2014 soon)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-cyan" />
+                Forever <span className="text-cyan/70 normal-case tracking-normal text-[9px]">(live now)</span>
+              </div>
+            </div>
+            <PriceRow tier="1-char"  tag="ultra-premium" annual="1,000" forever="4,000" />
+            <PriceRow tier="2-char"  tag="premium"       annual="800"   forever="2,000" />
+            <PriceRow tier="3-char"  tag="rare"          annual="500"   forever="1,200" />
+            <PriceRow tier="4-char"  tag="uncommon"      annual="250"   forever="800" />
+            <PriceRow tier={"5\u201332"} tag="standard" annual="50"    forever="500"   last />
           </div>
-          <p className="mt-4 text-xs text-white/45">
-            Paid <span className="text-emerald-300">once</span> in native iKAS at registration.
-            <span className="ml-2 text-white/30">\u00b7</span>{" "}
-            <span className="ml-2">No renewal fee \u2014 the contract has no function to charge one.</span>
-            <span className="ml-2 text-white/30">\u00b7</span>{" "}
-            <span className="ml-2">Marketplace: 2% seller fee on resale, 0% buyer fee.</span>
-          </p>
+
+          <ul className="mt-4 space-y-1.5 text-xs text-white/55">
+            <li>\u00b7 All prices in native iKAS, paid <span className="text-white/80">once</span> at registration (Forever) or per year (Annual).</li>
+            <li>\u00b7 Annual names get a <span className="text-white/80">30-day grace period</span> after expiry before re-entering the public registry.</li>
+            <li>\u00b7 Annual \u2192 Forever upgrade available any time at the price difference.</li>
+            <li>\u00b7 Marketplace: <span className="text-white/80">2% seller fee</span> on resale, <span className="text-white/80">0% buyer fee</span>. Hard cap 5% \u2014 even a compromised owner key can never extract more.</li>
+          </ul>
         </section>
 
         <section className="mt-16">
@@ -158,7 +176,7 @@ export default function AboutPage() {
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <StackRow
               title="Registry + Resolver + Marketplace"
-              body="Solidity 0.8.24 · Foundry · 116 tests across 4 suites (incl. 3 × 256-run fuzz) covering all 3 TLDs. Each contract deployed atomically with ownership transferred to the treasury Safe in the same broadcast — deployer EOA never retained control."
+              body="Solidity 0.8.24 · Foundry · 170 tests across 5 suites (incl. 7 fuzz tests at 1024 runs each) covering Registry / Resolver / Marketplace / Subnames. Each contract deployed atomically with ownership transferred to the treasury Safe in the same broadcast — deployer EOA never retained control."
             />
             <StackRow
               title="Frontend"
@@ -215,8 +233,13 @@ export default function AboutPage() {
             <Milestone done title="Reverse resolution" body="primaryName(address) so block explorers, bots and dApps can render a name next to an address." />
             <Milestone done title="Zero-custody marketplace" body="Fixed-price listings, 2% seller fee + 1% optional featured promotion. Buyer pays 0%. NFT stays in the seller's wallet until the moment of sale." />
             <Milestone done title="Live activity feed" body="@insdomainsbot in the INS Telegram posts every mint, listing, and sale in real time so the community sees activity happen." />
+            <Milestone done title="Public REST API + integration docs" body="Free, no-auth REST API at /api/* + INTEGRATION.md guide for wallet/explorer devs. One fetch() resolves any name → address." />
             <Milestone title="Subnames (code complete · activates v1.1)" body="Free child names under any .igra parent — pay.alice.igra, vault.alice.igra, etc. Contract + 27 Foundry tests + full UI shipped today; launches with enabled=false on chain. Activation planned ~1 month post-mainnet once v1 is stable. Full design at docs/SUBNAMES.md." />
-            <Milestone title="Cross-chain reverse resolution" body="Explorer + wallet integrations to render .igra names natively across Kaspa L1 + Igra L2 + other EVMs that bridge to Igra." />
+            <Milestone title="V2 — dual registration model (1-year + Forever)" body="V2 Registry adds a 1-year renewable tier alongside Forever. Cheaper entry price, optional renewal, 30-day grace period after expiry. V1 holders get the new Forever tier grandfathered for free (gas only). Subname holders get a one-click upgrade-to-root flow at the current Forever price." />
+            <Milestone title="Emoji & Unicode names" body="V2 widens the label validator to accept full Unicode via Punycode (xn--ls8h.igra renders as 🦄.igra in wallets) — same standard ENS uses. Single-emoji + double-emoji slots are reserved for fair launch." />
+            <Milestone title="Cross-chain reverse resolution" body="Explorer + wallet integrations to render .igra names natively across Kaspa L1 + Igra L2 + other EVMs that bridge to Igra. First wallets land via the public REST API." />
+            <Milestone title=".eth interop (CCIP-Read gateway)" body="Resolver is namehash-compatible with ENS, so a CCIP-Read gateway lets .eth-aware wallets resolve .igra names natively + lets users link their alice.igra → alice.eth profiles. Coordinated rollout with the ENS team." />
+            <Milestone title="DAO partnership transfer" body="Once the community is large enough, ownership of the treasury Safe + price knobs migrates to a community DAO. Phase one is a simple admin-page handoff to the DAO multisig; phase two is on-chain governance." />
             <Milestone title="Renounce admin on parameter knobs" body="Once tier pricing + marketplace fees prove out, renounce the admin ability to change them. The Safe keeps emergency pause; the rest becomes immutable." />
           </ol>
         </section>
@@ -268,24 +291,37 @@ function Stat({ icon, title, body }: { icon: React.ReactNode; title: string; bod
   );
 }
 
-function TierChip({
-  color, len, price, tag,
+function PriceRow({
+  tier, tag, annual, forever, last = false,
 }: {
-  color: "red" | "plum" | "amber" | "cyan" | "emerald";
-  len: string; price: string; tag: string;
+  tier: string;
+  tag: string;
+  annual: string;
+  forever: string;
+  last?: boolean;
 }) {
-  const map: Record<typeof color, string> = {
-    red:     "border-red-500/30 bg-red-500/10 text-red-300",
-    plum:    "border-plum/30 bg-plum/10 text-plum",
-    amber:   "border-amber-500/30 bg-amber-500/10 text-amber-300",
-    cyan:    "border-cyan/30 bg-cyan/10 text-cyan",
-    emerald: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-  };
   return (
-    <div className={`rounded-xl border px-3 py-2.5 ${map[color]}`}>
-      <div className="text-[11px] uppercase tracking-wider opacity-70">{len}</div>
-      <div className="text-sm font-bold">{price}</div>
-      <div className="text-[10px] opacity-60">{tag}</div>
+    <div
+      className={`grid grid-cols-[1.2fr_1fr_1fr] items-center gap-3 px-4 py-3 ${
+        last ? "" : "border-b border-white/5"
+      }`}
+    >
+      <div>
+        <div className="text-sm font-bold text-white">{tier}</div>
+        <div className="text-[10px] uppercase tracking-wider text-white/40">{tag}</div>
+      </div>
+      <div>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-base font-bold text-emerald-300/80">{annual}</span>
+          <span className="text-[10px] text-white/40">iKAS / yr</span>
+        </div>
+      </div>
+      <div>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-base font-bold text-cyan">{forever}</span>
+          <span className="text-[10px] text-white/40">iKAS · once</span>
+        </div>
+      </div>
     </div>
   );
 }
