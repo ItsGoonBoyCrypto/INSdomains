@@ -33,10 +33,15 @@ const FAQS: { section: string; items: FaqItem[] }[] = [
         q: "What is INS?",
         a: (
           <>
-            INS (Igra Name Service) is the permanent name service native to{" "}
+            INS (Igra Name Service) is the name service native to{" "}
             <strong>Igra L2</strong>. Every name is an ERC-721 NFT with on-chain
-            SVG art. You buy a name once, in native iKAS, and you own it forever
-            — there&rsquo;s no renewal fee, no expiry, no grace-period auction.
+            SVG art, paid in native iKAS. V2 (live since 2026-05-02) ships{" "}
+            <strong className="text-cyan">two tenures</strong>: pick{" "}
+            <strong>Forever</strong> (pay once, no renewals — the brand
+            promise) or <strong className="text-emerald-300">Annual</strong>{" "}
+            (1-year renewable, ~5x cheaper, 30-day grace period). Existing V1
+            holders keep their names forever and can migrate to V2 Forever{" "}
+            <strong>for gas only</strong>.
           </>
         ),
       },
@@ -59,11 +64,26 @@ const FAQS: { section: string; items: FaqItem[] }[] = [
         q: "Is there a renewal fee?",
         a: (
           <>
-            <strong>No.</strong> The contract does not implement a renewal
-            function. Once you mint a Forever name, no one — not even the
-            multisig — can charge you to keep it. If we ever ship optional
-            1-year renewable names alongside Forever (planned for V2), the
-            choice is yours at registration time.
+            <strong>Depends on the tenure you pick.</strong> V2 ships two
+            options at registration:
+            <ul className="mt-3 space-y-1 text-sm">
+              <li>· <strong className="text-cyan">Forever</strong> — pay once, no
+                renewals, ever. The contract has no function to charge you again.
+                This is the brand promise; pick this if you want the name for life.</li>
+              <li>· <strong className="text-emerald-300">Annual</strong> —
+                1-year renewable, ~5x cheaper than Forever per name. Renew any
+                time before expiry (or anyone can renew on your behalf). 30-day
+                grace period after expiry, then the name returns to public
+                availability if you haven&rsquo;t renewed. You can also upgrade
+                an Annual to Forever at any point by paying the Forever price
+                difference.</li>
+            </ul>
+            <p className="mt-3">
+              V1 holders (legacy mints from before V2 shipped 2026-05-02) keep
+              their names forever — and can migrate to V2 Forever for{" "}
+              <strong>gas only</strong> via the migration banner on{" "}
+              <a href="/domains" className="text-cyan underline decoration-dotted underline-offset-2">/domains</a>.
+            </p>
           </>
         ),
       },
@@ -76,20 +96,31 @@ const FAQS: { section: string; items: FaqItem[] }[] = [
         q: "What does a name cost?",
         a: (
           <>
-            Tiered by length, paid <strong>once</strong> in native iKAS.
-            Today (V1, Forever-only):
-            <ul className="mt-3 space-y-1 text-sm">
-              <li>· 1-char — <strong>1,000 iKAS</strong></li>
-              <li>· 2-char — <strong>500 iKAS</strong></li>
-              <li>· 3-char — <strong>250 iKAS</strong></li>
-              <li>· 4-char — <strong>50 iKAS</strong></li>
-              <li>· 5–32 chars — <strong>30 iKAS</strong></li>
-            </ul>
-            <p className="mt-3">
-              V2 (planned this quarter) introduces a dual model: keep buying{" "}
-              <em>Forever</em> at the prices above, or pick the cheaper{" "}
-              <em>1-year renewable</em> tier. V1 holders get the new Forever
-              tier grandfathered for free (gas only).
+            Tiered by length. Pick <strong className="text-cyan">Forever</strong>{" "}
+            (pay once, own for life) or <strong className="text-emerald-300">Annual</strong>{" "}
+            (1-year renewable, 30-day grace). Both in native iKAS:
+            <table className="mt-3 w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/10 text-left text-[10px] uppercase tracking-wider text-white/50">
+                  <th className="py-1 pr-4">Length</th>
+                  <th className="py-1 pr-4 text-cyan">Forever (once)</th>
+                  <th className="py-1 text-emerald-300">Annual (per year)</th>
+                </tr>
+              </thead>
+              <tbody className="text-white/85">
+                <tr><td className="py-1 pr-4">1-char (ultra-premium)</td><td className="py-1 pr-4"><strong>4,000 iKAS</strong></td><td className="py-1"><strong>1,000 iKAS</strong></td></tr>
+                <tr><td className="py-1 pr-4">2-char (premium)</td><td className="py-1 pr-4"><strong>2,000 iKAS</strong></td><td className="py-1"><strong>800 iKAS</strong></td></tr>
+                <tr><td className="py-1 pr-4">3-char (rare)</td><td className="py-1 pr-4"><strong>1,200 iKAS</strong></td><td className="py-1"><strong>500 iKAS</strong></td></tr>
+                <tr><td className="py-1 pr-4">4-char (uncommon)</td><td className="py-1 pr-4"><strong>800 iKAS</strong></td><td className="py-1"><strong>250 iKAS</strong></td></tr>
+                <tr><td className="py-1 pr-4">5–32 chars (standard)</td><td className="py-1 pr-4"><strong>500 iKAS</strong></td><td className="py-1"><strong>50 iKAS</strong></td></tr>
+              </tbody>
+            </table>
+            <p className="mt-3 text-xs text-white/60">
+              Annual is ~5x cheaper than Forever per name and renewable up to
+              10 years (public dApp surfaces 1-year only — admin can gift
+              multi-year via <code>adminMintAnnual</code> for ecosystem partners).
+              Both tenures use the same on-chain SVG NFT and ENS-compatible
+              namehash surface.
             </p>
           </>
         ),
@@ -146,11 +177,13 @@ const FAQS: { section: string; items: FaqItem[] }[] = [
         a: (
           <>
             Yes — the <code>SubnameExtension</code> contract is shipped and
-            tested (27 Foundry tests, all passing). It&rsquo;s currently
-            disabled on chain. The plan is to flip it on once V1 root
-            registrations are stable, ~3-4 weeks post-launch. When it activates,
-            you&rsquo;ll be able to issue free subnames under any .igra name you
-            own:{" "}
+            tested (27 Foundry tests, all passing). The V2-targeted
+            instance is deployed at{" "}
+            <code className="font-mono text-xs">0x7E10…f280</code> with
+            <code> enabled = false</code> on chain — flipping to true
+            (planned ~3-4 weeks post-V2 launch, once V2 root registrations
+            stabilise) opens the floodgates. When activated, you&rsquo;ll be
+            able to issue free subnames under any .igra name you own:{" "}
             <code>pay.alice.igra</code>, <code>vault.alice.igra</code>,{" "}
             <code>devs.team.igra</code>, etc.
           </>
@@ -160,10 +193,11 @@ const FAQS: { section: string; items: FaqItem[] }[] = [
         q: "Will I be able to upgrade a subname into a real root .igra name?",
         a: (
           <>
-            Yes — when V2 ships we&rsquo;ll surface a one-click{" "}
-            &ldquo;promote to root&rdquo; flow on the dApp. You pay the
-            current tier price (Forever or 1-year), and the subname becomes
-            your standalone root name.
+            Yes — once subnames activate, the dApp will surface a one-click{" "}
+            &ldquo;promote to root&rdquo; flow. You pay the current Forever
+            (or Annual) tier price for that root label and the subname holder
+            becomes the new root NFT owner. Subname stays on the parent for
+            backward-compat unless the parent owner revokes it.
           </>
         ),
       },
@@ -189,13 +223,13 @@ const FAQS: { section: string; items: FaqItem[] }[] = [
         q: "Can I register an emoji name?",
         a: (
           <>
-            <strong>Coming in V2.</strong> V1 limits labels to lowercase ASCII
-            (a–z, 0–9, hyphen). V2 widens the validator to accept full Unicode
-            via <a href="https://en.wikipedia.org/wiki/Punycode" target="_blank" rel="noreferrer" className="text-cyan underline decoration-dotted underline-offset-2">Punycode</a>{" "}
-            (the same standard ENS uses). On chain it&rsquo;s stored as the
-            ASCII-safe punycode form (e.g. <code>xn--ls8h.igra</code>); in
-            wallets and the dApp it renders back as the original glyph
-            (e.g. <code>🦄.igra</code>).
+            <strong>Yes, live on V2.</strong> The validator accepts the full{" "}
+            <a href="https://en.wikipedia.org/wiki/Punycode" target="_blank" rel="noreferrer" className="text-cyan underline decoration-dotted underline-offset-2">Punycode</a>{" "}
+            shape (the same standard ENS uses). On chain it&rsquo;s stored as
+            the ASCII-safe form (e.g. <code>xn--ls8h.igra</code>); in
+            modern wallets that handle IDN it renders back as the original
+            glyph (e.g. <code>🦄.igra</code>). Mint via the dApp — paste the
+            emoji directly and the frontend handles encoding.
           </>
         ),
       },
@@ -270,8 +304,10 @@ const FAQS: { section: string; items: FaqItem[] }[] = [
         q: "Has the contract been audited?",
         a: (
           <>
-            Yes. <strong>170 Foundry tests, zero failures</strong>. 1024-run
-            fuzz soak across 7 fuzz tests (7,168 iterations) — no
+            Yes. <strong>273 Foundry tests, zero failures</strong> across 8
+            suites (V1 Registry, V2 Registry, Marketplace, Resolver,
+            ReverseResolver, SubnameExtension, TLD-variants, Integration).
+            1024-run fuzz soak across 15 fuzz tests (15,360 iterations) — no
             counter-examples. 100% line coverage on Resolver/ReverseResolver,
             96–100% on Registry/Marketplace. Full report at{" "}
             <a

@@ -55,11 +55,18 @@ export function PartnersSection() {
             explorer integrations land.
           </p>
         </div>
+        {/* Partner-inquiry CTA → X DM @IgraNameService.
+            Uses x.com/messages/compose for direct DM intent (lands in
+            inbox, not the public timeline). Liam reads X DMs more reliably
+            than email so this maximises the chance an inbound integration
+            request actually gets seen. */}
         <a
-          href="mailto:hello@insdomains.org"
+          href="https://x.com/messages/compose?recipient_id=IgraNameService&text=Hey%20%40IgraNameService%20%E2%80%94%20I%27d%20like%20to%20partner%20with%20INS%20%F0%9F%9F%A3"
+          target="_blank"
+          rel="noreferrer noopener"
           className="hidden text-xs text-white/45 hover:text-cyan sm:inline"
         >
-          Want to partner? →
+          Want to partner? DM @IgraNameService →
         </a>
       </div>
 
