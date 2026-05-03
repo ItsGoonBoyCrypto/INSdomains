@@ -166,6 +166,7 @@ export function isSplitterDeployed(): boolean {
 export const TREASURY_SPLITTER_ABI = [
   // ── reads ─────────────────────────────────────────────
   { type: "function", name: "owner",        stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
+  { type: "function", name: "pendingOwner", stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
   { type: "function", name: "treasury",     stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
   { type: "function", name: "dao",          stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
   { type: "function", name: "daoBps",       stateMutability: "view", inputs: [], outputs: [{ type: "uint16" }] },
@@ -186,6 +187,7 @@ export const TREASURY_SPLITTER_ABI = [
   { type: "function", name: "setDao",            stateMutability: "nonpayable", inputs: [{ name: "_dao",      type: "address" }], outputs: [] },
   { type: "function", name: "setTreasury",       stateMutability: "nonpayable", inputs: [{ name: "_treasury", type: "address" }], outputs: [] },
   { type: "function", name: "transferOwnership", stateMutability: "nonpayable", inputs: [{ name: "newOwner",  type: "address" }], outputs: [] },
+  { type: "function", name: "acceptOwnership",   stateMutability: "nonpayable", inputs: [], outputs: [] },
   // ── events ────────────────────────────────────────────
   { type: "event", name: "Flushed",
     inputs: [
@@ -199,6 +201,11 @@ export const TREASURY_SPLITTER_ABI = [
     inputs: [{ name: "dao", type: "address", indexed: false }] },
   { type: "event", name: "TreasuryUpdated",
     inputs: [{ name: "treasury", type: "address", indexed: false }] },
+  { type: "event", name: "OwnershipTransferStarted",
+    inputs: [
+      { name: "previousOwner", type: "address", indexed: true },
+      { name: "pendingOwner",  type: "address", indexed: true },
+    ] },
   { type: "event", name: "OwnershipTransferred",
     inputs: [
       { name: "previousOwner", type: "address", indexed: true },

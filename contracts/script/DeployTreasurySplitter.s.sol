@@ -71,7 +71,7 @@ contract DeployTreasurySplitter is Script {
         console.log("");
         console.log("Once DAO multisig is known (Safe-signed txs):");
         console.log("  splitter.setDao(<dao multisig>)");
-        console.log("  splitter.setSplit(<bps>)   // e.g. 3000 = 30% to DAO");
+        console.log("  splitter.setSplit(2000)   // 2000 bps = 20% to DAO (production split)");
         console.log("");
         console.log("Then to route a withdraw through the splitter (Safe-signed):");
         console.log("  Registry.withdraw(splitter)   // pulls full balance to splitter");

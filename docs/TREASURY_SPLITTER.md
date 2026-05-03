@@ -62,6 +62,11 @@ export INS_TREASURY=0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1   # Treasury Safe
 export DAO_ADDRESS=0x0000000000000000000000000000000000000000    # 0x0 OK pre-DAO
 export DAO_BPS=0                                                  # 0 OK pre-DAO
 
+# When Igra DAO multisig is known and you want to deploy with the
+# production split baked in, set DAO_ADDRESS to their address and
+# DAO_BPS=2000 (= 20% to DAO / 80% to Treasury Safe — the planned
+# production split for INS V2).
+
 forge script script/DeployTreasurySplitter.s.sol \
   --rpc-url https://rpc.igralabs.com:8545 \
   --broadcast \
@@ -95,7 +100,7 @@ Two Safe txs from `0x7447…7aA1` (Treasury Safe), targeting the splitter:
 
 ```text
 splitter.setDao(<igra dao multisig address>)
-splitter.setSplit(<bps>)        # e.g. 3000 = 30% to DAO
+splitter.setSplit(2000)         # 2000 bps = 20% to DAO (production split)
 ```
 
 Both reads update live in the dApp — no rebuild needed. The split-withdraw
@@ -125,32 +130,72 @@ script). All admin functions are Safe-only:
 | `setSplit(uint16 daoBps)`       | Change DAO's share (0–10_000 bps). Treasury gets rest.  |
 | `setDao(address)`               | Update DAO recipient. `0x0` allowed (must set bps to 0). |
 | `setTreasury(address)`          | Update Treasury recipient. `0x0` rejected.               |
-| `transferOwnership(address)`    | Hand admin to a different wallet/Safe.                   |
+| `transferOwnership(address)`    | Step 1 of 2-step handoff — sets `pendingOwner`. Owner does NOT change yet. Pass `0x0` to cancel a pending transfer. |
+| `acceptOwnership()`             | Step 2 — must be called by the address `transferOwnership` was directed at. Atomically rotates `owner` and clears `pendingOwner`. |
 
 The dApp UI does NOT expose admin writes — admin-only paths live in the
 Safe to keep the trust boundary clean.
+
+### Trust model — what the Safe can do
+
+The Treasury Safe owns the splitter and can socially / contractually
+override the DAO's share at any time. Specifically, the Safe can:
+
+- `setSplit(0)` to send 100% to treasury on the next flush
+- `setDao(<arbitrary address>)` to redirect the DAO's share elsewhere
+- `setTreasury(<arbitrary address>)` to redirect treasury's share
+
+This is the SAME trust model that already governs the Registry (which
+the Safe also owns). The "20% to DAO" commitment is therefore SOCIAL,
+backed by the Safe's transparent on-chain history rather than a timelock
+or immutable parameter. If the Igra DAO needs a stronger guarantee, the
+options are:
+
+1. **Hand splitter ownership to the DAO multisig** via `transferOwnership`
+   + `acceptOwnership` (the 2-step pattern lets the DAO sign-and-confirm
+   atomically, no risk of the Safe sending to a typo'd address).
+2. **Wrap the Safe in a TimelockController** (OpenZeppelin) so any
+   `setSplit/setDao/setTreasury` waits N hours before execution — gives
+   the DAO time to react if the Safe behaves adversarially.
+3. **Burn ownership** (`transferOwnership(0x0)` + accept by 0x0 — not
+   currently possible since `acceptOwnership` requires `msg.sender == pendingOwner`,
+   intentionally — leave config locked at the current settings forever).
+
+For launch we ship as-is (Safe-owned, no timelock) — same risk surface
+as the Registry, no net-new trust assumption.
 
 ---
 
 ## Tests
 
-`contracts/test/TreasurySplitter.t.sol` — **35 tests, 4 fuzz suites at 256
+`contracts/test/TreasurySplitter.t.sol` — **41 tests, 4 fuzz suites at 256
 runs each, all passing**:
 
 - Constructor input validation (zero-address, bps cap, zero-DAO is OK)
-- Happy-path flush at 30/70, 0/100, 100/0 splits
+- Happy-path flush at 20/80 (production), 0/100, 100/0 splits
 - Rounding (DAO rounds DOWN, treasury keeps the residual)
 - Permissionless flush
-- Admin (`setSplit`, `setDao`, `setTreasury`, `transferOwnership`)
+- Admin (`setSplit`, `setDao`, `setTreasury`)
+- Two-step ownership: `transferOwnership` doesn't rotate, `acceptOwnership`
+  atomically rotates + clears pending, non-pending caller reverts, can
+  cancel by passing `0x0` to `transferOwnership`
 - Revert paths (`DaoUnsetButShareNonZero`, `SendFailed`, `BpsTooHigh`,
-  `ZeroAddress`, `NotOwner`)
+  `ZeroAddress`, `NotOwner`, `NotPendingOwner`)
 - `receive()` emits `Funded`
+- Audit-extra coverage:
+  - Reentrancy attempt — malicious DAO calls `flush()` from receive(),
+    treasury still gets paid in full, no double-spend
+  - Send-order — gas-griefing DAO recipient burns 5_000-iteration loop
+    in receive(), treasury still gets paid (because treasury is sent FIRST)
+  - Force-balance via `selfdestruct` is handled cleanly when DAO unset + bps=0
+  - `setTreasury(splitter)` self-loop returns funds to splitter (no loss,
+    next flush after a fix-up recovers them)
 - Fuzz: split correctness, full-route fallback when `daoBps == 0`,
   rounding never overpays DAO, non-owner writes always revert
 
 ```bash
 cd contracts
-forge test --match-contract TreasurySplitterTest -vvv
+forge test --match-contract TreasurySplitter -vvv
 ```
 
 ---

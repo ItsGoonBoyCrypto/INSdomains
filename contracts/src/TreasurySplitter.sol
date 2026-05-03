@@ -52,6 +52,12 @@ contract TreasurySplitter {
 
     /* ─────────────────────────── State ──────────────────────────── */
     address public owner;
+    /// @notice Pending owner under the Ownable2Step pattern — set by
+    ///         `transferOwnership`, cleared on `acceptOwnership`. Until
+    ///         the pending owner accepts, the current owner retains all
+    ///         admin powers. Prevents accidental hand-off to a wrong-
+    ///         checksum or typo'd address (which would brick the splitter).
+    address public pendingOwner;
     address payable public treasury;
     address payable public dao;
     /// @notice basis points (out of 10_000) sent to `dao` on each flush.
@@ -63,11 +69,13 @@ contract TreasurySplitter {
     event SplitUpdated(uint16 daoBps);
     event DaoUpdated(address dao);
     event TreasuryUpdated(address treasury);
+    event OwnershipTransferStarted(address indexed previousOwner, address indexed pendingOwner);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event Funded(address indexed from, uint256 amount);
 
     /* ─────────────────────────── Errors ─────────────────────────── */
     error NotOwner();
+    error NotPendingOwner();
     error ZeroAddress();
     error BpsTooHigh();
     error SendFailed();
@@ -108,6 +116,13 @@ contract TreasurySplitter {
     ///         between treasury + DAO per current `daoBps`. Idempotent at
     ///         zero balance. Reverts if dao is unset (zero address) and
     ///         daoBps > 0 — set DAO first (or set bps to 0).
+    ///
+    ///         Send order: treasury FIRST, then DAO. Treasury is the
+    ///         hot-path beneficiary (Treasury Safe, address-validated on
+    ///         every setTreasury) and the DAO recipient is set later by
+    ///         the same Safe; sending treasury first means a malicious
+    ///         or buggy DAO contract that consumes all forwarded gas in
+    ///         its receive() can starve only its own share, not treasury's.
     function flush() external {
         uint256 bal = address(this).balance;
         if (bal == 0) {
@@ -122,13 +137,13 @@ contract TreasurySplitter {
         }
         uint256 toTreasury = bal - toDao;
 
-        if (toDao > 0) {
-            (bool okDao, ) = dao.call{value: toDao}("");
-            if (!okDao) revert SendFailed();
-        }
         if (toTreasury > 0) {
             (bool okT, ) = treasury.call{value: toTreasury}("");
             if (!okT) revert SendFailed();
+        }
+        if (toDao > 0) {
+            (bool okDao, ) = dao.call{value: toDao}("");
+            if (!okDao) revert SendFailed();
         }
         emit Flushed(bal, toTreasury, toDao);
     }
@@ -154,11 +169,31 @@ contract TreasurySplitter {
         emit TreasuryUpdated(_treasury);
     }
 
+    /// @notice Initiates a two-step ownership handover. The new owner does
+    ///         NOT take effect until they call `acceptOwnership`. Until
+    ///         then, the current owner retains all admin rights.
+    ///
+    ///         Pass `address(0)` to cancel a pending transfer.
+    ///
+    ///         Two-step pattern (OpenZeppelin Ownable2Step) prevents the
+    ///         most common multisig footgun: handing admin to a wrong-
+    ///         checksum or typo'd address and bricking the contract.
     function transferOwnership(address newOwner) external onlyOwner {
-        if (newOwner == address(0)) revert ZeroAddress();
+        // newOwner == address(0) is allowed — it cancels any pending transfer.
+        pendingOwner = newOwner;
+        emit OwnershipTransferStarted(owner, newOwner);
+    }
+
+    /// @notice Completes a two-step ownership handover. Must be called by
+    ///         the address set as `pendingOwner` via `transferOwnership`.
+    ///         Atomic: clears `pendingOwner` and rotates `owner` in the
+    ///         same transaction.
+    function acceptOwnership() external {
+        if (msg.sender != pendingOwner) revert NotPendingOwner();
         address prev = owner;
-        owner = newOwner;
-        emit OwnershipTransferred(prev, newOwner);
+        owner = pendingOwner;
+        pendingOwner = address(0);
+        emit OwnershipTransferred(prev, owner);
     }
 
     /* ─────────────────────────── Views ──────────────────────────── */
