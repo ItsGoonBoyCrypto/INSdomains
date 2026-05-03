@@ -1497,13 +1497,18 @@ function TierPricingCard({ tld }: { tld: Tld }) {
   };
 
   // Read all 5 buckets from active TLD (for the rows).
+  // Cast to `any[]` to escape wagmi's deep ABI type inference — the V2
+  // ABI is large enough that the inferred contracts-array type triggers
+  // TS2589 ("type instantiation is excessively deep"). The runtime
+  // shape is unchanged; we cast each `result` at the read site below.
   const { data: prices, refetch } = useReadContracts({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     contracts: tiers.map((t) => ({
       address: REGISTRY_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: "lengthPrice",
       args: [t.bucket],
-    })),
+    })) as any,
     query: { enabled: REGISTRY_LIVE },
   });
 
