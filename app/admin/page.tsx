@@ -1097,7 +1097,7 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
                   <Loader2 className="h-3 w-3 flex-none animate-spin text-white/30" />
                 )}
                 <span className="font-mono truncate">
-                  {label}<span className="text-white/30">.ins</span>
+                  {label}<span className="text-white/30">{tldSuffix(tld)}</span>
                 </span>
                 {isOffChain && (
                   <span className="flex-none rounded-full border border-amber-400/30 bg-amber-400/10 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-amber-300">
@@ -1145,9 +1145,13 @@ const BULK_CHUNK = 50;
 
 function parseBulkInput(raw: string, currentReserved: string[]) {
   const already = new Set(currentReserved);
+  // Strip any known TLD suffix the operator might have pasted (.ins / .igra / .ikas)
+  // so labels are always stored as bare strings — the on-chain Registry stores
+  // labels without a TLD suffix.
+  const stripTld = new RegExp(`\\.(${TLDS.join("|")})$`);
   const tokens = raw
     .split(/[\s,;]+/)
-    .map((t) => t.trim().toLowerCase().replace(/\.ins$/, ""))
+    .map((t) => t.trim().toLowerCase().replace(stripTld, ""))
     .filter(Boolean);
 
   const seen = new Set<string>();
@@ -1295,7 +1299,7 @@ function BulkReserveSection({
       </div>
       <p className="mt-1 text-[10px] text-white/50">
         Paste names — any separator (newline, comma, space).{" "}
-        <code className="rounded bg-black/30 px-1">.ins</code> suffix auto-stripped.
+        <code className="rounded bg-black/30 px-1">{tldSuffix(tld)}</code> suffix auto-stripped.
         Duplicates + invalid labels filtered. {BULK_CHUNK} names per batch tx.
       </p>
       <textarea
@@ -1303,7 +1307,7 @@ function BulkReserveSection({
         onChange={(e) => setRaw(e.target.value)}
         disabled={busy}
         rows={5}
-        placeholder={"alice\nbob.ins\nkaspa, igra, zealous\nkasplex, kasware, kastle\n..."}
+        placeholder={`alice\nbob${tldSuffix(tld)}\nkaspa, igra, zealous\nkasplex, kasware, kastle\n...`}
         className="mt-2 w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 font-mono text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/40 disabled:opacity-60"
         spellCheck={false}
       />

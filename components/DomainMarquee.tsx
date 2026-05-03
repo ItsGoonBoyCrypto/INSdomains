@@ -1,6 +1,8 @@
 import { TRENDING } from "@/lib/mock-registry";
 
 function suffixColour(name: string): string {
+  // .igra is the only canonical TLD post-2026-04-26 pivot; legacy branches
+  // retained as defensive fallbacks in case TRENDING ever re-mixes TLDs.
   if (name.endsWith(".igra")) return "text-plum";
   if (name.endsWith(".ikas")) return "text-emerald-300";
   return "text-cyan";

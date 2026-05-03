@@ -106,7 +106,7 @@ function Dashboard({ address }: { address: `0x${string}` }) {
           <h1 className="text-4xl font-black tracking-tight sm:text-5xl">My domains</h1>
           <p className="mt-2 text-sm text-white/60">
             {REGISTRY_LIVE
-              ? `${owned.list.length} name${owned.list.length === 1 ? "" : "s"} owned across .ins / .igra / .ikas`
+              ? `${owned.list.length} .igra name${owned.list.length === 1 ? "" : "s"} owned`
               : `${DEMO_OWNED.length} demo names shown`}
             <span className="mx-2 text-white/30">·</span>
             <a
@@ -744,7 +744,7 @@ function DemoDomainCard({ domain }: { domain: typeof DEMO_OWNED[number] }) {
 
       <h3 className="relative mt-5 text-2xl font-bold">
         <span className="ins-gradient-text">{domain.label}</span>
-        <span className="text-white/30">.ins</span>
+        <span className="text-white/30">.igra</span>
       </h3>
 
       <div className="relative mt-3 flex items-center gap-2 text-xs text-white/50">

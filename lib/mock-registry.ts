@@ -52,12 +52,12 @@ export const DEMO_OWNED = [
   },
 ] as const;
 
-// Mix of all three TLDs for the homepage marquee — neutral generic names
-// chosen to showcase the multi-TLD offering (no ecosystem brand links).
+// .igra-only marquee for the homepage — neutral generic names that
+// showcase the canonical TLD without leaning on ecosystem brand links.
 export const TRENDING = [
-  "alice.ins",   "vitalik.igra", "grok.ikas",   "kaspa.ins",
-  "satoshi.igra", "rooftop.ikas", "dev.ins",    "builder.igra",
-  "wagmi.ikas",  "gm.ins",       "ngmi.igra",   "ser.ikas",
+  "alice.igra",  "vitalik.igra", "grok.igra",   "kaspa.igra",
+  "satoshi.igra", "rooftop.igra", "dev.igra",   "builder.igra",
+  "wagmi.igra",  "gm.igra",      "ngmi.igra",   "ser.igra",
 ];
 
 // Former mock STATS export removed 2026-04-24 — homepage StatsRow now reads
