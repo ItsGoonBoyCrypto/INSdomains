@@ -142,6 +142,75 @@ export const REVERSE_RESOLVER_ADDRESS = REVERSE_RESOLVER_ADDRESSES.igra;
 export const RESOLVER_ADDRESS = (process.env.NEXT_PUBLIC_INS_RESOLVER ??
   ZERO) as Address;
 
+/* ──────────────────── Treasury splitter ─────────────────────────────
+ * Optional payment-splitter contract that sits between Registry/Marketplace
+ * withdrawals and the final recipients (Treasury Safe + Igra DAO). See
+ * docs/TREASURY_SPLITTER.md for the deploy + activation runbook.
+ *
+ * When unset (env var blank or zero), the dApp's TreasuryCard renders
+ * exactly as before: single "withdraw to address" flow. When set, the
+ * card additionally surfaces a "Withdraw + flush" path that pulls the
+ * Registry balance into the splitter and triggers the dual-payout.
+ *
+ * The splitter contract is owner-controlled by the Treasury Safe; admin
+ * functions (setSplit / setDao / setTreasury / transferOwnership) MUST
+ * be invoked via Safe txs, not from the dApp UI.
+ */
+export const TREASURY_SPLITTER_ADDRESS = (process.env.NEXT_PUBLIC_INS_TREASURY_SPLITTER ??
+  ZERO) as Address;
+
+export function isSplitterDeployed(): boolean {
+  return TREASURY_SPLITTER_ADDRESS !== ZERO;
+}
+
+export const TREASURY_SPLITTER_ABI = [
+  // ── reads ─────────────────────────────────────────────
+  { type: "function", name: "owner",        stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
+  { type: "function", name: "treasury",     stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
+  { type: "function", name: "dao",          stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
+  { type: "function", name: "daoBps",       stateMutability: "view", inputs: [], outputs: [{ type: "uint16" }] },
+  { type: "function", name: "treasuryBps",  stateMutability: "view", inputs: [], outputs: [{ type: "uint16" }] },
+  { type: "function", name: "BPS_MAX",      stateMutability: "view", inputs: [], outputs: [{ type: "uint16" }] },
+  {
+    type: "function", name: "previewSplit", stateMutability: "view",
+    inputs: [{ name: "amount", type: "uint256" }],
+    outputs: [
+      { name: "toTreasury", type: "uint256" },
+      { name: "toDao",      type: "uint256" },
+    ],
+  },
+  // ── writes (permissionless) ───────────────────────────
+  { type: "function", name: "flush",        stateMutability: "nonpayable", inputs: [], outputs: [] },
+  // ── admin (Safe) ──────────────────────────────────────
+  { type: "function", name: "setSplit",          stateMutability: "nonpayable", inputs: [{ name: "_daoBps",   type: "uint16"  }], outputs: [] },
+  { type: "function", name: "setDao",            stateMutability: "nonpayable", inputs: [{ name: "_dao",      type: "address" }], outputs: [] },
+  { type: "function", name: "setTreasury",       stateMutability: "nonpayable", inputs: [{ name: "_treasury", type: "address" }], outputs: [] },
+  { type: "function", name: "transferOwnership", stateMutability: "nonpayable", inputs: [{ name: "newOwner",  type: "address" }], outputs: [] },
+  // ── events ────────────────────────────────────────────
+  { type: "event", name: "Flushed",
+    inputs: [
+      { name: "totalAmount", type: "uint256", indexed: false },
+      { name: "toTreasury",  type: "uint256", indexed: false },
+      { name: "toDao",       type: "uint256", indexed: false },
+    ] },
+  { type: "event", name: "SplitUpdated",
+    inputs: [{ name: "daoBps", type: "uint16", indexed: false }] },
+  { type: "event", name: "DaoUpdated",
+    inputs: [{ name: "dao", type: "address", indexed: false }] },
+  { type: "event", name: "TreasuryUpdated",
+    inputs: [{ name: "treasury", type: "address", indexed: false }] },
+  { type: "event", name: "OwnershipTransferred",
+    inputs: [
+      { name: "previousOwner", type: "address", indexed: true },
+      { name: "newOwner",      type: "address", indexed: true },
+    ] },
+  { type: "event", name: "Funded",
+    inputs: [
+      { name: "from",   type: "address", indexed: true },
+      { name: "amount", type: "uint256", indexed: false },
+    ] },
+] as const;
+
 /* ──────────────────── Subname extension (.igra) ─────────────────────
  * Optional layer that lets owners of top-level .igra names mint free
  * subnames (e.g. pay.alice.igra). Ships in this codebase but the on-chain

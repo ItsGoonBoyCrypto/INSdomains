@@ -24,6 +24,7 @@ import {
   REGISTRY_ABI, MARKETPLACE_ABI,
   REGISTRY_ADDRESSES, MARKETPLACE_ADDRESSES,
   SUBNAME_EXTENSION_ADDRESS, SUBNAME_EXTENSION_ABI,
+  TREASURY_SPLITTER_ADDRESS, TREASURY_SPLITTER_ABI, isSplitterDeployed,
   TLDS, LIVE_TLDS, isTldLive, tldSuffix,
   type Tld,
 } from "@/lib/contracts";
@@ -2072,6 +2073,20 @@ function TreasuryCard({ tld }: { tld: Tld }) {
         <TxLink hash={hash} />
       </div>
 
+      {/* ── Split withdraw via TreasurySplitter ────────────
+           Two-step flow: withdraw the full Registry balance into the
+           splitter contract, then call splitter.flush() to atomically
+           split it between Treasury Safe + Igra DAO per the on-chain
+           daoBps. Hidden when NEXT_PUBLIC_INS_TREASURY_SPLITTER is unset. */}
+      {isSplitterDeployed() && (
+        <SplitterWithdrawSection
+          registryAddress={REGISTRY_ADDRESS}
+          registryLive={REGISTRY_LIVE}
+          registryBalance={balance?.value ?? 0n}
+          onAfterWithdraw={refetch}
+        />
+      )}
+
       {/* ── DAO Handoff ────────────────────────────────────
            One-click ownership transfer of THIS Registry to a DAO multisig.
            Same on-chain call as the Ownership card below; this is the
@@ -2126,6 +2141,228 @@ function TreasuryCard({ tld }: { tld: Tld }) {
         </p>
       </div>
     </Card>
+  );
+}
+
+/* ── Splitter withdraw (treasury → splitter → flush) ───── */
+/**
+ * Two-step withdraw flow that routes the Registry's full balance through
+ * the on-chain TreasurySplitter contract:
+ *   step 1: Registry.withdraw(splitter)   — pulls 100% to splitter (Safe-only)
+ *   step 2: splitter.flush()              — splits to treasury + dao (anyone)
+ *
+ * The split percentage is read live from the splitter (daoBps + treasuryBps),
+ * so the operator sees the exact distribution BEFORE clicking. If the DAO
+ * address hasn't been set on the splitter yet (admin can do this once Igra
+ * provides their multisig), flush() will revert with DaoUnsetButShareNonZero
+ * unless daoBps == 0.
+ */
+function SplitterWithdrawSection({
+  registryAddress,
+  registryLive,
+  registryBalance,
+  onAfterWithdraw,
+}: {
+  registryAddress: `0x${string}`;
+  registryLive: boolean;
+  registryBalance: bigint;
+  onAfterWithdraw: () => void;
+}) {
+  const splitter = TREASURY_SPLITTER_ADDRESS;
+
+  // Live splitter state — small parallel reads. All four are cheap views.
+  const { data: daoBps } = useReadContract({
+    address: splitter,
+    abi: TREASURY_SPLITTER_ABI,
+    functionName: "daoBps",
+  });
+  const { data: treasuryBps } = useReadContract({
+    address: splitter,
+    abi: TREASURY_SPLITTER_ABI,
+    functionName: "treasuryBps",
+  });
+  const { data: daoAddr } = useReadContract({
+    address: splitter,
+    abi: TREASURY_SPLITTER_ABI,
+    functionName: "dao",
+  });
+  const { data: treasuryAddr } = useReadContract({
+    address: splitter,
+    abi: TREASURY_SPLITTER_ABI,
+    functionName: "treasury",
+  });
+  const { data: splitterBal, refetch: refetchSplitterBal } = useBalance({ address: splitter });
+
+  // Step-1 (Registry.withdraw) and step-2 (splitter.flush) each get their
+  // own writeContract slot so the UI can show distinct status per step.
+  const w1 = useWriteContract();
+  const r1 = useWaitForTransactionReceipt({ hash: w1.data });
+  const w2 = useWriteContract();
+  const r2 = useWaitForTransactionReceipt({ hash: w2.data });
+
+  const busy1 = w1.isPending || r1.isLoading;
+  const busy2 = w2.isPending || r2.isLoading;
+
+  useEffect(() => {
+    if (r1.isSuccess) {
+      onAfterWithdraw();
+      refetchSplitterBal();
+    }
+  }, [r1.isSuccess, onAfterWithdraw, refetchSplitterBal]);
+
+  useEffect(() => {
+    if (r2.isSuccess) {
+      refetchSplitterBal();
+    }
+  }, [r2.isSuccess, refetchSplitterBal]);
+
+  // Preview the split for the *current* registry balance (pre-withdraw),
+  // so the operator knows what to expect before signing step 1.
+  const tBps = (treasuryBps ?? 0) as number;
+  const dBps = (daoBps ?? 0) as number;
+  const previewToTreasury = registryBalance > 0n ? (registryBalance * BigInt(tBps)) / 10_000n : 0n;
+  const previewToDao      = registryBalance > 0n ? (registryBalance * BigInt(dBps)) / 10_000n : 0n;
+  const splitterCurrent   = splitterBal?.value ?? 0n;
+  const daoConfigured     = !!daoAddr && (daoAddr as string).toLowerCase() !== "0x0000000000000000000000000000000000000000";
+  const flushBlocked      = dBps > 0 && !daoConfigured;
+
+  const onWithdrawToSplitter = () => {
+    if (registryBalance === 0n) return;
+    w1.writeContract({
+      address: registryAddress,
+      abi: REGISTRY_ABI,
+      functionName: "withdraw",
+      args: [splitter],
+    });
+  };
+
+  const onFlush = () => {
+    if (splitterCurrent === 0n) return;
+    w2.writeContract({
+      address: splitter,
+      abi: TREASURY_SPLITTER_ABI,
+      functionName: "flush",
+      args: [],
+    });
+  };
+
+  return (
+    <div className="mt-6 rounded-2xl border border-plum/30 bg-plum/[0.04] p-4">
+      <div className="flex items-center gap-2">
+        <Layers className="h-4 w-4 text-plum" />
+        <h4 className="text-sm font-bold text-white">Split withdraw</h4>
+        <span className="ml-auto rounded-full border border-plum/30 bg-plum/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-plum">
+          via splitter
+        </span>
+      </div>
+      <p className="mt-1 text-xs text-white/50">
+        Routes the Registry balance through{" "}
+        <a
+          href={`${IGRA_EXPLORER}/address/${splitter}`}
+          target="_blank"
+          rel="noreferrer"
+          className="font-mono text-plum/90 underline decoration-dotted hover:text-plum"
+        >
+          {shortAddr(splitter)}
+        </a>
+        {" "}so it can be split between Treasury Safe and Igra DAO atomically.
+      </p>
+
+      {/* Live ratio + recipients */}
+      <div className="mt-3 grid grid-cols-2 gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-3 text-[11px]">
+        <div>
+          <div className="text-white/40 uppercase tracking-wider text-[9px]">Treasury share</div>
+          <div className="mt-0.5 font-mono text-base font-bold text-cyan">
+            {tBps !== undefined ? `${(tBps / 100).toFixed(2)}%` : "—"}
+          </div>
+          <div className="mt-0.5 font-mono text-[10px] text-white/40">
+            {treasuryAddr ? shortAddr(treasuryAddr as string) : "—"}
+          </div>
+        </div>
+        <div>
+          <div className="text-white/40 uppercase tracking-wider text-[9px]">DAO share</div>
+          <div className="mt-0.5 font-mono text-base font-bold text-plum">
+            {dBps !== undefined ? `${(dBps / 100).toFixed(2)}%` : "—"}
+          </div>
+          <div className="mt-0.5 font-mono text-[10px] text-white/40">
+            {daoConfigured ? shortAddr(daoAddr as string) : <span className="text-amber-300">DAO unset</span>}
+          </div>
+        </div>
+      </div>
+
+      {/* Step-by-step preview of what will move */}
+      {registryBalance > 0n && (
+        <div className="mt-3 rounded-xl border border-white/5 bg-black/30 p-3 text-[11px] text-white/60">
+          <div className="font-semibold text-white/80">If you flush right now:</div>
+          <div className="mt-1.5 flex justify-between">
+            <span className="text-white/50">→ Treasury</span>
+            <span className="font-mono text-cyan">{Number(previewToTreasury) / 1e18 < 0.0001 ? "<0.0001" : (Number(previewToTreasury) / 1e18).toFixed(4)} iKAS</span>
+          </div>
+          <div className="mt-1 flex justify-between">
+            <span className="text-white/50">→ DAO</span>
+            <span className="font-mono text-plum">{Number(previewToDao) / 1e18 < 0.0001 ? "<0.0001" : (Number(previewToDao) / 1e18).toFixed(4)} iKAS</span>
+          </div>
+        </div>
+      )}
+
+      {/* Splitter-held balance — if non-zero, operator can flush immediately */}
+      {splitterCurrent > 0n && (
+        <div className="mt-3 flex items-center justify-between rounded-xl border border-amber-500/20 bg-amber-500/[0.04] px-3 py-2 text-[11px] text-amber-200">
+          <span>
+            <span className="font-semibold">{(Number(splitterCurrent) / 1e18).toFixed(4)} iKAS</span>{" "}
+            already in splitter — call flush() to distribute.
+          </span>
+        </div>
+      )}
+
+      {/* Step buttons */}
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <button
+          onClick={onWithdrawToSplitter}
+          disabled={!registryLive || busy1 || busy2 || registryBalance === 0n}
+          className="inline-flex items-center justify-center gap-1 rounded-xl border border-plum/30 bg-plum/10 px-3 py-2 text-xs font-semibold text-plum transition hover:bg-plum/20 disabled:opacity-40"
+        >
+          {busy1 ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowRight className="h-3.5 w-3.5" />}
+          1. Withdraw → splitter
+        </button>
+        <button
+          onClick={onFlush}
+          disabled={busy1 || busy2 || splitterCurrent === 0n || flushBlocked}
+          title={flushBlocked ? "DAO address not configured on splitter — set DAO via Safe before flushing" : "Calls splitter.flush() — anyone can call"}
+          className="inline-flex items-center justify-center gap-1 rounded-xl border border-cyan/30 bg-cyan/10 px-3 py-2 text-xs font-semibold text-cyan transition hover:bg-cyan/20 disabled:opacity-40"
+        >
+          {busy2 ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+          2. Flush splitter
+        </button>
+      </div>
+
+      {/* Tx errors + links per step */}
+      {(w1.error || w1.data) && (
+        <div className="mt-2 flex items-center justify-between text-[10px]">
+          <TxError message={w1.error?.message} onReset={w1.reset} />
+          <TxLink hash={w1.data} />
+        </div>
+      )}
+      {(w2.error || w2.data) && (
+        <div className="mt-1 flex items-center justify-between text-[10px]">
+          <TxError message={w2.error?.message} onReset={w2.reset} />
+          <TxLink hash={w2.data} />
+        </div>
+      )}
+
+      {flushBlocked && (
+        <p className="mt-2 text-[10px] text-amber-300">
+          DAO share is {(dBps / 100).toFixed(2)}% but DAO address is unset.
+          Have the Treasury Safe call <code className="font-mono">setDao(&lt;dao multisig&gt;)</code> on
+          the splitter before flushing.
+        </p>
+      )}
+      <p className="mt-2 text-[10px] text-white/35">
+        Split ratio + recipients are owned by the Treasury Safe. To change them,
+        call <code className="font-mono">setSplit</code> / <code className="font-mono">setDao</code> /
+        {" "}<code className="font-mono">setTreasury</code> on the splitter via Safe.
+      </p>
+    </div>
   );
 }
 
