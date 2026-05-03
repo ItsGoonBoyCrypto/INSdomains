@@ -19,6 +19,26 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://insdomains.org";
 const EXPLORER = process.env.NEXT_PUBLIC_IGRA_EXPLORER ?? "https://explorer.igralabs.com";
 const REFRESH_MS = 60_000;
 
+/**
+ * Optional allowlist of labels (without TLD) to surface in the carousel.
+ * When non-empty, the live API result is filtered down to only these
+ * labels — useful for the marketing push when we want a curated shop
+ * window (e.g. ecosystem-anchor names + the team's own names) rather
+ * than every random mint that lands on chain.
+ *
+ * Set to an empty array to show the full live feed.
+ *
+ * Locked 2026-05-03 for the V2 launch push.
+ */
+const RECENT_MINT_ALLOWLIST: ReadonlySet<string> = new Set([
+  "igranetwork",
+  "goonboycrypto",
+  "goonboy",      // already minted as V2 #2; fallback while goonboycrypto is pending
+  "foreverigra",
+  "emdin",
+  "test1",
+]);
+
 type RecentName = {
   tokenId: string;
   label: string;
@@ -38,14 +58,22 @@ export function RecentMintsCarousel() {
     let alive = true;
     async function load() {
       try {
-        const r = await fetch(`${SITE}/api/names/recent?limit=12`, {
+        // Pull a wider window than we'll show so the curation allowlist
+        // has every recent mint to filter against (V1 + V2 unioned by API).
+        const r = await fetch(`${SITE}/api/names/recent?limit=50`, {
           // Browser cache is fine; backend already does s-maxage=30.
           cache: "default",
         });
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const data = (await r.json()) as { names: RecentName[] };
         if (alive) {
-          setNames(data.names ?? []);
+          // Apply curation allowlist when set — keeps the carousel
+          // focused on ecosystem-anchor names during the launch push.
+          const all = data.names ?? [];
+          const filtered = RECENT_MINT_ALLOWLIST.size > 0
+            ? all.filter((n) => RECENT_MINT_ALLOWLIST.has(n.label.toLowerCase()))
+            : all;
+          setNames(filtered);
           setError(null);
         }
       } catch (e) {

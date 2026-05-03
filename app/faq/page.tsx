@@ -139,19 +139,42 @@ const FAQS: { section: string; items: FaqItem[] }[] = [
         q: "Where does the money go?",
         a: (
           <>
-            The mint fee streams into the{" "}
+            Mint + sale fees stream through an on-chain{" "}
             <a
-              href="https://explorer.igralabs.com/address/0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1"
+              href="https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/docs/TREASURY_SPLITTER.md"
               target="_blank"
               rel="noreferrer"
               className="text-cyan underline decoration-dotted underline-offset-2"
             >
-              treasury Safe
+              TreasurySplitter
             </a>{" "}
-            — a Gnosis Safe multisig — and is deployed into grants, integration
-            bounties, and ecosystem spend. We&rsquo;re also planning a formal
-            DAO transfer once the community is large enough; the multisig will
-            announce it on Telegram first.
+            contract that atomically routes every withdrawal:
+            <ul className="mt-3 space-y-1 text-sm">
+              <li>· <strong className="text-cyan">80%</strong> →{" "}
+                <a
+                  href="https://explorer.igralabs.com/address/0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-cyan underline decoration-dotted underline-offset-2"
+                >
+                  INS Treasury Safe
+                </a>{" "}
+                — a Gnosis Safe multisig that funds grants, integration bounties,
+                and ecosystem spend.</li>
+              <li>· <strong className="text-plum">20%</strong> →{" "}
+                <strong>Igra DAO multisig</strong>. The splitter contract is
+                built, audited, and tested (41 tests + 4 fuzz × 256 runs);
+                takes effect on launch once Igra confirms their DAO multisig
+                address.</li>
+            </ul>
+            <p className="mt-3 text-white/60">
+              The split is enforced on-chain — it isn&rsquo;t a promise, it&rsquo;s
+              a function call. The split percentage is owner-tunable by the
+              Treasury Safe via Safe txs, no redeploy needed. Future-proofed for
+              a deeper DAO handoff: ownership of the splitter itself can migrate
+              to the Igra DAO multisig via the contract&rsquo;s 2-step ownership
+              pattern.
+            </p>
           </>
         ),
       },
@@ -334,6 +357,44 @@ const FAQS: { section: string; items: FaqItem[] }[] = [
             tier pricing, and reserve/unreserve labels — but cannot mint names
             for itself, cannot reclaim user names, and cannot raise the fee
             cap above the 5% hard limit.
+          </>
+        ),
+      },
+      {
+        q: "Is the Igra DAO involved? Where does the partnership stand?",
+        a: (
+          <>
+            Yes — INS revenue is split with the Igra DAO via an on-chain{" "}
+            <a
+              href="https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/docs/TREASURY_SPLITTER.md"
+              target="_blank"
+              rel="noreferrer"
+              className="text-cyan underline decoration-dotted underline-offset-2"
+            >
+              TreasurySplitter
+            </a>{" "}
+            contract. The split is{" "}
+            <strong className="text-plum">20% to the Igra DAO</strong> and{" "}
+            <strong className="text-cyan">80% to the INS Treasury Safe</strong>{" "}
+            on every flush — atomically, no human in the loop, no &ldquo;we
+            promise we&rsquo;ll send it later.&rdquo;
+            <p className="mt-3">
+              The splitter contract is built, independently security-audited
+              (Ownable2Step admin, send-treasury-first ordering to defeat any
+              gas-griefing recipient), and covered by{" "}
+              <strong>41 Foundry tests + 4 fuzz suites at 256 runs each</strong>.
+              It <strong className="text-emerald-300">takes effect on launch</strong>{" "}
+              the moment the Igra team provides their DAO multisig address —
+              activation is one forge command + one env var on the production
+              box.
+            </p>
+            <p className="mt-3 text-white/60">
+              For a deeper handoff later: the splitter&rsquo;s own ownership can
+              migrate to the Igra DAO via a 2-step transferOwnership /
+              acceptOwnership flow, giving the DAO direct control of the split
+              percentage and recipients. Full runbook + trust model are in{" "}
+              <code className="text-cyan/80 text-xs">docs/TREASURY_SPLITTER.md</code>.
+            </p>
           </>
         ),
       },

@@ -81,11 +81,11 @@ export function HeroSearch() {
       <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
         {(
           [
-            { label: "alice",   tld: "ins",  colour: "text-cyan/80" },
-            { label: "grok",    tld: "igra", colour: "text-plum/80" },
-            { label: "vitalik", tld: "ikas", colour: "text-emerald-300/80" },
-            { label: "rooftop", tld: "ins",  colour: "text-cyan/80" },
-            { label: "kaspa",   tld: "igra", colour: "text-plum/80" },
+            { label: "igranetwork", tld: "igra" },
+            { label: "insdomains",  tld: "igra" },
+            { label: "zealous",     tld: "igra" },
+            { label: "kaskad",      tld: "igra" },
+            { label: "kaspacom",    tld: "igra" },
           ] as const
         ).map((s) => (
           <button
@@ -94,7 +94,7 @@ export function HeroSearch() {
             onClick={() => setRaw(s.label)}
             className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-white/60 transition hover:border-cyan/30 hover:text-white"
           >
-            {s.label}<span className={s.colour}>.{s.tld}</span>
+            {s.label}<span className="text-plum/80">.{s.tld}</span>
           </button>
         ))}
       </div>

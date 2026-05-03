@@ -152,27 +152,26 @@ function Browse() {
         </div>
       )}
 
-      {featured.length > 0 && (
+      {/* ── Featured hero ──
+           Always visible (with empty state) so featuring is THE primary
+           call-to-action when discovering names. We want sellers to feature
+           and buyers to scroll featured first. */}
+      {!listings.loading && (
         <section className="mt-10">
-          <SectionHeader
-            icon={<Star className="h-4 w-4 fill-cyan text-cyan" />}
-            title="Featured"
-            subtitle="Promoted listings · updated on every block"
+          <FeaturedHero
+            featured={featured}
+            onBought={listings.refetch}
+            pausedByTld={pausedByTld}
           />
-          <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.map((l) => (
-              <ListingCard key={l.tokenId.toString()} listing={l} onBought={listings.refetch} paused={Boolean(pausedByTld[l.tld])} />
-            ))}
-          </div>
         </section>
       )}
 
       {regular.length > 0 && (
-        <section className="mt-12">
+        <section className="mt-14">
           <SectionHeader
             icon={<Tag className="h-4 w-4 text-white/60" />}
             title="All listings"
-            subtitle={featured.length > 0 ? "Remaining on the market" : undefined}
+            subtitle={featured.length > 0 ? "Browse everything else" : undefined}
           />
           <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {regular.map((l) => (
@@ -182,6 +181,78 @@ function Browse() {
         </section>
       )}
     </>
+  );
+}
+
+/* ─── Featured hero ───
+   Pinned at the top of the marketplace as the primary discovery surface.
+   Featured listings render in a 2-column grid (vs 3-col below) so each
+   tile is visually larger; cyan glow border, "Star" pill, and a "promote
+   yours" CTA in the header drive sellers toward the upgrade. */
+function FeaturedHero({
+  featured, onBought, pausedByTld,
+}: {
+  featured: ActiveListing[];
+  onBought: () => void;
+  pausedByTld: Partial<Record<Tld, boolean>>;
+}) {
+  return (
+    <div className="overflow-hidden rounded-3xl border border-cyan/30 bg-gradient-to-br from-cyan/[0.06] via-transparent to-plum/[0.04] p-6 shadow-[0_0_60px_rgba(0,240,255,0.08)] sm:p-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-cyan/40 bg-cyan/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan">
+            <Star className="h-3 w-3 fill-cyan" /> Featured
+          </div>
+          <h2 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl">
+            Top names on the market
+          </h2>
+          <p className="mt-1.5 text-sm text-white/55">
+            Promoted listings get top placement, a glow border, and the Featured
+            badge — pay just <span className="text-cyan font-semibold">1% upfront</span>{" "}
+            on top of the regular 2% sale fee.
+          </p>
+        </div>
+        <Link
+          href="/domains"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan/40 bg-cyan/15 px-4 py-2.5 text-sm font-bold text-cyan transition hover:border-cyan/70 hover:bg-cyan/25 hover:text-white"
+        >
+          <Star className="h-4 w-4" /> Feature your listing
+        </Link>
+      </div>
+
+      {featured.length === 0 ? (
+        <div className="mt-6 rounded-2xl border border-dashed border-white/10 bg-black/20 p-10 text-center">
+          <Star className="mx-auto h-8 w-8 text-cyan/60" />
+          <h3 className="mt-3 text-base font-bold text-white">
+            No featured listings yet — be the first
+          </h3>
+          <p className="mx-auto mt-2 max-w-md text-xs text-white/55">
+            Featuring takes a 1% upfront fee in iKAS. Your name jumps to the top
+            of the marketplace and shows a glow border + ⭐ badge until it sells
+            or expires.
+          </p>
+          <Link
+            href="/domains"
+            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-ins-gradient px-5 py-2.5 text-sm font-black text-black transition hover:brightness-110"
+          >
+            <Tag className="h-4 w-4" /> Go to my domains
+          </Link>
+        </div>
+      ) : (
+        // 2-col grid (vs 3-col regular) so featured cards are physically
+        // larger and visually dominate the fold.
+        <div className="mt-6 grid gap-5 sm:grid-cols-2">
+          {featured.map((l) => (
+            <ListingCard
+              key={l.tokenId.toString()}
+              listing={l}
+              onBought={onBought}
+              paused={Boolean(pausedByTld[l.tld])}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

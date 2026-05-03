@@ -32,7 +32,7 @@ export default function Home() {
           Igra Network. Pick <span className="text-cyan font-medium">Forever</span>{" "}
           (pay once, no renewals) or <span className="text-emerald-300 font-medium">Annual</span>{" "}
           (1-year renewable). Send crypto to{" "}
-          <span className="font-medium text-plum">alice.igra</span>{" "}
+          <span className="font-medium text-plum">yourname.igra</span>{" "}
           instead of <span className="font-mono text-white/50">0x71C4…f3a2</span>.
         </p>
 
@@ -144,7 +144,7 @@ export default function Home() {
 
         {/* Resolve demo */}
         <div className="mt-20 inline-flex flex-wrap items-center justify-center gap-4 rounded-2xl glass px-6 py-4">
-          <span className="ins-gradient-text text-xl font-bold">alice.igra</span>
+          <span className="ins-gradient-text text-xl font-bold">yourname.igra</span>
           <ArrowRight className="h-4 w-4 text-cyan" />
           <span className="font-mono text-sm text-white/70">0x71C4…f3a2</span>
           <span className="ml-2 rounded-full bg-cyan/10 px-2 py-0.5 text-[10px] font-medium text-cyan">

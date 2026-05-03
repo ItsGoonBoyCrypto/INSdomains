@@ -36,7 +36,9 @@ const PARTNERS: Partner[] = [
     name: "Igra Labs",
     url: "https://igralabs.com",
     role: "Chain · L2 home of INS",
-    mark: { kind: "stylized", initial: "i" },
+    // Real Igra wordmark — sourced from igralabs.com favicon, recoloured
+    // white for the dark-card surface. Lives at public/partner-logos/.
+    mark: { kind: "image", src: "/partner-logos/igra-labs.svg", alt: "Igra Labs" },
     accent: "plum",
     live: true,
   },
