@@ -58,9 +58,11 @@ export function RecentMintsCarousel() {
     let alive = true;
     async function load() {
       try {
-        // Pull a wider window than we'll show so the curation allowlist
-        // has every recent mint to filter against (V1 + V2 unioned by API).
-        const r = await fetch(`${SITE}/api/names/recent?limit=50`, {
+        // V2-only: V1 is migrate-only post-launch, so the public-facing
+        // "Recently registered" carousel only shows V2 mints. Wider limit
+        // than we'll display so the curation allowlist has every recent
+        // V2 mint to filter against.
+        const r = await fetch(`${SITE}/api/names/recent?limit=50&version=v2`, {
           // Browser cache is fine; backend already does s-maxage=30.
           cache: "default",
         });

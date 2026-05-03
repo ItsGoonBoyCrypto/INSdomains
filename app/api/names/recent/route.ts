@@ -41,11 +41,17 @@ export async function OPTIONS() {
 }
 
 /**
- * GET /api/names/recent?limit=50&tld=igra
+ * GET /api/names/recent?limit=50&tld=igra&version=all
  *
  * Returns the most recent N names registered on the chosen TLD's Registry.
  * Useful for explorers, "newly registered" feeds, and integration smoke
  * tests by wallet devs who want to verify they can read live state.
+ *
+ * Query params:
+ *   - limit:   1..200, default 50
+ *   - tld:     "igra" (only live TLD; default igra)
+ *   - version: "v1" | "v2" | "all" (default "all" — unions both registries)
+ *              Use "v2" for the canonical post-launch feed (V1 is migrate-only).
  *
  * Response (200):
  *   {
@@ -54,7 +60,7 @@ export async function OPTIONS() {
  *     names: [
  *       { tokenId: "11", label: "newest", name: "newest.igra",
  *         owner: "0x...", target: "0x...", mintedAt: 1735000000,
- *         blockNumber: "5176410", txHash: "0x..." },
+ *         blockNumber: "5176410", txHash: "0x...", registry_version: "v2" },
  *       …
  *     ]
  *   }
@@ -66,6 +72,14 @@ export async function GET(req: Request) {
     200,
   );
   const tldParam = (url.searchParams.get("tld") ?? "igra").toLowerCase();
+  const versionParam = (url.searchParams.get("version") ?? "all").toLowerCase();
+  if (!["v1", "v2", "all"].includes(versionParam)) {
+    return Response.json(
+      { error: "invalid_version", version: versionParam, valid: ["v1", "v2", "all"] },
+      { status: 400, headers: CORS },
+    );
+  }
+  const versionFilter = versionParam as "v1" | "v2" | "all";
 
   if (!(LIVE_TLDS as readonly string[]).includes(tldParam)) {
     return Response.json(
@@ -76,20 +90,22 @@ export async function GET(req: Request) {
   const tld = tldParam as Tld;
   const registry = REGISTRY_ADDRESSES[tld];
 
-  // For .igra: include V2 mint events alongside V1 (V2 fires Transfer
-  // from-zero for both fresh mints + V1Migrated claims, which is what
-  // we want — both should appear in the recent-mints feed).
-  const includeV2 = tld === "igra" && isV2Deployed();
+  // Skip V1 reads entirely if caller asked for V2 only (saves an RPC roundtrip).
+  // Skip V2 reads entirely if caller asked for V1 only.
+  const includeV1 = versionFilter !== "v2";
+  const includeV2 = versionFilter !== "v1" && tld === "igra" && isV2Deployed();
 
   try {
     // Mint events = Transfer with from == 0x0. Chunked since Igra RPC caps
     // eth_getLogs at 100k blocks per call. Also chunked across V1 + V2.
-    const v1LogsP = getLogsChunked({
-      client,
-      address: registry,
-      event: TRANSFER_EVENT,
-      args: { from: ZERO_ADDR as Address },
-    });
+    const v1LogsP = includeV1
+      ? getLogsChunked({
+          client,
+          address: registry,
+          event: TRANSFER_EVENT,
+          args: { from: ZERO_ADDR as Address },
+        })
+      : Promise.resolve([]);
     const v2LogsP = includeV2
       ? getLogsChunked({
           client,

@@ -21,10 +21,17 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ADMIN_WALLET, isAdmin } from "@/lib/admin";
 import {
-  REGISTRY_ABI, MARKETPLACE_ABI,
-  REGISTRY_ADDRESSES, MARKETPLACE_ADDRESSES,
+  // V2-only admin: Registry/ABI imports are ALIASED to V2. The .igra V1
+  // Registry is migrate-only post-launch (per the 2026-05-03 V2-only flip)
+  // — every admin write here lands on the V2 Registry. V1 NFTs continue
+  // to work via /domains' V1MigrationBanner; admin doesn't manage them.
+  REGISTRY_V2_ABI as REGISTRY_ABI,
+  REGISTRY_V2_ADDRESS,
+  MARKETPLACE_ABI,
+  MARKETPLACE_V2_ADDRESS,
   SUBNAME_EXTENSION_ADDRESS, SUBNAME_EXTENSION_ABI,
   TREASURY_SPLITTER_ADDRESS, TREASURY_SPLITTER_ABI, isSplitterDeployed,
+  isV2Deployed,
   TLDS, LIVE_TLDS, isTldLive, tldSuffix,
   type Tld,
 } from "@/lib/contracts";
@@ -176,6 +183,7 @@ function AdminDashboard() {
   return (
     <>
       <TldSelector activeTld={activeTld} onSelect={onSelectTld} />
+      <V2ActiveBanner />
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <AdminMintCard tld={activeTld} />
         <ReservedNamesCard tld={activeTld} />
@@ -236,6 +244,47 @@ function TldSelector({
   );
 }
 
+/**
+ * Banner clarifying that admin writes target the V2 Registry / Marketplace.
+ * Rendered between the TLD selector and the card grid so it's the FIRST
+ * thing the operator sees after picking a TLD. V1 contracts remain on chain
+ * as legacy infra (V1 holders can still resolve / transfer / migrate) but
+ * the admin no longer creates anything on V1 — every adminMint, setReserved,
+ * setLengthPrice, withdraw, etc. lands on V2.
+ */
+function V2ActiveBanner() {
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-plum/30 bg-plum/[0.04] p-4 text-xs sm:text-sm">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-plum/40 bg-plum/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-plum">
+        V2 active
+      </span>
+      <span className="text-white/70">
+        Every admin write targets the{" "}
+        <a
+          href={`${IGRA_EXPLORER}/address/${REGISTRY_V2_ADDRESS}`}
+          target="_blank"
+          rel="noreferrer"
+          className="font-mono text-plum/90 underline decoration-dotted hover:text-plum"
+        >
+          V2 Registry
+        </a>{" "}
+        and{" "}
+        <a
+          href={`${IGRA_EXPLORER}/address/${MARKETPLACE_V2_ADDRESS}`}
+          target="_blank"
+          rel="noreferrer"
+          className="font-mono text-plum/90 underline decoration-dotted hover:text-plum"
+        >
+          V2 Marketplace
+        </a>
+        . V1 is migrate-only — V1 NFTs continue to work but no new mints land
+        there. V1 holders see the free Forever upgrade banner on{" "}
+        <a href="/domains" className="text-cyan underline decoration-dotted hover:text-white">/domains</a>.
+      </span>
+    </div>
+  );
+}
+
 /* ─────────────────────────── Cards ─────────────────────────── */
 
 function Card({
@@ -291,8 +340,8 @@ function TxError({ message, onReset }: { message?: string; onReset: () => void }
 
 /* ── Admin Mint ─────────────────────────────────────────── */
 function AdminMintCard({ tld }: { tld: Tld }) {
-  const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
-  const REGISTRY_LIVE = isTldLive(tld);
+  const REGISTRY_ADDRESS = REGISTRY_V2_ADDRESS;
+  const REGISTRY_LIVE = isV2Deployed();  // V2-only admin (V1 is migrate-only)
   const [label, setLabel] = useState("");
   const [target, setTarget] = useState("");
   const { writeContract, data: hash, isPending, error, reset } = useWriteContract();
@@ -341,7 +390,7 @@ function AdminMintCard({ tld }: { tld: Tld }) {
     setBatchStatuses((s) => ({ ...s, [nextTld]: "signing" }));
     reset();
     writeContract({
-      address: REGISTRY_ADDRESSES[nextTld],
+      address: REGISTRY_V2_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: op.fn,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -586,8 +635,8 @@ type BatchOp = {
 };
 
 function ReservedNamesCard({ tld }: { tld: Tld }) {
-  const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
-  const REGISTRY_LIVE = isTldLive(tld);
+  const REGISTRY_ADDRESS = REGISTRY_V2_ADDRESS;
+  const REGISTRY_LIVE = isV2Deployed();  // V2-only admin (V1 is migrate-only)
 
   // Multi-TLD apply-all toggle — dormant in single-TLD mode (post-pivot).
   // Code retained but the toggle UI never renders. When eventually re-enabled,
@@ -772,7 +821,7 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
     setBatchStatuses((s) => ({ ...s, [nextTld]: "signing" }));
     reset();
     writeContract({
-      address: REGISTRY_ADDRESSES[nextTld],
+      address: REGISTRY_V2_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: op.fn,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1199,7 +1248,7 @@ function BulkReserveSection({
   disabled: boolean;
   onBatchDone: (labels: string[]) => void;
 }) {
-  const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
+  const REGISTRY_ADDRESS = REGISTRY_V2_ADDRESS;
   const [open, setOpen] = useState(false);
   const [raw, setRaw] = useState("");
   const [batches, setBatches] = useState<string[][]>([]);
@@ -1421,8 +1470,8 @@ const CANONICAL_TIER_SCHEDULE = [
 
 
 function TierPricingCard({ tld }: { tld: Tld }) {
-  const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
-  const REGISTRY_LIVE = isTldLive(tld);
+  const REGISTRY_ADDRESS = REGISTRY_V2_ADDRESS;
+  const REGISTRY_LIVE = isV2Deployed();  // V2-only admin (V1 is migrate-only)
   const tiers = [
     { bucket: 1, label: "1-char", hint: "ultra-premium" },
     { bucket: 2, label: "2-char", hint: "premium" },
@@ -1476,7 +1525,7 @@ function TierPricingCard({ tld }: { tld: Tld }) {
     setBatchStatuses((s) => ({ ...s, [nextTld]: "signing" }));
     batchReset();
     writeBatch({
-      address: REGISTRY_ADDRESSES[nextTld],
+      address: REGISTRY_V2_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: op.fn,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1621,8 +1670,8 @@ function TierRow({
   /** Number of TLDs the batch will touch (for the button label). */
   tldQueueLen: number;
 }) {
-  const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
-  const REGISTRY_LIVE = isTldLive(tld);
+  const REGISTRY_ADDRESS = REGISTRY_V2_ADDRESS;
+  const REGISTRY_LIVE = isV2Deployed();  // V2-only admin (V1 is migrate-only)
   const currentStr =
     current === null ? "" : current === "RESERVED" ? "RESERVED" : String(current);
   const [value, setValue] = useState<string>(currentStr);
@@ -1698,8 +1747,8 @@ function TierRow({
 
 /* ── Premium overrides ──────────────────────────────────── */
 function PremiumOverridesCard({ tld }: { tld: Tld }) {
-  const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
-  const REGISTRY_LIVE = isTldLive(tld);
+  const REGISTRY_ADDRESS = REGISTRY_V2_ADDRESS;
+  const REGISTRY_LIVE = isV2Deployed();  // V2-only admin (V1 is migrate-only)
   const [label, setLabel] = useState("");
   const [price, setPrice] = useState("");
   const [items, setItems] = useState<{ label: string; price: number }[]>([]);
@@ -1744,7 +1793,7 @@ function PremiumOverridesCard({ tld }: { tld: Tld }) {
     setBatchStatuses((s) => ({ ...s, [nextTld]: "signing" }));
     reset();
     writeContract({
-      address: REGISTRY_ADDRESSES[nextTld],
+      address: REGISTRY_V2_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: op.fn,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1962,8 +2011,8 @@ function PremiumOverridesCard({ tld }: { tld: Tld }) {
 
 /* ── Treasury ───────────────────────────────────────────── */
 function TreasuryCard({ tld }: { tld: Tld }) {
-  const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
-  const REGISTRY_LIVE = isTldLive(tld);
+  const REGISTRY_ADDRESS = REGISTRY_V2_ADDRESS;
+  const REGISTRY_LIVE = isV2Deployed();  // V2-only admin (V1 is migrate-only)
   const { data: balance, refetch } = useBalance({
     address: REGISTRY_ADDRESS,
     query: { enabled: REGISTRY_LIVE },
@@ -2368,8 +2417,8 @@ function SplitterWithdrawSection({
 
 /* ── Marketplace ────────────────────────────────────────── */
 function MarketplaceCard({ tld }: { tld: Tld }) {
-  const MARKETPLACE_ADDRESS = MARKETPLACE_ADDRESSES[tld];
-  const MARKETPLACE_LIVE = isTldLive(tld);
+  const MARKETPLACE_ADDRESS = MARKETPLACE_V2_ADDRESS;
+  const MARKETPLACE_LIVE = isV2Deployed();  // V2 Marketplace is the active one
   const { data: balance, refetch: refetchBalance } = useBalance({
     address: MARKETPLACE_ADDRESS,
     query: { enabled: MARKETPLACE_LIVE },
@@ -2691,10 +2740,10 @@ function PreLaunchListingsCard({ tld }: { tld: Tld }) {
   const safeAddr: `0x${string}` = address ?? "0x0000000000000000000000000000000000000000";
   const { data: reads1, refetch: refetchReads1 } = useReadContracts({
     contracts: targetTlds.flatMap((t) => [
-      { address: REGISTRY_ADDRESSES[t], abi: REGISTRY_ABI, functionName: "reserved" as const, args: [cleanedLabel] as const },
-      { address: REGISTRY_ADDRESSES[t], abi: REGISTRY_ABI, functionName: "tokenIdOf" as const, args: [cleanedLabel] as const },
-      { address: REGISTRY_ADDRESSES[t], abi: REGISTRY_ABI, functionName: "isApprovedForAll" as const, args: [safeAddr, MARKETPLACE_ADDRESSES[t]] as const },
-      { address: MARKETPLACE_ADDRESSES[t], abi: MARKETPLACE_ABI, functionName: "featureFeeBps" as const, args: [] as const },
+      { address: REGISTRY_V2_ADDRESS, abi: REGISTRY_ABI, functionName: "reserved" as const, args: [cleanedLabel] as const },
+      { address: REGISTRY_V2_ADDRESS, abi: REGISTRY_ABI, functionName: "tokenIdOf" as const, args: [cleanedLabel] as const },
+      { address: REGISTRY_V2_ADDRESS, abi: REGISTRY_ABI, functionName: "isApprovedForAll" as const, args: [safeAddr, MARKETPLACE_V2_ADDRESS] as const },
+      { address: MARKETPLACE_V2_ADDRESS, abi: MARKETPLACE_ABI, functionName: "featureFeeBps" as const, args: [] as const },
     ]),
     query: { enabled: enabledReads },
   });
@@ -2715,8 +2764,8 @@ function PreLaunchListingsCard({ tld }: { tld: Tld }) {
 
   const { data: reads2, refetch: refetchReads2 } = useReadContracts({
     contracts: tldsNeedingSecondPass.flatMap((x) => [
-      { address: REGISTRY_ADDRESSES[x.tld], abi: REGISTRY_ABI, functionName: "ownerOf" as const, args: [x.tokenId] as const },
-      { address: MARKETPLACE_ADDRESSES[x.tld], abi: MARKETPLACE_ABI, functionName: "getActiveListing" as const, args: [x.tokenId] as const },
+      { address: REGISTRY_V2_ADDRESS, abi: REGISTRY_ABI, functionName: "ownerOf" as const, args: [x.tokenId] as const },
+      { address: MARKETPLACE_V2_ADDRESS, abi: MARKETPLACE_ABI, functionName: "getActiveListing" as const, args: [x.tokenId] as const },
     ]),
     query: { enabled: tldsNeedingSecondPass.length > 0 },
   });
@@ -2808,7 +2857,7 @@ function PreLaunchListingsCard({ tld }: { tld: Tld }) {
   const resolveTokenId = async (t: Tld): Promise<bigint> => {
     if (!publicClient) throw new Error("No RPC client");
     const id = await publicClient.readContract({
-      address: REGISTRY_ADDRESSES[t],
+      address: REGISTRY_V2_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: "tokenIdOf",
       args: [cleanedLabel],
@@ -2845,7 +2894,7 @@ function PreLaunchListingsCard({ tld }: { tld: Tld }) {
     try {
       if (step.kind === "reserve") {
         const r = await publicClient.readContract({
-          address: REGISTRY_ADDRESSES[step.tld],
+          address: REGISTRY_V2_ADDRESS,
           abi: REGISTRY_ABI,
           functionName: "reserved",
           args: [cleanedLabel],
@@ -2854,14 +2903,14 @@ function PreLaunchListingsCard({ tld }: { tld: Tld }) {
       }
       if (step.kind === "mint") {
         const id = (await publicClient.readContract({
-          address: REGISTRY_ADDRESSES[step.tld],
+          address: REGISTRY_V2_ADDRESS,
           abi: REGISTRY_ABI,
           functionName: "tokenIdOf",
           args: [cleanedLabel],
         })) as bigint;
         if (id === 0n) return false;
         const owner = (await publicClient.readContract({
-          address: REGISTRY_ADDRESSES[step.tld],
+          address: REGISTRY_V2_ADDRESS,
           abi: REGISTRY_ABI,
           functionName: "ownerOf",
           args: [id],
@@ -2871,23 +2920,23 @@ function PreLaunchListingsCard({ tld }: { tld: Tld }) {
       if (step.kind === "approve") {
         if (!address) return false;
         const ok = await publicClient.readContract({
-          address: REGISTRY_ADDRESSES[step.tld],
+          address: REGISTRY_V2_ADDRESS,
           abi: REGISTRY_ABI,
           functionName: "isApprovedForAll",
-          args: [address, MARKETPLACE_ADDRESSES[step.tld]],
+          args: [address, MARKETPLACE_V2_ADDRESS],
         });
         return ok === true;
       }
       if (step.kind === "list") {
         const id = (await publicClient.readContract({
-          address: REGISTRY_ADDRESSES[step.tld],
+          address: REGISTRY_V2_ADDRESS,
           abi: REGISTRY_ABI,
           functionName: "tokenIdOf",
           args: [cleanedLabel],
         })) as bigint;
         if (id === 0n) return false;
         const listing = (await publicClient.readContract({
-          address: MARKETPLACE_ADDRESSES[step.tld],
+          address: MARKETPLACE_V2_ADDRESS,
           abi: MARKETPLACE_ABI,
           functionName: "getActiveListing",
           args: [id],
@@ -2937,7 +2986,7 @@ function PreLaunchListingsCard({ tld }: { tld: Tld }) {
     try {
       if (step.kind === "reserve") {
         writeContract({
-          address: REGISTRY_ADDRESSES[step.tld],
+          address: REGISTRY_V2_ADDRESS,
           abi: REGISTRY_ABI,
           functionName: "setReserved",
           args: [cleanedLabel, true],
@@ -2945,17 +2994,17 @@ function PreLaunchListingsCard({ tld }: { tld: Tld }) {
       } else if (step.kind === "mint") {
         if (!address) throw new Error("Wallet not connected");
         writeContract({
-          address: REGISTRY_ADDRESSES[step.tld],
+          address: REGISTRY_V2_ADDRESS,
           abi: REGISTRY_ABI,
           functionName: "adminMint",
           args: [cleanedLabel, address],
         });
       } else if (step.kind === "approve") {
         writeContract({
-          address: REGISTRY_ADDRESSES[step.tld],
+          address: REGISTRY_V2_ADDRESS,
           abi: REGISTRY_ABI,
           functionName: "setApprovalForAll",
-          args: [MARKETPLACE_ADDRESSES[step.tld], true],
+          args: [MARKETPLACE_V2_ADDRESS, true],
         });
       } else if (step.kind === "list") {
         const tokenId = await resolveTokenId(step.tld);
@@ -2966,7 +3015,7 @@ function PreLaunchListingsCard({ tld }: { tld: Tld }) {
         const ffBps = pf?.featureFeeBps ?? 100;
         const featureFee = (priceWei * BigInt(ffBps)) / 10000n;
         writeContract({
-          address: MARKETPLACE_ADDRESSES[step.tld],
+          address: MARKETPLACE_V2_ADDRESS,
           abi: MARKETPLACE_ABI,
           functionName: "createListing",
           args: [tokenId, priceWei, FOREVER_EXPIRY, true],
@@ -3304,7 +3353,7 @@ function CleanupCard({ tld: _tld }: { tld: Tld }) {
 
       for (const t of LIVE_TLDS) {
         const supply = (await publicClient.readContract({
-          address: REGISTRY_ADDRESSES[t],
+          address: REGISTRY_V2_ADDRESS,
           abi: REGISTRY_ABI,
           functionName: "totalSupply",
           args: [],
@@ -3316,7 +3365,7 @@ function CleanupCard({ tld: _tld }: { tld: Tld }) {
           let label = "";
           try {
             label = (await publicClient.readContract({
-              address: REGISTRY_ADDRESSES[t],
+              address: REGISTRY_V2_ADDRESS,
               abi: REGISTRY_ABI,
               functionName: "labelOf",
               args: [i],
@@ -3326,7 +3375,7 @@ function CleanupCard({ tld: _tld }: { tld: Tld }) {
 
           // Read active listing (may be empty struct)
           const listing = (await publicClient.readContract({
-            address: MARKETPLACE_ADDRESSES[t],
+            address: MARKETPLACE_V2_ADDRESS,
             abi: MARKETPLACE_ABI,
             functionName: "getActiveListing",
             args: [i],
@@ -3365,7 +3414,7 @@ function CleanupCard({ tld: _tld }: { tld: Tld }) {
         let anyNonZero = false;
         for (const t of LIVE_TLDS) {
           const p = (await publicClient.readContract({
-            address: REGISTRY_ADDRESSES[t],
+            address: REGISTRY_V2_ADDRESS,
             abi: REGISTRY_ABI,
             functionName: "premiumPrice",
             args: [label],
@@ -3424,7 +3473,7 @@ function CleanupCard({ tld: _tld }: { tld: Tld }) {
     if (busy) return;
     setPending({ kind: "cancel", tld, tokenId });
     writeContract({
-      address: MARKETPLACE_ADDRESSES[tld],
+      address: MARKETPLACE_V2_ADDRESS,
       abi: MARKETPLACE_ABI,
       functionName: "cancelListing",
       args: [tokenId],
@@ -3437,7 +3486,7 @@ function CleanupCard({ tld: _tld }: { tld: Tld }) {
     if (busy) return;
     setPending({ kind: "clearPremium", tld, label });
     writeContract({
-      address: REGISTRY_ADDRESSES[tld],
+      address: REGISTRY_V2_ADDRESS,
       abi: REGISTRY_ABI,
       functionName: "setPremiumPrice",
       args: [label, 0n],
@@ -3581,8 +3630,8 @@ function CleanupCard({ tld: _tld }: { tld: Tld }) {
 
 /* ── Ownership ──────────────────────────────────────────── */
 function OwnershipCard({ tld }: { tld: Tld }) {
-  const REGISTRY_ADDRESS = REGISTRY_ADDRESSES[tld];
-  const REGISTRY_LIVE = isTldLive(tld);
+  const REGISTRY_ADDRESS = REGISTRY_V2_ADDRESS;
+  const REGISTRY_LIVE = isV2Deployed();  // V2-only admin (V1 is migrate-only)
   const [to, setTo] = useState("");
   const [confirming, setConfirming] = useState(false);
 
