@@ -23,7 +23,7 @@ const COLS: { title: string; items: FooterItem[] }[] = [
     title: "Community",
     items: [
       { label: "Telegram", href: "https://t.me/IgraNameService", external: true },
-      { label: "X / Twitter", href: "#", comingSoon: true },
+      { label: "X / Twitter", href: "https://x.com/IgraNameService", external: true },
       { label: "GitHub", href: "https://github.com/ItsGoonBoyCrypto/INSdomains", external: true },
     ],
   },

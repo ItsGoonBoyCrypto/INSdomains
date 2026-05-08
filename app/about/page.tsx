@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   Sparkles, Infinity as InfinityIcon, ShieldCheck,
-  Layers, Coins, Globe, Github, Send, Hourglass, ArrowRight,
+  Layers, Coins, Globe, Github, Send, ArrowRight,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -265,12 +265,18 @@ export default function AboutPage() {
             >
               <Github className="h-4 w-4" /> GitHub
             </a>
-            <span
-              title="Launching once account security is finalised"
-              className="btn-ghost inline-flex cursor-default items-center gap-2 opacity-60"
+            <a
+              href="https://x.com/IgraNameService"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="btn-ghost inline-flex items-center gap-2"
             >
-              <Hourglass className="h-4 w-4" /> X · soon
-            </span>
+              {/* Inline X logo (lucide doesn't yet ship a clean X-brand glyph). */}
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+              X
+            </a>
           </div>
         </section>
       </main>
