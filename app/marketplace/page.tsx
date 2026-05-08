@@ -21,13 +21,20 @@ import { shortAddr } from "@/lib/names";
 import { explorerAddr } from "@/lib/igra-chain";
 import {
   REGISTRY_ABI,
+  REGISTRY_V2_ABI,
+  REGISTRY_V2_ADDRESS,
   MARKETPLACE_ABI,
+  MARKETPLACE_V2_ADDRESS,
   REGISTRY_ADDRESSES, MARKETPLACE_ADDRESSES,
+  isV2Deployed,
   TLDS, LIVE_TLDS, isTldLive, tldSuffix,
   type Tld,
 } from "@/lib/contracts";
+import type { Address } from "viem";
 
 const ANY_TLD_LIVE = LIVE_TLDS.length > 0;
+
+type RegistryVersion = "v1" | "v2";
 
 type ActiveListing = {
   tld: Tld;
@@ -37,6 +44,12 @@ type ActiveListing = {
   price: bigint;
   expiry: bigint;
   featured: boolean;
+  /** Which registry the NFT belongs to (V1 legacy or V2 canonical). */
+  registryVersion: RegistryVersion;
+  /** Marketplace contract that holds this listing — must match the
+   *  registry version since each marketplace is bound to one Registry
+   *  via an immutable IERC721Min constructor arg. */
+  marketplace: Address;
 };
 
 export default function MarketplacePage() {
@@ -55,35 +68,45 @@ export default function MarketplacePage() {
 
 function Browse() {
   const listings = useActiveListings();
-  // Fees + paused flag are set per-marketplace; in the launch config they're
-  // identical across TLDs, so we show the .ins value as the canonical banner.
-  // If a TLD differs it's surfaced per-card via the individual fee-on-price
-  // computation at buy time.
-  const primaryTld: Tld = LIVE_TLDS[0] ?? "ins";
+  // V2 is the canonical post-launch marketplace; saleFeeBps is identical to
+  // V1 (2% by design) so the V2 banner read is the source of truth.
+  const v2Live = isV2Deployed();
   const { data: saleFeeBps } = useReadContract({
-    address: MARKETPLACE_ADDRESSES[primaryTld],
+    address: v2Live ? MARKETPLACE_V2_ADDRESS : MARKETPLACE_ADDRESSES[LIVE_TLDS[0] ?? "igra"],
     abi: MARKETPLACE_ABI,
     functionName: "saleFeeBps",
     query: { enabled: LIVE_TLDS.length > 0 },
   });
-  // Pause is per-marketplace — read all live ones and build a per-TLD map
-  // so cards can show pause state only on the affected TLD. The global
-  // banner summarises which TLDs (if any) are paused.
+  // Pause is per-marketplace. Build a map keyed by marketplace ADDRESS
+  // (not TLD) so the V1 marketplace and V2 marketplace can each be paused
+  // independently. Each ListingCard looks itself up via listing.marketplace.
   const pausedReads = useReadContracts({
-    contracts: LIVE_TLDS.map((tld) => ({
-      address: MARKETPLACE_ADDRESSES[tld],
-      abi: MARKETPLACE_ABI,
-      functionName: "paused",
-    } as const)),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    contracts: [
+      ...LIVE_TLDS.map((tld) => ({
+        address: MARKETPLACE_ADDRESSES[tld],
+        abi: MARKETPLACE_ABI,
+        functionName: "paused",
+      })),
+      ...(v2Live
+        ? [{ address: MARKETPLACE_V2_ADDRESS, abi: MARKETPLACE_ABI, functionName: "paused" }]
+        : []),
+    ] as any,
     query: { enabled: LIVE_TLDS.length > 0 },
   });
-  const pausedByTld: Partial<Record<Tld, boolean>> = {};
+  const pausedByMarketplace: Record<string, boolean> = {};
   LIVE_TLDS.forEach((tld, i) => {
     const r = pausedReads.data?.[i];
-    if (r?.status === "success") pausedByTld[tld] = r.result === true;
+    if (r?.status === "success") pausedByMarketplace[MARKETPLACE_ADDRESSES[tld].toLowerCase()] = r.result === true;
   });
-  const pausedTlds = (Object.keys(pausedByTld) as Tld[]).filter((t) => pausedByTld[t]);
-  const anyPaused = pausedTlds.length > 0;
+  if (v2Live) {
+    const r = pausedReads.data?.[LIVE_TLDS.length];
+    if (r?.status === "success") pausedByMarketplace[MARKETPLACE_V2_ADDRESS.toLowerCase()] = r.result === true;
+  }
+  const pausedMarketplaces = Object.entries(pausedByMarketplace)
+    .filter(([, v]) => v)
+    .map(([k]) => k);
+  const anyPaused = pausedMarketplaces.length > 0;
 
   const featured = listings.list.filter((l) => l.featured);
   const regular = listings.list.filter((l) => !l.featured);
@@ -111,7 +134,7 @@ function Browse() {
                 }`}
               />
             </span>
-            {anyPaused ? `Paused: ${pausedTlds.map(tldSuffix).join(", ")}` : "Live on Igra mainnet"}
+            {anyPaused ? `${pausedMarketplaces.length} marketplace${pausedMarketplaces.length === 1 ? "" : "s"} paused` : "Live on Igra mainnet"}
           </div>
           <h1 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl">
             INS <span className="ins-gradient-text">Marketplace</span>
@@ -161,7 +184,7 @@ function Browse() {
           <FeaturedHero
             featured={featured}
             onBought={listings.refetch}
-            pausedByTld={pausedByTld}
+            pausedByMarketplace={pausedByMarketplace}
           />
         </section>
       )}
@@ -175,7 +198,7 @@ function Browse() {
           />
           <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {regular.map((l) => (
-              <ListingCard key={l.tokenId.toString()} listing={l} onBought={listings.refetch} paused={Boolean(pausedByTld[l.tld])} />
+              <ListingCard key={`${l.registryVersion}-${l.tokenId.toString()}`} listing={l} onBought={listings.refetch} paused={Boolean(pausedByMarketplace[l.marketplace.toLowerCase()])} />
             ))}
           </div>
         </section>
@@ -190,11 +213,11 @@ function Browse() {
    tile is visually larger; cyan glow border, "Star" pill, and a "promote
    yours" CTA in the header drive sellers toward the upgrade. */
 function FeaturedHero({
-  featured, onBought, pausedByTld,
+  featured, onBought, pausedByMarketplace,
 }: {
   featured: ActiveListing[];
   onBought: () => void;
-  pausedByTld: Partial<Record<Tld, boolean>>;
+  pausedByMarketplace: Record<string, boolean>;
 }) {
   return (
     <div className="overflow-hidden rounded-3xl border border-cyan/30 bg-gradient-to-br from-cyan/[0.06] via-transparent to-plum/[0.04] p-6 shadow-[0_0_60px_rgba(0,240,255,0.08)] sm:p-8">
@@ -244,10 +267,10 @@ function FeaturedHero({
         <div className="mt-6 grid gap-5 sm:grid-cols-2">
           {featured.map((l) => (
             <ListingCard
-              key={l.tokenId.toString()}
+              key={`${l.registryVersion}-${l.tokenId.toString()}`}
               listing={l}
               onBought={onBought}
-              paused={Boolean(pausedByTld[l.tld])}
+              paused={Boolean(pausedByMarketplace[l.marketplace.toLowerCase()])}
             />
           ))}
         </div>
@@ -290,7 +313,10 @@ function ListingCard({
     setTxError(null);
     writeContract(
       {
-        address: MARKETPLACE_ADDRESSES[listing.tld],
+        // Buy MUST go to the marketplace that holds the listing — V1 and V2
+        // each have their own immutable Registry binding, listings can't
+        // cross. listing.marketplace is set per-entry in useActiveListings.
+        address: listing.marketplace,
         abi: MARKETPLACE_ABI,
         functionName: "buyListing",
         args: [listing.tokenId],
@@ -350,10 +376,16 @@ function ListingCard({
             {tldSuffix(listing.tld)}
           </span>
           <span
-            title="ERC-721 token ID"
-            className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-[10px] font-semibold text-white/60"
+            title={listing.registryVersion === "v2"
+              ? `V2 Registry · token #${listing.tokenId.toString()}`
+              : `V1 Registry (legacy) · token #${listing.tokenId.toString()}`}
+            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 font-mono text-[10px] font-semibold ${
+              listing.registryVersion === "v2"
+                ? "border-cyan/40 bg-cyan/10 text-cyan"
+                : "border-white/15 bg-white/[0.04] text-white/55"
+            }`}
           >
-            #{listing.tokenId.toString()}
+            {listing.registryVersion === "v2" ? "V2" : "V1"} #{listing.tokenId.toString()}
           </span>
         </div>
       </div>
@@ -448,65 +480,121 @@ function ListingCard({
 
 /* ─────────────────────────── DATA HOOK ─────────────────────────── */
 
+/** Per-grid-entry metadata used for both the listing read and the label
+ *  read. Each entry owns its own (registry + marketplace + ABI) trio so
+ *  V1 entries hit V1 contracts and V2 entries hit V2 contracts — they
+ *  can NEVER cross because each marketplace is `IERC721Min immutable` to
+ *  exactly one Registry on chain. */
+type GridEntry = {
+  tld: Tld;
+  tokenId: bigint;
+  registryVersion: RegistryVersion;
+  registry: Address;
+  marketplace: Address;
+};
+
 function useActiveListings() {
-  // 1. totalSupply on every live Registry in parallel.
+  // 1. totalSupply on every live Registry (V1 .igra/.ins/.ikas) PLUS V2 .igra
+  //    in parallel. V2 is the canonical post-launch source; V1 stays in the
+  //    union so legacy listings (any V1 .igra NFT being sold pre-migration)
+  //    keep showing on /marketplace.
+  const v2Live = isV2Deployed();
   const supplyReads = useReadContracts({
-    contracts: LIVE_TLDS.map((tld) => ({
-      address: REGISTRY_ADDRESSES[tld],
-      abi: REGISTRY_ABI,
-      functionName: "totalSupply",
-    } as const)),
+    // Cast escapes wagmi's deep ABI inference (TS2589 on V2 ABI). The
+    // runtime shape is identical — each totalSupply returns bigint.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    contracts: [
+      ...LIVE_TLDS.map((tld) => ({
+        address: REGISTRY_ADDRESSES[tld],
+        abi: REGISTRY_ABI,
+        functionName: "totalSupply",
+      })),
+      ...(v2Live
+        ? [{
+            address: REGISTRY_V2_ADDRESS,
+            abi: REGISTRY_V2_ABI,
+            functionName: "totalSupply",
+          }]
+        : []),
+    ] as any,
     query: { enabled: ANY_TLD_LIVE },
   });
 
-  const supplyByTld: Record<Tld, number> = { ins: 0, igra: 0, ikas: 0 };
+  const v1SupplyByTld: Record<Tld, number> = { ins: 0, igra: 0, ikas: 0 };
   LIVE_TLDS.forEach((tld, i) => {
     const r = supplyReads.data?.[i];
-    if (r?.status === "success") supplyByTld[tld] = Number(r.result as bigint);
+    if (r?.status === "success") v1SupplyByTld[tld] = Number(r.result as bigint);
   });
+  const v2Supply: number = v2Live
+    ? Number(((supplyReads.data?.[LIVE_TLDS.length]?.result as bigint | undefined) ?? 0n))
+    : 0;
 
-  // 2. Build (tld, tokenId) grid so we can batch getActiveListing across all TLDs.
-  const grid = useMemo(() => {
-    const g: Array<{ tld: Tld; tokenId: bigint }> = [];
+  // 2. Build (registryVersion, tld, tokenId) grid so we can batch
+  //    getActiveListing across both V1 marketplaces AND the V2 marketplace.
+  const grid: GridEntry[] = useMemo(() => {
+    const g: GridEntry[] = [];
+    // V1 entries (per LIVE_TLD)
     for (const tld of LIVE_TLDS) {
-      for (let i = 1; i <= supplyByTld[tld]; i++) {
-        g.push({ tld, tokenId: BigInt(i) });
+      for (let i = 1; i <= v1SupplyByTld[tld]; i++) {
+        g.push({
+          tld,
+          tokenId: BigInt(i),
+          registryVersion: "v1",
+          registry: REGISTRY_ADDRESSES[tld],
+          marketplace: MARKETPLACE_ADDRESSES[tld],
+        });
+      }
+    }
+    // V2 entries (only .igra has a V2 deploy)
+    if (v2Live) {
+      for (let i = 1; i <= v2Supply; i++) {
+        g.push({
+          tld: "igra",
+          tokenId: BigInt(i),
+          registryVersion: "v2",
+          registry: REGISTRY_V2_ADDRESS,
+          marketplace: MARKETPLACE_V2_ADDRESS,
+        });
       }
     }
     return g;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [supplyByTld.ins, supplyByTld.igra, supplyByTld.ikas]);
+  }, [v1SupplyByTld.ins, v1SupplyByTld.igra, v1SupplyByTld.ikas, v2Supply, v2Live]);
 
   const { data: listingData, isLoading: listingLoading, refetch: refetchListings } =
     useReadContracts({
-      contracts: grid.map(({ tld, tokenId }) => ({
-        address: MARKETPLACE_ADDRESSES[tld],
+      contracts: grid.map((e) => ({
+        address: e.marketplace,
         abi: MARKETPLACE_ABI,
         functionName: "getActiveListing",
-        args: [tokenId],
+        args: [e.tokenId],
       } as const)),
       query: { enabled: grid.length > 0 },
     });
 
-  // 3. Filter to active listings, collect labels from each TLD's Registry.
+  // 3. Filter to active listings, then route labelOf to the entry's own
+  //    Registry (V1 or V2). V2 ABI is a strict superset of V1 for labelOf,
+  //    but using the matching ABI keeps the type contract honest.
   const activePositions = useMemo(() => {
-    if (!listingData) return [] as Array<{ gridIdx: number; tld: Tld; tokenId: bigint }>;
-    const out: Array<{ gridIdx: number; tld: Tld; tokenId: bigint }> = [];
+    if (!listingData) return [] as Array<{ gridIdx: number; entry: GridEntry }>;
+    const out: Array<{ gridIdx: number; entry: GridEntry }> = [];
     for (let i = 0; i < grid.length; i++) {
       const l = listingData[i]?.result as { active: boolean } | undefined;
-      if (l?.active) out.push({ gridIdx: i, tld: grid[i].tld, tokenId: grid[i].tokenId });
+      if (l?.active) out.push({ gridIdx: i, entry: grid[i] });
     }
     return out;
   }, [listingData, grid]);
 
   const { data: labelData, isLoading: labelLoading, refetch: refetchLabels } =
     useReadContracts({
-      contracts: activePositions.map(({ tld, tokenId }) => ({
-        address: REGISTRY_ADDRESSES[tld],
-        abi: REGISTRY_ABI,
+      // Cast for the same TS2589 reason as the supply reads above.
+      contracts: activePositions.map(({ entry }) => ({
+        address: entry.registry,
+        abi: entry.registryVersion === "v2" ? REGISTRY_V2_ABI : REGISTRY_ABI,
         functionName: "labelOf",
-        args: [tokenId],
-      } as const)),
+        args: [entry.tokenId],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      })) as any,
       query: { enabled: activePositions.length > 0 },
     });
 
@@ -527,13 +615,15 @@ function useActiveListings() {
       if (!l?.active) continue;
       const label = (labelData?.[a]?.result as string | undefined) ?? "";
       out.push({
-        tld: pos.tld,
-        tokenId: pos.tokenId,
+        tld: pos.entry.tld,
+        tokenId: pos.entry.tokenId,
         label,
         seller: l.seller,
         price: l.price,
         expiry: l.expiry,
         featured: l.featured,
+        registryVersion: pos.entry.registryVersion,
+        marketplace: pos.entry.marketplace,
       });
     }
     return out.sort((a, b) => {
