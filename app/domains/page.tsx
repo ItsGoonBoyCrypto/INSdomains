@@ -16,6 +16,7 @@ import { NameHistory } from "@/components/NameHistory";
 import { ListForSaleButton } from "@/components/ListForSaleButton";
 import { SubnamesPanel } from "@/components/SubnamesPanel";
 import { V1MigrationBanner } from "@/components/V1MigrationBanner";
+import { SetPrimaryBanner } from "@/components/SetPrimaryBanner";
 import { DEMO_OWNED } from "@/lib/mock-registry";
 import { shortAddr } from "@/lib/names";
 import { explorerAddr } from "@/lib/igra-chain";
@@ -133,6 +134,20 @@ function Dashboard({ address }: { address: `0x${string}` }) {
           v1TokenIds={owned.list
             .filter((d) => d.tld === "igra" && d.registryVersion === "v1")
             .map((d) => d.tokenId)}
+        />
+      </div>
+
+      {/* Set-Primary banner — high-vis nudge for V2 holders who haven't
+          set a primary yet. Without a primary, every reverse-lookup returns
+          ""; wallets, block explorers, and the CCIP-Read .eth gateway all
+          have no name to display. One-tx prompt → name shows up everywhere.
+          Auto-disappears once primary is set on chain. */}
+      <div className="mt-6">
+        <SetPrimaryBanner
+          v2Names={owned.list
+            .filter((d) => d.tld === "igra" && d.registryVersion === "v2")
+            .map((d) => ({ tokenId: d.tokenId, label: d.label }))}
+          onPrimaryChange={() => primaryReads.refetch()}
         />
       </div>
 
@@ -606,7 +621,14 @@ function LiveDomainCard({
             className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition disabled:opacity-50 ${
               isPrimary
                 ? "border-cyan/40 bg-cyan/10 text-cyan hover:bg-cyan/20"
-                : "border-white/10 bg-white/[0.03] text-white/70 hover:border-cyan/30 hover:text-white"
+                : // No primary set anywhere on this RR → boost prominence:
+                  //   border + bg + glow so the action stands out among the
+                  //   other 6 buttons in this row. Subtle pulse to draw the
+                  //   eye without being annoying. Drops to neutral once any
+                  //   card has been set as primary.
+                  primaryTokenId === undefined || primaryTokenId === 0n
+                  ? "animate-pulse border-cyan/50 bg-cyan/[0.08] text-cyan shadow-[0_0_20px_rgba(0,240,255,0.15)] hover:bg-cyan/15"
+                  : "border-white/10 bg-white/[0.03] text-white/70 hover:border-cyan/30 hover:text-white"
             }`}
           >
             {primaryBusy ? (

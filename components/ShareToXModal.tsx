@@ -3,8 +3,18 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { X, Check, Sparkles, ExternalLink } from "lucide-react";
-import { REGISTRY_ADDRESSES } from "@/lib/contracts";
+import { X, Check, Sparkles, ExternalLink, Star, Loader2 } from "lucide-react";
+import {
+  useAccount,
+  useReadContract,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
+import {
+  REGISTRY_ADDRESSES,
+  REVERSE_RESOLVER_V2_ADDRESS,
+  REVERSE_RESOLVER_ABI,
+} from "@/lib/contracts";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://insdomains.org";
 // Once the official @ handle exists, set NEXT_PUBLIC_X_HANDLE in env (e.g. "InsDomains")
@@ -158,6 +168,17 @@ export function ShareToXModal({
           </div>
         )}
 
+        {/* Set-Primary nudge — only on V2 mints, only when not already
+            primary. Renders inline above the share buttons so it's the
+            first thing users see post-mint. One-tx → name shows up
+            everywhere wallets render reverse resolutions. */}
+        {registryVersion === "v2" && tokenIdStr && (
+          <SetPrimaryNudge
+            tokenIdStr={tokenIdStr}
+            label={primary.replace(/\.igra$/i, "")}
+          />
+        )}
+
         {/* CTA */}
         <div className="space-y-2 px-6 pb-6">
           <a
@@ -228,5 +249,141 @@ function XIcon({ className }: { className?: string }) {
     >
       <path d="M17.53 3H21l-7.41 8.47L22 21h-6.83l-5.35-6.51L3.55 21H.07l7.96-9.1L0 3h7.04l4.84 5.97L17.53 3Zm-2.4 16h2.05L7 5H4.83l10.3 14Z" />
     </svg>
+  );
+}
+
+/**
+ * Inline post-mint nudge to set the just-minted V2 NFT as the wallet's
+ * primary on-chain identity. Reads the V2 ReverseResolver to gate visibility.
+ *
+ * Hides itself when:
+ *   - V2 RR isn't deployed (env unset)
+ *   - The current connected wallet already has THIS tokenId as primary
+ *   - User clicks the dismiss link (in-modal session state only)
+ *
+ * Why this lives in the post-mint modal: it's the moment of highest user
+ * engagement (they just paid + signed). Asking for one more single-step tx
+ * here has dramatically better conversion than expecting them to come back
+ * to /domains and find the per-card "Set primary" pill.
+ */
+function SetPrimaryNudge({
+  tokenIdStr,
+  label,
+}: {
+  tokenIdStr: string;
+  label: string;
+}) {
+  const { address } = useAccount();
+  const [dismissed, setDismissed] = useState(false);
+
+  const v2RrLive =
+    REVERSE_RESOLVER_V2_ADDRESS !== "0x0000000000000000000000000000000000000000";
+
+  // Read current primary on V2 RR. If it already matches this tokenId,
+  // the nudge is unnecessary (user already set it on a previous mint).
+  const { data: currentPrimary, refetch } = useReadContract({
+    address: REVERSE_RESOLVER_V2_ADDRESS,
+    abi: REVERSE_RESOLVER_ABI,
+    functionName: "primaryTokenId",
+    args: address ? [address] : undefined,
+    query: { enabled: !!address && v2RrLive },
+  }) as { data: bigint | undefined; refetch: () => void };
+
+  const tokenId = (() => {
+    try {
+      return BigInt(tokenIdStr);
+    } catch {
+      return null;
+    }
+  })();
+
+  const alreadyPrimary =
+    currentPrimary !== undefined &&
+    tokenId !== null &&
+    currentPrimary === tokenId;
+
+  const { writeContract, data: hash, isPending, error, reset } =
+    useWriteContract();
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({ hash });
+
+  useEffect(() => {
+    if (!isConfirmed || !hash) return;
+    refetch();
+    const t = setTimeout(reset, 800);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConfirmed, hash]);
+
+  if (!v2RrLive) return null;
+  if (!address) return null;
+  if (tokenId === null) return null;
+  if (alreadyPrimary) return null;
+  if (dismissed) return null;
+
+  const busy = isPending || isConfirming;
+
+  const onClick = () => {
+    if (busy || tokenId === null) return;
+    writeContract({
+      address: REVERSE_RESOLVER_V2_ADDRESS,
+      abi: REVERSE_RESOLVER_ABI,
+      functionName: "setPrimary",
+      args: [tokenId],
+    });
+  };
+
+  return (
+    <div className="mx-6 mb-3 mt-1 rounded-2xl border border-cyan/30 bg-cyan/[0.06] p-3 text-left">
+      <div className="flex items-start gap-2.5">
+        <div className="mt-0.5 flex h-7 w-7 flex-none items-center justify-center rounded-lg border border-cyan/40 bg-cyan/15">
+          <Star className="h-3.5 w-3.5 fill-cyan text-cyan" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-xs font-bold text-cyan/95">
+            One more thing — make this your primary
+          </div>
+          <p className="mt-0.5 text-[11px] leading-relaxed text-white/60">
+            Wallets &amp; explorers will show{" "}
+            <span className="font-mono text-white/80">{label}.igra</span>{" "}
+            instead of your <span className="font-mono">0x…</span>. One tx,
+            ~2 seconds.
+          </p>
+          <button
+            onClick={onClick}
+            disabled={busy}
+            className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-cyan/40 bg-cyan/15 px-3 py-2 text-[11px] font-bold text-cyan transition hover:bg-cyan/25 disabled:opacity-50"
+          >
+            {busy ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {isPending ? "Confirm in wallet…" : "Setting primary…"}
+              </>
+            ) : isConfirmed ? (
+              <>
+                <Check className="h-3.5 w-3.5" />
+                Primary set ✓
+              </>
+            ) : (
+              <>
+                <Star className="h-3.5 w-3.5 fill-cyan" />
+                Set as primary identity
+              </>
+            )}
+          </button>
+          {error && (
+            <p className="mt-1.5 text-[10px] text-red-300">
+              {error.message.split("\n")[0] || "Tx failed"}
+            </p>
+          )}
+          <button
+            onClick={() => setDismissed(true)}
+            className="mt-1.5 block w-full text-center text-[10px] text-white/40 hover:text-white/60"
+          >
+            Skip — I&rsquo;ll do it later from My Names
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
