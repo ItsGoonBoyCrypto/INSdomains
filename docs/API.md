@@ -84,14 +84,26 @@ curl https://insdomains.org/api/reverse?address=0xF9d065b70C9357098dc7854D7A28B1
 ```json
 {
   "address": "0xf9d065b70c9357098dc7854d7a28b1498f6d125c",
-  "primary": "alice.igra",
-  "primaries": { "ins": null, "igra": "alice.igra", "ikas": null }
+  "primary": "insdomains.igra",
+  "primary_version": "v2",
+  "primaries": {
+    "igra_v2": "insdomains",
+    "igra":    null,
+    "ins":     null,
+    "ikas":    null
+  }
 }
 ```
 
-If the user has set no primary, both `primary` and all `primaries.*` are `null`. Always 200 on a valid address — "no primary" is a valid state.
+The top-level `primary` field selects across all four reverse resolvers in this precedence order: **V2 `.igra`** → V1 `.igra` → V1 `.ins` → V1 `.ikas`. The companion `primary_version` field tells you which Registry the answer came from (`"v2"` for the canonical post-launch RR, `"v1"` for legacy holders).
+
+The `primaries` map gives you the full per-source breakdown — use this if you want to display all primaries side-by-side or apply a custom precedence rule.
+
+If the user has set no primary on any RR, both `primary` and `primary_version` are `null` and every `primaries.*` is `null`. Always 200 on a valid address — "no primary" is a valid state.
 
 **Stale-safe**: if the user no longer owns the token they previously set as primary, the underlying contract returns `""` and we drop it from the response. You'll never see a name that's been transferred away.
+
+**Backwards compatibility:** the `primaries.ins/igra/ikas` keys preserved their v1 shape (V1-only reads). The V2 read was added as a new `primaries.igra_v2` key so integrators on the original v1 API continue to work without changes.
 
 ---
 
