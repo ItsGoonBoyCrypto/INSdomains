@@ -18,7 +18,7 @@ This guide is for wallet developers, explorer maintainers, and dApp builders who
 - **Free public REST API** at `https://insdomains.org/api/*` — CORS-enabled, no auth, no rate limit
 - One `fetch()` resolves a name → address. Same surface for both V1 and V2 — the API unions the registries automatically.
 - Source + tests open under [github.com/ItsGoonBoyCrypto/INSdomains](https://github.com/ItsGoonBoyCrypto/INSdomains) (private; ping for read access)
-- **273 Foundry tests, 0 failures**, 1024-run fuzz soak clean across V1 + V2
+- **356 Foundry tests, 0 failures**, 1024-run fuzz soak clean across V1 + V2
 - All contracts owned by the Igra Treasury Safe at `0x7447F0e5…7aA1`
 - No SDK to install, no DB to run, no indexer to maintain
 
@@ -32,7 +32,7 @@ This guide is for wallet developers, explorer maintainers, and dApp builders who
 | **Dual tenure** | Forever names are permanent; Annual names give cheaper entry with predictable renewal. Wallets can render either via the unified `expiresAt` field (`0` = Forever, `> 0` = Annual unix timestamp). |
 | **On-chain art** | Every NFT's `tokenURI` returns a Base64 SVG inline. No IPFS pinning, no CDN, no image-server dependency for displaying the user's name in your UI. |
 | **ENS-compatible namehash** | The hardened INSResolverV2 at `0xcb2A450784849b85A797998EE220dC43d8B3f557` exposes the ENS surface (`addr(bytes32 node)` / `text(bytes32 node, string key)`) with trustless node→label binding. For most wallets the Registry's `resolve(label)` (Path 2) is simpler. Full `.eth` interop ships via the CCIP-Read gateway (`docs/ETH_INTEGRATION.md`). |
-| **Live + audited** | 17+ names minted across V1 + V2, real sales settled, all events publicly verifiable on `https://explorer.igralabs.com`. |
+| **Live + audited** | 115+ names minted across V1 + V2, real sales settled, all events publicly verifiable on `https://explorer.igralabs.com`. |
 
 ---
 
@@ -224,7 +224,7 @@ If you see real JSON with token IDs and addresses, the API is healthy.
 
 | | |
 |---|---|
-| **Tests** | **273 passed · 0 failed · 0 skipped** (V1 + V2 + Marketplace + Resolver + ReverseResolver + SubnameExtension + Integration + TldVariants) |
+| **Tests** | **356 passed · 0 failed · 0 skipped** (V1 + V2 + Marketplace + Resolver + ReverseResolver + SubnameExtension + Integration + TldVariants) |
 | **Fuzz** | 1024 runs per fuzz test (15 fuzz tests = 15,360 fuzz iterations, no counter-examples) |
 | **Coverage** | 100% lines on Resolver / ReverseResolver, 96–100% on Registry / Marketplace |
 | **CI** | Full suite runs on every push at `.github/workflows/contracts.yml` |
@@ -253,9 +253,9 @@ All **explorer-verified** on `https://explorer.igralabs.com`:
 | Contract | Address |
 |---|---|
 | **Registry V2 (`.igra`)** | `0x7E7018959bf44045F01D176D8db1594894CBf4E9` |
-| Marketplace (shared) | `0xde8df276e93394c0e5dd9fe7a7ff6fd144a3642a` |
-| ReverseResolver (shared) | `0x1bbd46aec04330a90832faf1da91889dee67d931` |
-| Resolver (shared, ENS-compatible) | `0x451D84002cE0eCFd4cc622c72FA40849a8Bb5f2A` |
+| **Marketplace V2** | `0xd641dadd503d8beba2395cd72367cf4edaf4674f` |
+| **ReverseResolver V2** | `0xef449f577255ee1d6df37d982da086a7e22a6853` |
+| Resolver (ENS-compatible, hardened) | `0xcb2A450784849b85A797998EE220dC43d8B3f557` |
 | Owner / Treasury (Safe multisig) | `0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1` |
 
 ### V1 — legacy, read-only

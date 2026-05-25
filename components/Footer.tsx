@@ -17,6 +17,7 @@ const COLS: { title: string; items: FooterItem[] }[] = [
       { label: "Marketplace", href: "/marketplace" },
       { label: "About", href: "/about" },
       { label: "FAQ", href: "/faq" },
+      { label: "Developers", href: "/developers" },
     ],
   },
   {
