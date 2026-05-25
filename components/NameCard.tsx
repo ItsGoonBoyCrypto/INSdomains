@@ -24,7 +24,7 @@ const TLD_COLOR: Record<Tld, string> = {
 export function NameCard({
   label,
   tld,
-  tier = "STANDARD · 30 iKAS",
+  tier = "STANDARD · 500 iKAS",
   tokenId,
   className = "",
 }: {
