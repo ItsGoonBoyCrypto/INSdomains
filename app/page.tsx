@@ -38,21 +38,21 @@ export default function Home() {
 
         <HeroSearch />
 
-        {/* Zero-renewal callout — the product's core promise. New copy
-            references the dual model that lands in V2 (Annual coming soon),
-            keeping Forever as the headline. */}
+        {/* Zero-renewal callout — the product's core promise. V2 is live so
+            both tenures are available today; copy reflects the live dual model. */}
         <div className="mx-auto mt-10 inline-flex max-w-xl items-center gap-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.06] px-5 py-4 text-left shadow-[0_0_40px_rgba(52,211,153,0.08)]">
           <div className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-emerald-500/15 text-2xl font-black text-emerald-300">
             ∞
           </div>
           <div>
             <div className="text-sm font-bold text-white">
-              Forever from <span className="text-cyan">500 iKAS</span> · Annual tier coming soon
+              Forever from <span className="text-cyan">500 iKAS</span> · Annual from <span className="text-emerald-300">50 iKAS/yr</span>
             </div>
             <p className="mt-0.5 text-xs text-white/60">
-              Pick Forever to lock your name in for life with no renewals
-              ever. Cheaper 1-year Annual tier launches with V2; current
-              holders get the new Forever tier grandfathered for gas only.
+              Pick <span className="text-cyan">Forever</span> to lock your name in for life with no
+              renewals ever, or <span className="text-emerald-300">Annual</span> for a cheaper
+              1-year renewable tier (30-day grace). V1 holders get Forever
+              grandfathered for gas only.
             </p>
           </div>
         </div>
