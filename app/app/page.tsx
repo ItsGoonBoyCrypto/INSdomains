@@ -88,7 +88,7 @@ function AppInner() {
               const url = q ? `/app?q=${encodeURIComponent(q)}` : "/app";
               router.replace(url, { scroll: false });
             }}
-            placeholder="type a name (min 3 chars)"
+            placeholder="type a name (1–32 chars)"
             className="w-full bg-transparent py-4 text-lg placeholder:text-white/30 focus:outline-none"
             autoComplete="off"
             spellCheck={false}
@@ -140,7 +140,7 @@ function EmptyHint() {
       </div>
 
       <p className="text-white/60">
-        Type a name to check availability. Names are lowercase letters, digits, and hyphens — 3–32 chars.
+        Type a name to check availability. Names are lowercase letters, digits, and hyphens — 1–32 chars.
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
         {(
@@ -224,7 +224,7 @@ function TierSample({
 function InvalidHint({ label }: { label: string }) {
   return (
     <div className="mt-10 rounded-3xl border border-amber-500/30 bg-amber-500/5 p-6 text-center text-sm text-amber-200">
-      <strong>"{label}"</strong> isn't a valid name — use 3–32 lowercase letters, digits, or hyphens (no leading / trailing hyphen).
+      <strong>"{label}"</strong> isn't a valid name — use 1–32 lowercase letters, digits, or hyphens (no leading / trailing hyphen).
     </div>
   );
 }

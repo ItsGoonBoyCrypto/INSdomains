@@ -9,16 +9,17 @@ import { TAKEN_NAMES } from "./mock-registry";
 export const TIER_RESERVED = Number.MAX_SAFE_INTEGER;
 
 /**
- * Canonical tier schedule, mirrored on every Registry contract via
- * setLengthPrice. Admin → Length tier pricing → "Sync to canonical"
- * keeps every TLD aligned with this. Update both places together.
+ * Canonical Forever-tier schedule, mirrored on INSRegistryIgraV2 via
+ * lengthPrice[1..5]. Used ONLY for instant UI preview chips — the real
+ * mint price is always read on-chain via priceFor. Keep in sync with
+ * the contract constructor schedule.
  */
 export const LENGTH_PRICE: Record<number, number> = {
-  1: 1000,            // ultra-premium (1-char)
-  2: 500,             // premium (2-char)
-  3: 250,             // rare (3-char)
-  4: 50,              // uncommon (4-char)
-  5: 30,              // standard (5–32 chars)
+  1: 4000,            // ultra-premium (1-char)
+  2: 2000,            // premium (2-char)
+  3: 1200,            // rare (3-char)
+  4: 800,             // uncommon (4-char)
+  5: 500,             // standard (5–32 chars)
 };
 
 /** Curated premium overrides — these mirror the admin-set on-chain mapping. */

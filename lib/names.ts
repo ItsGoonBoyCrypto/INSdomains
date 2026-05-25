@@ -12,10 +12,10 @@ export function namehash(name: string): `0x${string}` {
   return node;
 }
 
-/** Validate a `.ins` label (no dots). Allows a-z, 0-9, hyphen; 3–32 chars. */
+/** Validate a `.igra` label (no dots). Allows a-z, 0-9, hyphen; 1–32 chars. */
 export function isValidLabel(label: string): boolean {
-  const clean = label.toLowerCase().replace(/\.ins$/, "");
-  if (clean.length < 3 || clean.length > 32) return false;
+  const clean = label.toLowerCase().replace(/\.(igra|ins)$/, "");
+  if (clean.length < 1 || clean.length > 32) return false;
   if (clean.startsWith("-") || clean.endsWith("-")) return false;
   return /^[a-z0-9-]+$/.test(clean);
 }

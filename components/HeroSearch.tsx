@@ -11,7 +11,7 @@ export function HeroSearch() {
   const [raw, setRaw] = useState("");
 
   const label = useMemo(() => cleanLabel(raw), [raw]);
-  const valid = useMemo(() => label.length >= 3 && isValidLabel(label), [label]);
+  const valid = useMemo(() => label.length >= 1 && isValidLabel(label), [label]);
   const available = useMemo(
     () => (valid ? mockAvailable(label) : null),
     [valid, label]
@@ -35,7 +35,7 @@ export function HeroSearch() {
             autoComplete="off"
             spellCheck={false}
           />
-          {label.length >= 3 && (
+          {label.length >= 1 && (
             <div className="mr-2 hidden sm:block">
               <AvailabilityPill available={available} valid={valid} />
             </div>
@@ -53,7 +53,7 @@ export function HeroSearch() {
         </div>
       </div>
 
-      {label.length >= 3 && (
+      {label.length >= 1 && (
         <div className="mt-3 block sm:hidden">
           <AvailabilityPill available={available} valid={valid} />
         </div>
@@ -69,7 +69,7 @@ export function HeroSearch() {
       <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-white/40">
         <span className="inline-flex items-center gap-1 rounded-full bg-white/[0.04] px-2.5 py-1">
           <Sparkles className="h-3 w-3 text-cyan" />
-          Tiered pricing · <span className="font-semibold text-cyan">from 30 iKAS</span>
+          Tiered pricing · <span className="font-semibold text-cyan">from 50 iKAS/yr</span>
         </span>
         <span>· gas ~$0.0004</span>
         <span className="dot-sep" />
