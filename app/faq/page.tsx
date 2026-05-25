@@ -246,13 +246,22 @@ const FAQS: { section: string; items: FaqItem[] }[] = [
         q: "Can I register an emoji name?",
         a: (
           <>
-            <strong>Yes, live on V2.</strong> The validator accepts the full{" "}
-            <a href="https://en.wikipedia.org/wiki/Punycode" target="_blank" rel="noreferrer" className="text-cyan underline decoration-dotted underline-offset-2">Punycode</a>{" "}
-            shape (the same standard ENS uses). On chain it&rsquo;s stored as
-            the ASCII-safe form (e.g. <code>xn--ls8h.igra</code>); in
-            modern wallets that handle IDN it renders back as the original
-            glyph (e.g. <code>🦄.igra</code>). Mint via the dApp — paste the
-            emoji directly and the frontend handles encoding.
+            <strong>At the protocol level, yes — via{" "}
+            <a href="https://en.wikipedia.org/wiki/Punycode" target="_blank" rel="noreferrer" className="text-cyan underline decoration-dotted underline-offset-2">Punycode</a></strong>,
+            the same standard ENS uses. The Registry accepts the ASCII-safe
+            encoded form of an emoji name (e.g. <code>xn--ls8h.igra</code> for{" "}
+            <code>🦄.igra</code>), and IDN-aware wallets &amp; browsers render
+            that back as the original glyph.
+            <p className="mt-3">
+              <strong>The honest caveat:</strong> the dApp doesn&rsquo;t yet
+              have a one-click emoji flow — if you paste a raw emoji into the
+              search box it&rsquo;s stripped, and we currently display the{" "}
+              <code>xn--</code> form rather than the glyph. To register an
+              emoji name today you&rsquo;d encode it to Punycode yourself and
+              register that <code>xn--…</code> label. A first-class &ldquo;type
+              the emoji, see the emoji&rdquo; experience (with confusable/
+              homograph protection) is on the roadmap.
+            </p>
           </>
         ),
       },
@@ -260,11 +269,13 @@ const FAQS: { section: string; items: FaqItem[] }[] = [
         q: "Are there any emoji-name reservations?",
         a: (
           <>
-            Yes. Single-emoji and double-emoji names are flagged as{" "}
-            <em>ultra-premium</em> (1-char and 2-char tiers respectively) and
-            most popular emojis will sit on the reserved list at launch — they
-            need to be admin-minted and only assigned to verified holders. This
-            stops day-1 sniping.
+            When the first-class emoji flow ships, popular single- and
+            double-emoji names will sit on the reserved list and be
+            admin-minted to verified holders only, to stop day-1 sniping.
+            Note that pricing follows the on-chain label length of the{" "}
+            <code>xn--</code> encoding (a single emoji encodes to ~7–9 ASCII
+            characters, so it falls in the standard tier today — not the
+            1-/2-character premium tiers).
           </>
         ),
       },
