@@ -31,7 +31,7 @@ This guide is for wallet developers, explorer maintainers, and dApp builders who
 | **Native to Igra L2** | Resolution happens on the same chain users are already transacting on. No bridges, no L1 dependency. |
 | **Dual tenure** | Forever names are permanent; Annual names give cheaper entry with predictable renewal. Wallets can render either via the unified `expiresAt` field (`0` = Forever, `> 0` = Annual unix timestamp). |
 | **On-chain art** | Every NFT's `tokenURI` returns a Base64 SVG inline. No IPFS pinning, no CDN, no image-server dependency for displaying the user's name in your UI. |
-| **ENS-compatible namehash** | The shared Resolver at `0x451D84002cE0eCFd4cc622c72FA40849a8Bb5f2A` exposes `addr(bytes32 node)` and `text(bytes32 node, string key)` — same surface as ENS. If you already integrate ENS via namehash, this is a one-liner. |
+| **ENS-compatible namehash** | The shared Resolver at `0x451D84002cE0eCFd4cc622c72FA40849a8Bb5f2A` exposes the ENS surface (`addr(bytes32 node)` / `text(bytes32 node, string key)`). For production resolution, prefer the Registry's `resolve(label)` (Path 2) — see the caveat under Path 3 before relying on `addr(node)` directly. Full `.eth` interop ships via the CCIP-Read gateway (`docs/ETH_INTEGRATION.md`). |
 | **Live + audited** | 17+ names minted across V1 + V2, real sales settled, all events publicly verifiable on `https://explorer.igralabs.com`. |
 
 ---
@@ -179,18 +179,22 @@ const isExpired = await client.readContract({
 });
 ```
 
-### Path 3 — ENS-compatible namehash (drop into existing ENS code)
+### Path 3 — ENS-compatible namehash (advanced / optional)
 
-If your wallet already has an ENS resolution flow that calls `Resolver.addr(node)`, you can point it at our shared Resolver:
+The shared Resolver at `0x451D84002cE0eCFd4cc622c72FA40849a8Bb5f2A` exposes the ENS surface (`addr(bytes32 node)` / `text(bytes32 node, string key)`) for tooling that *only* speaks namehash and can't take a label string.
+
+> **⚠️ For production resolution, use Path 1 (REST) or Path 2 (Registry `resolve(label)` / ReverseResolver `primaryName(address)`).** Those read the Registry's canonical state directly and are the source of truth.
+>
+> The namehash Resolver's `addr(node)` is a **convenience shim**, not the authority: it resolves through a node→label cache that must be seeded first, and the current deployment does not yet bind a node to its label with an on-chain ownership/namehash check. **Until the hardened Resolver redeploy ships, do not treat `addr(node)` as a trusted resolution path** — if you must use a namehash flow, cross-check the result against `Registry.resolve(label)` before showing or sending to it.
 
 ```
 Resolver address: 0x451D84002cE0eCFd4cc622c72FA40849a8Bb5f2A
 
-function addr(bytes32 node) external view returns (address);
+function addr(bytes32 node) external view returns (address);   // see caveat above
 function text(bytes32 node, string calldata key) external view returns (string memory);
 ```
 
-The namehash for `<label>.igra` is computed the same way as ENS (`namehash("igra")` then `keccak256(parent ‖ keccak256(label))`). One-liner addition to your existing namehash resolver registry.
+The namehash for `<label>.igra` is computed the same way as ENS (`namehash("igra")` then `keccak256(parent ‖ keccak256(label))`). When the CCIP-Read `.eth` gateway ships (see `docs/ETH_INTEGRATION.md`), `*.igra.eth` resolution from any ENS-aware wallet will route through a signed, verified path — that's the recommended namehash integration once live.
 
 ---
 

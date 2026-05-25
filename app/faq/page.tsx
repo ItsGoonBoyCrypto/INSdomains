@@ -418,13 +418,16 @@ const FAQS: { section: string; items: FaqItem[] }[] = [
         q: "How do I integrate INS resolution into my wallet?",
         a: (
           <>
-            Three paths, in order of effort:{" "}
+            Two recommended paths, in order of effort:{" "}
             <strong>(1) hit the free public REST API</strong>{" "}
-            (<code>https://insdomains.org/api/resolve?name=alice.igra</code>),{" "}
-            <strong>(2) read the contracts directly</strong> via{" "}
-            <code>tokenIdOf(label)</code> + <code>targetOf(tokenId)</code>, or{" "}
-            <strong>(3) drop into your existing ENS namehash flow</strong> by
-            pointing it at the shared Resolver. Full TS + Python snippets in{" "}
+            (<code>https://insdomains.org/api/resolve?name=alice.igra</code>),
+            or <strong>(2) read the contracts directly</strong> via{" "}
+            <code>resolve(label)</code> on the Registry (forward) and{" "}
+            <code>primaryName(address)</code> on the ReverseResolver (reverse).
+            A namehash-compatible Resolver also exists for ENS-style tooling,
+            but for production resolution use paths (1) or (2) — full{" "}
+            <code>.eth</code> interop ships separately via a CCIP-Read gateway.
+            TS + Python snippets + the namehash caveat are in{" "}
             <a
               href="https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/docs/INTEGRATION.md"
               target="_blank"
