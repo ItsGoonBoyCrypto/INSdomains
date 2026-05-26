@@ -140,7 +140,7 @@ export default function AboutPage() {
             Two tiers per name length. Pick <span className="text-cyan font-semibold">Forever</span> at
             registration to lock the name in for life with no renewals; the cheaper{" "}
             <span className="text-emerald-300 font-semibold">Annual</span> tier launches
-            with V2 (this quarter). Today every mint is Forever \u2014 V1 holders are
+            with V2 (this quarter). Today every mint is Forever — V1 holders are
             grandfathered into V2 Forever for gas only.
           </p>
 
@@ -149,7 +149,7 @@ export default function AboutPage() {
               <div>Length tier</div>
               <div className="flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                Annual <span className="text-white/30 normal-case tracking-normal text-[9px]">(V2 \u2014 soon)</span>
+                Annual <span className="text-white/30 normal-case tracking-normal text-[9px]">(V2 — soon)</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-cyan" />
@@ -164,10 +164,10 @@ export default function AboutPage() {
           </div>
 
           <ul className="mt-4 space-y-1.5 text-xs text-white/55">
-            <li>\u00b7 All prices in native iKAS, paid <span className="text-white/80">once</span> at registration (Forever) or per year (Annual).</li>
-            <li>\u00b7 Annual names get a <span className="text-white/80">30-day grace period</span> after expiry before re-entering the public registry.</li>
-            <li>\u00b7 Annual \u2192 Forever upgrade available any time at the price difference.</li>
-            <li>\u00b7 Marketplace: <span className="text-white/80">2% seller fee</span> on resale, <span className="text-white/80">0% buyer fee</span>. Hard cap 5% \u2014 even a compromised owner key can never extract more.</li>
+            <li>· All prices in native iKAS, paid <span className="text-white/80">once</span> at registration (Forever) or per year (Annual).</li>
+            <li>· Annual names get a <span className="text-white/80">30-day grace period</span> after expiry before re-entering the public registry.</li>
+            <li>· Annual → Forever upgrade available any time at the price difference.</li>
+            <li>· Marketplace: <span className="text-white/80">2% seller fee</span> on resale, <span className="text-white/80">0% buyer fee</span>. Hard cap 5% — even a compromised owner key can never extract more.</li>
           </ul>
         </section>
 
