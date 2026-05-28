@@ -749,6 +749,9 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
   const [pendingAction, setPendingAction] = useState<{ kind: "add" | "remove"; label: string } | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [importRaw, setImportRaw] = useState("");
+  // Bulk-unreserve + claimed-filter state (2026-05-28).
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [hideClaimed, setHideClaimed] = useState(true);
 
   const { writeContract, data: hash, isPending, error, reset } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
@@ -766,6 +769,30 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
       : [],
     query: { enabled: REGISTRY_LIVE && candidates.length > 0 },
   });
+
+  // Parallel: ownerOfName per candidate. Zero address = unminted/unclaimed,
+  // real address = already gifted ("claimed"). Used for the claimed badge,
+  // the hide-claimed filter, and the "Select all claimed" quick action.
+  const { data: ownerData, refetch: refetchOwners } = useReadContracts({
+    contracts: REGISTRY_LIVE
+      ? candidates.map((label) => ({
+          address: REGISTRY_ADDRESS,
+          abi: REGISTRY_ABI,
+          functionName: "ownerOfName" as const,
+          args: [label] as const,
+        }))
+      : [],
+    query: { enabled: REGISTRY_LIVE && candidates.length > 0 },
+  });
+  const ownerFor = (i: number): string | undefined => {
+    const row = ownerData?.[i];
+    if (!row || row.status !== "success") return undefined;
+    return (row.result as string) || undefined;
+  };
+  const isClaimed = (i: number): boolean => {
+    const o = ownerFor(i);
+    return !!o && o !== "0x0000000000000000000000000000000000000000";
+  };
 
   // Per-row on-chain status — true = reserved, false = not reserved, undefined = still loading.
   const statusFor = (i: number): boolean | undefined => {
@@ -803,7 +830,9 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
         );
       }
       refetchReserved();
+      refetchOwners();
       fetchChainLabels();
+      setSelected(new Set());
       setNewLabel("");
       setPendingAction(null);
       const t = setTimeout(reset, 1200);
@@ -962,6 +991,49 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
       return next;
     });
     setCandidates((prev) => prev.filter((x) => x !== label));
+  };
+
+  // Toggle a single label in the bulk-action selection set.
+  const onToggleSelect = (label: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      return next;
+    });
+  };
+
+  // Select every label that's reserved on-chain AND already has an owner
+  // (gifted via adminMint). Convenience for cleaning up the list of names
+  // that no longer need the reserved flag.
+  const onSelectAllClaimed = () => {
+    const claimed = new Set<string>();
+    candidates.forEach((label, i) => {
+      if (statusFor(i) === true && isClaimed(i)) claimed.add(label);
+    });
+    setSelected(claimed);
+  };
+
+  // Bulk unreserve every label currently in `selected` — single tx.
+  const onBulkUnreserve = () => {
+    const labels = Array.from(selected).filter((l) => reservedSet.has(l));
+    if (labels.length === 0 || !REGISTRY_LIVE || busy || batchOp) return;
+    setPendingAction({ kind: "remove", label: "(bulk-unreserve)" });
+    writeContract({
+      address: REGISTRY_ADDRESS,
+      abi: REGISTRY_ABI,
+      functionName: "setReservedBatch",
+      args: [labels, false],
+    });
+  };
+
+  // Manual refresh — re-pulls on-chain reserved + owner state and the
+  // chain-scan endpoint (picks up newly gifted names so they get the
+  // "claimed" badge and can be hidden / bulk-unreserved).
+  const onRefresh = () => {
+    refetchReserved();
+    refetchOwners();
+    fetchChainLabels();
   };
 
   const onBatchSeed = () => {
@@ -1128,15 +1200,79 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
         </div>
       )}
 
-      <ul className="mt-4 max-h-72 overflow-y-auto divide-y divide-white/5 rounded-xl border border-white/5">
+      {/* Bulk-action + filter + refresh bar (2026-05-28) */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2 text-[11px]">
+        <div className="flex items-center gap-3">
+          <label className="inline-flex cursor-pointer items-center gap-1.5 text-white/60">
+            <input
+              type="checkbox"
+              checked={hideClaimed}
+              onChange={(e) => setHideClaimed(e.target.checked)}
+              className="h-3 w-3 accent-cyan"
+            />
+            Hide claimed (gifted)
+          </label>
+          <button
+            onClick={onSelectAllClaimed}
+            disabled={!REGISTRY_LIVE || busy || !!batchOp}
+            className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-white/60 transition hover:border-emerald-400/40 hover:text-emerald-300 disabled:opacity-40"
+            title="Select every reserved name that already has an owner (gifted)"
+          >
+            Select all claimed
+          </button>
+        </div>
+        <div className="flex items-center gap-2">
+          {selected.size > 0 && (
+            <button
+              onClick={() => setSelected(new Set())}
+              className="rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-white/50 transition hover:text-white/80"
+            >
+              clear ({selected.size})
+            </button>
+          )}
+          <button
+            onClick={onBulkUnreserve}
+            disabled={selected.size === 0 || !REGISTRY_LIVE || busy || !!batchOp}
+            className="inline-flex items-center gap-1 rounded-md border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 font-semibold text-red-300 transition hover:bg-red-500/20 disabled:opacity-40"
+            title="setReservedBatch(selectedLabels, false) - one tx"
+          >
+            {busy && pendingAction?.label === "(bulk-unreserve)"
+              ? <Loader2 className="h-3 w-3 animate-spin" />
+              : <Trash2 className="h-3 w-3" />}
+            Unreserve {selected.size > 0 ? selected.size + " selected" : "selected"}
+          </button>
+          <button
+            onClick={onRefresh}
+            disabled={isLoadingChain || chainScanLoading}
+            className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-white/60 transition hover:border-cyan/30 hover:text-cyan disabled:opacity-40"
+            title="Re-pull on-chain reserved + owner state and re-scan chain history"
+          >
+            {(isLoadingChain || chainScanLoading) ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <ul className="mt-2 max-h-72 overflow-y-auto divide-y divide-white/5 rounded-xl border border-white/5">
         {candidates.map((label, i) => {
           const status = statusFor(i);
           const isOnChain = status === true;
           const isOffChain = status === false;
           const isUnknown = status === undefined;
+          const claimed = isOnChain && isClaimed(i);
+          if (hideClaimed && claimed) return null;
           return (
             <li key={label} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
               <div className="flex items-center gap-2 min-w-0">
+                {isOnChain && (
+                  <input
+                    type="checkbox"
+                    checked={selected.has(label)}
+                    onChange={() => onToggleSelect(label)}
+                    className="h-3.5 w-3.5 flex-none accent-red-400"
+                    title="Select for bulk unreserve"
+                  />
+                )}
                 {isOnChain && (
                   <span className="inline-flex h-1.5 w-1.5 flex-none rounded-full bg-emerald-400" title="Reserved on-chain" />
                 )}
@@ -1152,6 +1288,14 @@ function ReservedNamesCard({ tld }: { tld: Tld }) {
                 {isOffChain && (
                   <span className="flex-none rounded-full border border-amber-400/30 bg-amber-400/10 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-amber-300">
                     not on-chain
+                  </span>
+                )}
+                {claimed && (
+                  <span
+                    className="flex-none rounded-full border border-emerald-400/30 bg-emerald-400/10 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-emerald-300"
+                    title={"Already gifted to " + ownerFor(i)}
+                  >
+                    ✓ claimed
                   </span>
                 )}
               </div>
