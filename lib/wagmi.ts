@@ -90,8 +90,8 @@ const kaswareWallet = (): Wallet => ({
 const kastleWallet = (): Wallet => ({
   id: "kastle",
   name: "Kastle",
-  iconUrl: "/wallet-icons/kastle.svg",
-  iconBackground: "#1a1a2e",
+  iconUrl: "/wallet-icons/kastle.png",
+  iconBackground: "#ffffff",
   installed: hasProvider(["kastle.ethereum", "kastle"]),
   downloadUrls: {
     browserExtension: "https://kastle.cc",
