@@ -25,6 +25,8 @@ import type {
 
 const API_BASE = "https://insdomains.org/api";
 const PROTOCOL = "INS";
+/** Hard cap so MetaMask never blocks waiting on a slow gateway response. */
+const FETCH_TIMEOUT_MS = 5000;
 
 /** Cheap client-side filter: ignore anything that obviously isn't a .igra name. */
 function looksLikeIgraName(s: string): boolean {
@@ -32,13 +34,27 @@ function looksLikeIgraName(s: string): boolean {
   return lower.endsWith(".igra") && lower.length > 5;
 }
 
+/** Wrapper around fetch that aborts after FETCH_TIMEOUT_MS. */
+async function fetchWithTimeout(url: string): Promise<Response | null> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    return r;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 /** Forward resolution — name → address. */
 async function resolveForward(name: string): Promise<AddressLookupResult | null> {
+  const r = await fetchWithTimeout(
+    `${API_BASE}/resolve?name=${encodeURIComponent(name.toLowerCase())}`,
+  );
+  if (!r || !r.ok) return null;
   try {
-    const r = await fetch(
-      `${API_BASE}/resolve?name=${encodeURIComponent(name.toLowerCase())}`,
-    );
-    if (!r.ok) return null;
     const data = (await r.json()) as {
       exists?: boolean;
       address?: string;
@@ -62,11 +78,11 @@ async function resolveForward(name: string): Promise<AddressLookupResult | null>
 async function resolveReverse(
   address: string,
 ): Promise<DomainLookupResult | null> {
+  const r = await fetchWithTimeout(
+    `${API_BASE}/reverse?address=${encodeURIComponent(address)}`,
+  );
+  if (!r || !r.ok) return null;
   try {
-    const r = await fetch(
-      `${API_BASE}/reverse?address=${encodeURIComponent(address)}`,
-    );
-    if (!r.ok) return null;
     const data = (await r.json()) as { primary?: string | null };
     if (!data.primary) return null;
     return {

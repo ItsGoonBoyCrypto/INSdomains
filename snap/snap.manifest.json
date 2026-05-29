@@ -7,7 +7,7 @@
     "url": "https://github.com/ItsGoonBoyCrypto/INSdomains"
   },
   "source": {
-    "shasum": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+    "shasum": "Rx9Kmy3ILtrXFxmGtLNzmG9mj9Uc4Q6aqyIb0GX2rYM=",
     "location": {
       "npm": {
         "filePath": "dist/snap.js",
@@ -19,12 +19,10 @@
   },
   "initialPermissions": {
     "endowment:name-lookup": {
-      "chains": [
-        "eip155:1",
-        "eip155:38833"
-      ]
+      "chains": ["eip155:1", "eip155:38833"]
     },
     "endowment:network-access": {}
   },
+  "platformVersion": "6.24.0",
   "manifestVersion": "0.1"
 }
