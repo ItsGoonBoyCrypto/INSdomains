@@ -14,6 +14,7 @@ import { formatEther } from "viem";
 import {
   Tag, Hammer, Sparkles, ArrowRight,
   Loader2, Star, Clock, ExternalLink, ShoppingCart, Check,
+  Search, X,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -108,8 +109,65 @@ function Browse() {
     .map(([k]) => k);
   const anyPaused = pausedMarketplaces.length > 0;
 
-  const featured = listings.list.filter((l) => l.featured);
-  const regular = listings.list.filter((l) => !l.featured);
+  // ─ Filter + sort state (2026-05-29) ─
+  const [query, setQuery] = useState("");
+  const [lengthBucket, setLengthBucket] = useState<"all" | "1" | "2" | "3" | "4" | "5+">("all");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [sortBy, setSortBy] = useState<"default" | "priceAsc" | "priceDesc" | "nameAsc" | "lengthAsc">("default");
+
+  const anyFilterActive =
+    query.trim() !== "" || lengthBucket !== "all" || minPrice !== "" || maxPrice !== "" || sortBy !== "default";
+
+  const resetFilters = () => {
+    setQuery(""); setLengthBucket("all"); setMinPrice(""); setMaxPrice(""); setSortBy("default");
+  };
+
+  const filteredList = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const parseIkasToWei = (raw: string): bigint | null => {
+      if (!raw) return null;
+      const n = Number(raw);
+      if (!Number.isFinite(n) || n < 0) return null;
+      // n is iKAS; multiply by 1e18 to get wei. Use string concat to avoid f64 precision loss for large values.
+      const [intPart, fracPart = ""] = String(n).split(".");
+      const frac = (fracPart + "000000000000000000").slice(0, 18);
+      return BigInt(intPart + frac);
+    };
+    const min = parseIkasToWei(minPrice);
+    const max = parseIkasToWei(maxPrice);
+
+    const filtered = listings.list.filter((l) => {
+      if (q && !l.label.toLowerCase().includes(q)) return false;
+      if (lengthBucket !== "all") {
+        const len = l.label.length;
+        if (lengthBucket === "5+") { if (len < 5) return false; }
+        else if (len !== Number(lengthBucket)) return false;
+      }
+      if (min !== null && l.price < min) return false;
+      if (max !== null && l.price > max) return false;
+      return true;
+    });
+
+    const cmpUser = (a: ActiveListing, b: ActiveListing): number => {
+      switch (sortBy) {
+        case "priceAsc":  return a.price < b.price ? -1 : a.price > b.price ? 1 : 0;
+        case "priceDesc": return a.price > b.price ? -1 : a.price < b.price ? 1 : 0;
+        case "nameAsc":   return a.label.localeCompare(b.label);
+        case "lengthAsc": return a.label.length - b.label.length;
+        default:          return a.price < b.price ? -1 : a.price > b.price ? 1 : 0;
+      }
+    };
+    // Featured always lead within their group (paid placement); user sort applies within each group.
+    filtered.sort((a, b) => {
+      if (a.featured !== b.featured) return a.featured ? -1 : 1;
+      return cmpUser(a, b);
+    });
+    return filtered;
+  }, [listings.list, query, lengthBucket, minPrice, maxPrice, sortBy]);
+
+  const featured = filteredList.filter((l) => l.featured);
+  const regular = filteredList.filter((l) => !l.featured);
 
   return (
     <>
@@ -163,6 +221,30 @@ function Browse() {
         </div>
       )}
 
+      {!listings.loading && listings.list.length > 0 && (
+        <FilterBar
+          query={query} setQuery={setQuery}
+          lengthBucket={lengthBucket} setLengthBucket={setLengthBucket}
+          minPrice={minPrice} setMinPrice={setMinPrice}
+          maxPrice={maxPrice} setMaxPrice={setMaxPrice}
+          sortBy={sortBy} setSortBy={setSortBy}
+          onReset={resetFilters}
+          anyActive={anyFilterActive}
+          totalCount={listings.list.length}
+          matchCount={filteredList.length}
+        />
+      )}
+
+      {!listings.loading && listings.list.length > 0 && filteredList.length === 0 && anyFilterActive && (
+        <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.02] p-10 text-center">
+          <h2 className="text-base font-bold text-white/80">No matches</h2>
+          <p className="mt-1 text-xs text-white/55">Try widening the price range or clearing a filter.</p>
+          <button onClick={resetFilters} className="mt-4 inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/70 transition hover:border-cyan/30 hover:text-cyan">
+            <X className="h-3 w-3" /> Reset filters
+          </button>
+        </div>
+      )}
+
       {!listings.loading && listings.list.length === 0 && (
         <div className="mt-12 rounded-3xl border border-white/10 bg-white/[0.02] p-14 text-center">
           <h2 className="text-lg font-bold">No names listed yet</h2>
@@ -178,8 +260,9 @@ function Browse() {
       {/* ── Featured hero ──
            Always visible (with empty state) so featuring is THE primary
            call-to-action when discovering names. We want sellers to feature
-           and buyers to scroll featured first. */}
-      {!listings.loading && (
+           and buyers to scroll featured first. Hidden when filters are
+           active AND match nothing (handled by the no-matches block above). */}
+      {!listings.loading && filteredList.length > 0 && (
         <section className="mt-10">
           <FeaturedHero
             featured={featured}
@@ -212,6 +295,114 @@ function Browse() {
    Featured listings render in a 2-column grid (vs 3-col below) so each
    tile is visually larger; cyan glow border, "Star" pill, and a "promote
    yours" CTA in the header drive sellers toward the upgrade. */
+/* ── Filter bar (added 2026-05-29) ───────────────────────── */
+function FilterBar(props: {
+  query: string;
+  setQuery: (s: string) => void;
+  lengthBucket: "all" | "1" | "2" | "3" | "4" | "5+";
+  setLengthBucket: (b: "all" | "1" | "2" | "3" | "4" | "5+") => void;
+  minPrice: string;
+  setMinPrice: (s: string) => void;
+  maxPrice: string;
+  setMaxPrice: (s: string) => void;
+  sortBy: "default" | "priceAsc" | "priceDesc" | "nameAsc" | "lengthAsc";
+  setSortBy: (s: "default" | "priceAsc" | "priceDesc" | "nameAsc" | "lengthAsc") => void;
+  onReset: () => void;
+  anyActive: boolean;
+  totalCount: number;
+  matchCount: number;
+}) {
+  const {
+    query, setQuery, lengthBucket, setLengthBucket,
+    minPrice, setMinPrice, maxPrice, setMaxPrice,
+    sortBy, setSortBy, onReset, anyActive, totalCount, matchCount,
+  } = props;
+  const numOnly = (v: string) => v.replace(/[^0-9.]/g, "");
+
+  return (
+    <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.02] p-3">
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Search */}
+        <div className="flex min-w-[180px] flex-1 items-center gap-2 rounded-lg border border-white/10 bg-black/30 px-3 py-2">
+          <Search className="h-4 w-4 flex-none text-white/45" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name…"
+            className="flex-1 bg-transparent text-sm placeholder:text-white/35 focus:outline-none"
+            spellCheck={false}
+          />
+        </div>
+
+        {/* Length tier */}
+        <select
+          value={lengthBucket}
+          onChange={(e) => setLengthBucket(e.target.value as "all" | "1" | "2" | "3" | "4" | "5+")}
+          className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white/85 focus:border-cyan/40 focus:outline-none"
+          title="Length tier"
+        >
+          <option value="all">All lengths</option>
+          <option value="1">1-char · Ultra-Premium</option>
+          <option value="2">2-char · Premium</option>
+          <option value="3">3-char · Rare</option>
+          <option value="4">4-char · Uncommon</option>
+          <option value="5+">5+ char · Standard</option>
+        </select>
+
+        {/* Price range */}
+        <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm">
+          <input
+            value={minPrice}
+            onChange={(e) => setMinPrice(numOnly(e.target.value))}
+            placeholder="min"
+            inputMode="decimal"
+            className="w-14 bg-transparent text-right placeholder:text-white/35 focus:outline-none"
+          />
+          <span className="text-white/30">–</span>
+          <input
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(numOnly(e.target.value))}
+            placeholder="max"
+            inputMode="decimal"
+            className="w-14 bg-transparent placeholder:text-white/35 focus:outline-none"
+          />
+          <span className="text-[11px] text-white/40">iKAS</span>
+        </div>
+
+        {/* Sort */}
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as "default" | "priceAsc" | "priceDesc" | "nameAsc" | "lengthAsc")}
+          className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white/85 focus:border-cyan/40 focus:outline-none"
+          title="Sort order"
+        >
+          <option value="default">Sort: Default</option>
+          <option value="priceAsc">Price ↑</option>
+          <option value="priceDesc">Price ↓</option>
+          <option value="nameAsc">Name A–Z</option>
+          <option value="lengthAsc">Length ↑</option>
+        </select>
+
+        {/* Reset */}
+        {anyActive && (
+          <button
+            onClick={onReset}
+            className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white/65 transition hover:border-red-500/30 hover:text-red-300"
+          >
+            <X className="h-3 w-3" /> Reset
+          </button>
+        )}
+      </div>
+
+      {anyActive && (
+        <div className="mt-2 text-[11px] text-white/50">
+          Showing <span className="text-white/80">{matchCount}</span> of {totalCount}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function FeaturedHero({
   featured, onBought, pausedByMarketplace,
 }: {
