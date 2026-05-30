@@ -5,8 +5,9 @@ const nextConfig = {
   experimental: { optimizePackageImports: ["lucide-react"] },
   async rewrites() {
     return [
-      // Clean URL for the public snap install page (static file lives at /public/snap.html).
+      // Clean URLs for static snap pages (static files live at /public/<name>.html).
       { source: "/snap", destination: "/snap.html" },
+      { source: "/snap-help", destination: "/snap-help.html" },
     ];
   },
 };

@@ -39,7 +39,7 @@
 |---|---|
 | **Customer support contact** | `GoonBoyCrypto@gmail.com` |
 | **FAQ URL** | `https://insdomains.org/snap#faq` |
-| **Knowledge base / docs** | `https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/snap/README.md` |
+| **Knowledge base / docs** | `https://insdomains.org/snap-help` *(dedicated user help center — 14 sections, install through glossary)* |
 | **X / Twitter** | `https://x.com/IgraNameService` |
 | **Discord / community** | _(leave blank or use X DM)_ |
 
