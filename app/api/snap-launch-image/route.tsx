@@ -155,7 +155,7 @@ export async function GET(req: Request) {
                 <div style={{ display: "flex", fontSize: s(15), fontWeight: 800, color: "#86efac", letterSpacing: s(2) }}>RESOLVED VIA INS · IGRA L2</div>
               </div>
               <div style={{ display: "flex", fontSize: s(26), fontFamily: "monospace", color: "rgba(255,255,255,0.92)", fontWeight: 600, marginTop: s(2) }}>
-                0xA55E44b6...6506
+                0x7447F0e5...07aA1
               </div>
             </div>
           </div>

@@ -146,8 +146,8 @@ Before hitting submit, verify each of these:
 - [ ] `package.json` version matches `snap.manifest.json` version (both should be `0.1.0`)
 - [ ] GitHub repo is public and `snap/` directory shows README + SECURITY.md
 - [ ] Snap installs cleanly in Flask via the public install page (do one fresh install test)
-- [ ] Resolution test passes: `igranetwork.igra` resolves to `0xA55E44b6...6506`
-- [ ] Reverse resolution test passes: `0xA55E44b6...6506` → `insdomains.igra`
+- [ ] Resolution test passes: `igranetwork.igra` resolves to `0x7447F0e5...07aA1`
+- [ ] Reverse resolution test passes: `0x7447F0e5...07aA1` → `insdomains.igra`
 - [ ] Both screenshots and demo video are captured + saved locally
 
 ---

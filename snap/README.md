@@ -81,10 +81,11 @@ Or skip the snap entirely and call our public REST API directly:
 
 ```bash
 curl https://insdomains.org/api/resolve?name=igranetwork.igra
-# {"exists":true,"address":"0xA55E44b6...6506","name":"igranetwork.igra"}
+# {"exists":true,"address":"0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1",
+#  "label":"igranetwork","tld":"igra","tokenId":"4", ...}
 
-curl https://insdomains.org/api/reverse?address=0xA55E...6506
-# {"primary":"insdomains.igra"}
+curl https://insdomains.org/api/reverse?address=0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1
+# {"address":"0x7447...","primary":"insdomains.igra", ...}
 ```
 
 Full API reference: [docs/API.md](../docs/API.md).
