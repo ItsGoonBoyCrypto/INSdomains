@@ -141,6 +141,36 @@
   }
   .footer-meta a { color: rgba(255,255,255,0.65); }
   .meta-sep { color: rgba(255,255,255,0.2); }
+  .hero-row {
+    display: flex; align-items: center; gap: 28px;
+    margin-bottom: 14px;
+  }
+  .hero-icon {
+    width: 120px; height: 120px; flex-shrink: 0;
+    border-radius: 28px;
+    box-shadow: 0 0 60px rgba(0,240,255,0.30), 0 20px 40px rgba(0,0,0,0.45);
+  }
+  @media (max-width: 640px) {
+    .hero-row { flex-direction: column; align-items: flex-start; gap: 18px; }
+    .hero-icon { width: 96px; height: 96px; border-radius: 22px; }
+  }
+  .pill-row {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px;
+  }
+  .pill.green {
+    background: rgba(52,211,153,0.12); border: 1px solid #34d39955; color: #6ee7b7;
+  }
+  .pill.amber {
+    background: rgba(251,191,36,0.10); border: 1px solid #fbbf2455; color: #fcd34d;
+  }
+  .status-strip {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; border-radius: 10px;
+    background: rgba(251,191,36,0.06);
+    border: 1px solid rgba(251,191,36,0.25);
+    margin-top: 14px;
+    font-size: 13px; color: #fcd34d; line-height: 1.5;
+  }
   table.info { width: 100%; border-collapse: collapse; }
   table.info td { padding: 8px 0; vertical-align: top; font-size: 14px; }
   table.info td:first-child { color: rgba(255,255,255,0.5); width: 40%; }
@@ -155,13 +185,21 @@
       <span class="logo-mark">i</span>
       <span>IGRA NAME SERVICE</span>
     </a>
-    <span class="pill">🟣 LIVE ON NPM</span>
+    <div class="pill-row" style="margin: 0;">
+      <span class="pill green">🟢 LIVE in Flask</span>
+      <span class="pill amber">🟡 MetaMask Directory: in review</span>
+    </div>
   </nav>
 
-  <h1>Resolve .igra names natively in MetaMask</h1>
-  <p class="sub">
-    The INS Snap turns <code>alice.igra</code> into a wallet address right in the send field — no copy-paste, no extension switching, no <code>.eth</code> name required. Forward and reverse resolution both work out of the box.
-  </p>
+  <div class="hero-row">
+    <img src="/snap-icon.svg" alt="INS Snap icon" class="hero-icon" width="120" height="120">
+    <div>
+      <h1 style="margin-bottom: 14px;">Resolve .igra names natively in MetaMask</h1>
+      <p class="sub" style="margin-bottom: 0;">
+        The INS Snap turns <code>alice.igra</code> into a wallet address right in the send field — no copy-paste, no extension switching, no <code>.eth</code> name required. Forward and reverse resolution both work out of the box.
+      </p>
+    </div>
+  </div>
 
   <!-- ABOUT INS -->
   <div class="card">
@@ -178,10 +216,14 @@
   <div class="card" id="install">
     <h2>Install</h2>
     <p style="margin-top: 0; color: rgba(255,255,255,0.65); font-size: 14px;">
-      <span class="badge">REQUIRES</span>
+      <span class="badge">REQUIRES TODAY</span>
       &nbsp;<a href="https://metamask.io/flask" target="_blank" rel="noopener">MetaMask Flask</a>
-      &nbsp;— the developer build of MetaMask. (We&rsquo;re also live on npm and currently under review for the MetaMask Snap Directory, which will enable one-click install in regular MetaMask.)
+      &nbsp;— the developer build of MetaMask that runs side-by-side with regular MetaMask in the same browser.
     </p>
+    <div class="status-strip">
+      <span aria-hidden style="font-size: 16px;">📨</span>
+      <span><strong>Submission filed with the MetaMask Snap Directory.</strong> Once approved (typical review: 5&ndash;14 days), this Snap will install one-click in <em>regular</em> MetaMask too &mdash; no Flask needed. Bookmark this page; we&rsquo;ll flip the badge above to green the moment it lands.</span>
+    </div>
     <div id="wallets">
       <div class="wallet-row" style="color: rgba(255,255,255,0.45);">scanning for wallet extensions via EIP-6963&hellip;</div>
     </div>
@@ -264,8 +306,13 @@
     <h2>FAQ</h2>
 
     <div class="faq-item">
-      <h3>Why does this require MetaMask Flask?</h3>
-      <p>MetaMask Flask is MetaMask&rsquo;s developer build, which lets you install Snaps directly from npm. Regular MetaMask only loads Snaps that are on the official <a href="https://snaps.metamask.io" target="_blank" rel="noopener">MetaMask Snap Directory</a>. INS Snap has been submitted for review &mdash; once approved, it&rsquo;ll install one-click in regular MetaMask too. Flask is completely free and runs side-by-side with regular MetaMask in your browser.</p>
+      <h3>Why does this require MetaMask Flask <em>right now</em>?</h3>
+      <p>MetaMask Flask is MetaMask&rsquo;s developer build, which lets you install Snaps directly from npm. Regular MetaMask only loads Snaps that are on the official <a href="https://snaps.metamask.io" target="_blank" rel="noopener">MetaMask Snap Directory</a>. <strong>We have submitted INS Snap for review</strong> — once approved (typical: 5&ndash;14 days), it&rsquo;ll install one-click in regular MetaMask too. Flask is completely free, installs in 30 seconds, and runs side-by-side with regular MetaMask in your browser.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>When will INS Snap be in regular MetaMask?</h3>
+      <p>As soon as the MetaMask team approves our directory submission. We&rsquo;re pushing this as our top priority and will update the status badge at the top of this page the moment it goes live. Want a heads-up? Follow <a href="https://x.com/IgraNameService" target="_blank" rel="noopener">@IgraNameService</a> on X.</p>
     </div>
 
     <div class="faq-item">
