@@ -48,8 +48,16 @@ async function fetchWithTimeout(url: string): Promise<Response | null> {
   }
 }
 
-/** Forward resolution — name → address. */
-async function resolveForward(name: string): Promise<AddressLookupResult | null> {
+/**
+ * Forward resolution — name → address.
+ *
+ * NB on naming: in @metamask/snaps-sdk v11 the result types are named after
+ * the lookup INPUT, not the output. A `DomainLookupResult` is what you return
+ * when MetaMask gave you a domain (and you respond with addresses); an
+ * `AddressLookupResult` is what you return when MetaMask gave you an address
+ * (and you respond with domains). Counter-intuitive but correct.
+ */
+async function resolveForward(name: string): Promise<DomainLookupResult | null> {
   const r = await fetchWithTimeout(
     `${API_BASE}/resolve?name=${encodeURIComponent(name.toLowerCase())}`,
   );
@@ -77,7 +85,7 @@ async function resolveForward(name: string): Promise<AddressLookupResult | null>
 /** Reverse resolution — address → primary name. */
 async function resolveReverse(
   address: string,
-): Promise<DomainLookupResult | null> {
+): Promise<AddressLookupResult | null> {
   const r = await fetchWithTimeout(
     `${API_BASE}/reverse?address=${encodeURIComponent(address)}`,
   );
