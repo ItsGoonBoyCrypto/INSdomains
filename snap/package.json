@@ -1,7 +1,7 @@
 {
-  "name": "@ins/snap-resolver",
+  "name": "ins-snap-resolver",
   "version": "0.1.0",
-  "description": "MetaMask Snap — native .igra name resolution via INS (Igra Name Service)",
+  "description": "MetaMask Snap for native .igra name resolution via INS (Igra Name Service) on Igra L2",
   "main": "dist/snap.js",
   "files": [
     "dist/",
@@ -24,15 +24,20 @@
     "ens"
   ],
   "license": "MIT",
+  "homepage": "https://insdomains.org",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ItsGoonBoyCrypto/INSdomains"
+    "url": "git+https://github.com/ItsGoonBoyCrypto/INSdomains.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ItsGoonBoyCrypto/INSdomains/issues"
   },
   "dependencies": {
-    "@metamask/snaps-sdk": "^6.10.0"
+    "@metamask/snaps-sdk": "^11.1.1"
   },
   "devDependencies": {
-    "@metamask/snaps-cli": "^6.5.0",
+    "@metamask/snaps-cli": "^8.4.1",
+    "@metamask/snaps-utils": "^12.2.1",
     "@types/node": "^20.10.0",
     "prettier": "^3.8.3",
     "rimraf": "^5.0.5",
