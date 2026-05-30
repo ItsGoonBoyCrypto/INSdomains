@@ -1,0 +1,10 @@
+// File: src/background/service/index.ts
+//
+// Add ONE LINE to the existing barrel export — right after `blockscoutService`
+// (or anywhere alphabetical / logical with the existing exports).
+
+// Find this line (added by the RNS PR):
+//   export { default as blockscoutService } from './blockscout';
+
+// Add directly below it:
+export { default as insService } from './insService';

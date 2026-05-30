@@ -1,0 +1,60 @@
+// File: src/ui/views/SelectToAddress/components/EnterAddress.tsx
+//
+// Two changes that mirror exactly what the RNS PR did:
+//
+//   1. Extend the tag-display switch so the input shows "INS: alice.igra"
+//      when the resolved result came from INS (vs "ENS:" or "RNS:").
+//
+//   2. Add INS as a fallback in the resolution chain after RNS.
+
+// ──────────────────────────────────────────────
+// CHANGE 1: TAG DISPLAY
+// Find the existing logic added by the RNS PR (search for ".rsk"):
+//
+//   let domain = 'ENS';
+//   if (ensResult?.name && ensResult.name.endsWith('.rsk')) {
+//     domain = 'RNS';
+//   }
+//   setTags([`${domain}: ${ensResult?.name || ''}`]);
+//
+// Extend it with the .igra case:
+
+let domain = 'ENS';
+if (ensResult?.name && ensResult.name.endsWith('.rsk')) {
+  domain = 'RNS';
+} else if (ensResult?.name && ensResult.name.endsWith('.igra')) {
+  domain = 'INS';
+}
+setTags([`${domain}: ${ensResult?.name || ''}`]);
+
+
+// ──────────────────────────────────────────────
+// CHANGE 2: RESOLUTION FALLBACK
+// Find the existing RNS fallback block (search for `getRnsAddressByName`):
+//
+//   } else {
+//     const rnsResult = await wallet.getRnsAddressByName(address);
+//     if (rnsResult && rnsResult.addr) {
+//       setEnsResult(rnsResult);
+//     } else {
+//       setEnsResult(null);
+//     }
+//   }
+//
+// Insert an INS check BEFORE the existing RNS check (or chain them):
+
+} else {
+  // Try INS (.igra) first
+  const insResult = await wallet.getInsAddressByName(address);
+  if (insResult && insResult.addr) {
+    setEnsResult(insResult);
+  } else {
+    // Fall through to RNS (.rsk)
+    const rnsResult = await wallet.getRnsAddressByName(address);
+    if (rnsResult && rnsResult.addr) {
+      setEnsResult(rnsResult);
+    } else {
+      setEnsResult(null);
+    }
+  }
+}

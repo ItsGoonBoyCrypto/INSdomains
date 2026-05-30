@@ -1,0 +1,31 @@
+// File: src/background/controller/wallet.ts
+//
+// Two changes:
+//   1. Add `insService` to the imports from '../service'
+//   2. Add the `getInsAddressByName` method on the wallet class
+
+// ──────────────────────────────────────────────
+// 1. IMPORTS
+// Find the existing service-imports block (search for `blockscoutService,`)
+// and add `insService` next to it:
+import {
+  // ... existing imports ...
+  blockscoutService,
+  insService,
+  // ... rest ...
+} from '../service';
+
+
+// ──────────────────────────────────────────────
+// 2. METHOD
+// Find the existing `getRnsAddressByName` method (added by RNS PR)
+// and add a sibling method directly below it:
+
+getInsAddressByName = async (name: string) => {
+  try {
+    const insResult = await insService.getInsAddressByName(name);
+    return insResult;
+  } catch {
+    return null;
+  }
+};
