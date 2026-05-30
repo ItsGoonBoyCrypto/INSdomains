@@ -2,49 +2,96 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>INS Snap · Installer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>INS Snap — Native .igra resolution in MetaMask</title>
+<meta name="description" content="The INS MetaMask Snap resolves .igra names natively in MetaMask's send field. No copy-paste. No extension switching. One-click install.">
+<meta property="og:title" content="INS Snap — Native .igra resolution in MetaMask">
+<meta property="og:description" content="Type alice.igra in MetaMask's send field, it resolves natively. The INS MetaMask Snap is live on npm.">
+<meta property="og:image" content="https://insdomains.org/api/snap-launch-image">
+<meta property="og:url" content="https://insdomains.org/snap">
+<meta name="twitter:card" content="summary_large_image">
 <style>
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: radial-gradient(800px 600px at 30% 20%, rgba(0,240,255,0.18), transparent 60%),
-                radial-gradient(800px 700px at 100% 100%, rgba(168,85,247,0.20), transparent 60%),
+    background: radial-gradient(900px 700px at 30% 10%, rgba(0,240,255,0.18), transparent 60%),
+                radial-gradient(900px 800px at 100% 100%, rgba(168,85,247,0.22), transparent 60%),
                 #070708;
+    background-attachment: fixed;
     color: #fff;
     margin: 0;
     min-height: 100vh;
-    padding: 60px 40px;
+    padding: 48px 24px 80px;
+    line-height: 1.55;
   }
-  .wrap { max-width: 720px; margin: 0 auto; }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  .nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 36px; }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none; color: rgba(255,255,255,0.85);
+    font-weight: 800; font-size: 18px; letter-spacing: 2px;
+  }
+  .logo-mark {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(120deg, #00f0ff, #a855f7);
+    display: flex; align-items: center; justify-content: center;
+    color: #000; font-weight: 900; font-size: 22px;
+    box-shadow: 0 0 20px rgba(0,240,255,0.4);
+  }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 999px;
+    background: rgba(52,211,153,0.12); border: 1px solid #34d39955;
+    color: #6ee7b7; font-size: 12px; font-weight: 800; letter-spacing: 1px;
+  }
   h1 {
-    font-size: 36px; font-weight: 900; margin: 0 0 8px;
+    font-size: clamp(40px, 7vw, 64px); font-weight: 900; margin: 0 0 14px;
     background: linear-gradient(110deg, #00f0ff, #a855f7);
     -webkit-background-clip: text; background-clip: text; color: transparent;
+    line-height: 1.05; letter-spacing: -1.5px;
   }
-  .sub { color: rgba(255,255,255,0.6); font-size: 15px; margin-bottom: 36px; }
+  .sub {
+    color: rgba(255,255,255,0.7); font-size: 19px; margin-bottom: 36px;
+    max-width: 620px; line-height: 1.5;
+  }
   .card {
     border: 1px solid rgba(255,255,255,0.10);
     background: rgba(255,255,255,0.02);
-    border-radius: 16px;
-    padding: 28px;
-    margin-bottom: 20px;
+    border-radius: 18px;
+    padding: 32px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(20px);
   }
-  button {
+  .card h2 {
+    margin: 0 0 18px; font-size: 22px; font-weight: 800;
+    color: rgba(255,255,255,0.95); letter-spacing: -0.3px;
+  }
+  .card h3 { font-size: 16px; margin: 0 0 6px; font-weight: 800; color: #fff; }
+  button.install {
     background: linear-gradient(120deg, #00f0ff, #a855f7);
     border: 0; color: #000;
     padding: 16px 36px; font-size: 17px; font-weight: 900;
     border-radius: 12px; cursor: pointer;
     box-shadow: 0 0 30px rgba(0,240,255,0.3);
     transition: transform 0.1s;
+    font-family: inherit;
   }
-  button:hover { transform: translateY(-1px); }
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
-  ol, ul { padding-left: 22px; line-height: 1.7; color: rgba(255,255,255,0.8); }
+  button.install:hover { transform: translateY(-1px); }
+  button.install:disabled { opacity: 0.5; cursor: not-allowed; }
+  ol, ul { padding-left: 22px; line-height: 1.7; color: rgba(255,255,255,0.8); margin: 0; }
   code, kbd {
     background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 6px;
     font-family: "SF Mono", Menlo, monospace; font-size: 13px; color: #00f0ff;
   }
+  pre {
+    background: rgba(0,0,0,0.4); padding: 16px 20px; border-radius: 12px;
+    overflow-x: auto; font-family: "SF Mono", Menlo, monospace;
+    font-size: 13px; color: #c4b5fd; border: 1px solid rgba(255,255,255,0.06);
+    margin: 0;
+  }
   a { color: #00f0ff; }
+  a:hover { color: #a855f7; }
   #status {
     margin-top: 20px; padding: 14px 18px; border-radius: 10px;
     font-family: "SF Mono", Menlo, monospace; font-size: 13px;
@@ -54,7 +101,7 @@
   #status.ok { display: block; background: rgba(52,211,153,0.10); border: 1px solid #34d399; color: #6ee7b7; }
   #status.err { display: block; background: rgba(248,113,113,0.10); border: 1px solid #f87171; color: #fca5a5; }
   #status.info { display: block; background: rgba(0,240,255,0.06); border: 1px solid #00f0ff55; color: #67e8f9; }
-  .pill {
+  .badge {
     display: inline-block; padding: 3px 10px; border-radius: 999px;
     background: rgba(168,85,247,0.15); border: 1px solid #a855f755;
     color: #c4b5fd; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
@@ -74,61 +121,192 @@
   .wallet-row.flask { border-color: #34d39955; background: rgba(52,211,153,0.06); }
   .wallet-row img { width: 24px; height: 24px; }
   .wallet-row .rdns { color: rgba(255,255,255,0.4); font-family: "SF Mono", Menlo, monospace; font-size: 11px; margin-left: auto; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+  .feat {
+    padding: 18px 20px; border-radius: 14px;
+    background: linear-gradient(135deg, rgba(0,240,255,0.05) 0%, rgba(168,85,247,0.05) 100%);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .feat-icon { font-size: 24px; margin-bottom: 8px; }
+  .feat p { color: rgba(255,255,255,0.7); font-size: 14px; margin: 0; line-height: 1.5; }
+  .faq-item { padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .faq-item:last-child { border-bottom: 0; }
+  .faq-item h3 { margin-bottom: 6px; font-size: 15px; }
+  .faq-item p { color: rgba(255,255,255,0.7); margin: 0; font-size: 14px; line-height: 1.6; }
+  .footer-meta {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    color: rgba(255,255,255,0.5); font-size: 13px;
+    padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 24px;
+  }
+  .footer-meta a { color: rgba(255,255,255,0.65); }
+  .meta-sep { color: rgba(255,255,255,0.2); }
+  table.info { width: 100%; border-collapse: collapse; }
+  table.info td { padding: 8px 0; vertical-align: top; font-size: 14px; }
+  table.info td:first-child { color: rgba(255,255,255,0.5); width: 40%; }
+  table.info td:last-child { color: #fff; font-family: "SF Mono", Menlo, monospace; font-size: 13px; }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <h1>🟣 INS Snap · Installer</h1>
-  <p class="sub">Installs the INS snap into MetaMask Flask, then tests <code>.igra</code> resolution.</p>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <span class="logo-mark">i</span>
+      <span>IGRA NAME SERVICE</span>
+    </a>
+    <span class="pill">🟣 LIVE ON NPM</span>
+  </nav>
 
-  <div class="card">
-    <p style="margin: 0 0 10px;">
-      <span class="pill">REQUIRES</span>
-      &nbsp;<a href="https://metamask.io/flask" target="_blank">MetaMask Flask</a>
-      (separate extension from regular MetaMask &mdash; both can coexist)
-    </p>
-    <p style="margin: 0 0 10px; font-size: 13px; color: rgba(255,255,255,0.55);">
-      Installs <code>npm:ins-snap-resolver</code> from the public npm registry.
+  <h1>Resolve .igra names natively in MetaMask</h1>
+  <p class="sub">
+    The INS Snap turns <code>alice.igra</code> into a wallet address right in the send field — no copy-paste, no extension switching, no <code>.eth</code> name required. Forward and reverse resolution both work out of the box.
+  </p>
+
+  <!-- INSTALL CARD -->
+  <div class="card" id="install">
+    <h2>Install</h2>
+    <p style="margin-top: 0; color: rgba(255,255,255,0.65); font-size: 14px;">
+      <span class="badge">REQUIRES</span>
+      &nbsp;<a href="https://metamask.io/flask" target="_blank" rel="noopener">MetaMask Flask</a>
+      &nbsp;— the developer build of MetaMask. (We&rsquo;re also live on npm and currently under review for the MetaMask Snap Directory, which will enable one-click install in regular MetaMask.)
     </p>
     <div id="wallets">
-      <div class="wallet-row" style="color: rgba(255,255,255,0.45);">scanning for wallet extensions via EIP-6963…</div>
+      <div class="wallet-row" style="color: rgba(255,255,255,0.45);">scanning for wallet extensions via EIP-6963&hellip;</div>
     </div>
     <div style="margin-top: 20px;">
-      <button id="install">Install INS Snap (Flask)</button>
+      <button class="install" id="install-btn">Install INS Snap</button>
     </div>
     <div id="status"></div>
   </div>
 
+  <!-- WHAT IT DOES -->
   <div class="card">
-    <h3 style="margin-top: 0;">After install — test it:</h3>
+    <h2>What it does</h2>
+    <div class="grid-2">
+      <div class="feat">
+        <div class="feat-icon">📤</div>
+        <h3>Forward resolution</h3>
+        <p>Type <code>alice.igra</code> in any send field → MetaMask resolves it to the linked wallet address. Works the same as ENS does for <code>.eth</code> names.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">📥</div>
+        <h3>Reverse resolution</h3>
+        <p>Paste any wallet → if the holder has set a primary <code>.igra</code> name, MetaMask shows it instead of the long <code>0x&hellip;</code> address.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRY IT -->
+  <div class="card">
+    <h2>Try it after installing</h2>
     <ol>
-      <li>Open MetaMask Flask · switch network to <code>Ethereum Mainnet</code></li>
-      <li>Click <code>Send</code></li>
-      <li>In the recipient field, type <code>igranetwork.igra</code></li>
-      <li>Flask should resolve it to the V2 owner's address (Safe multisig)</li>
+      <li>Open MetaMask Flask</li>
+      <li>Switch the network to <code>Ethereum Mainnet</code> (or Igra L2 if you have it configured)</li>
+      <li>Click <kbd>Send</kbd></li>
+      <li>In the recipient field, type one of:
+        <ul style="margin-top: 6px;">
+          <li><code>igranetwork.igra</code> — Igra Labs official handle</li>
+          <li><code>insdomains.igra</code> — the INS team wallet</li>
+          <li><code>claudeai.igra</code></li>
+        </ul>
+      </li>
+      <li>Flask should display the resolved address below the input within ~1 second</li>
     </ol>
   </div>
 
+  <!-- SECURITY -->
   <div class="card">
-    <h3 style="margin-top: 0;">Troubleshooting</h3>
-    <ul>
-      <li><b>"MetaMask Flask not found" but you have it installed</b> → reload this page after the wallet list populates; if still missing, make sure Flask is enabled in <code>chrome://extensions/</code></li>
-      <li><b>Install dialog shows but resolution does nothing</b> → check Flask is on Ethereum Mainnet (snap is gated to <code>eip155:1</code> and <code>eip155:38833</code>)</li>
-    </ul>
+    <h2>Security &amp; permissions</h2>
+    <p style="margin-top: 0; color: rgba(255,255,255,0.7); font-size: 14px;">
+      INS Snap requests the absolute minimum permissions needed for name lookup. It cannot sign transactions, access your keys, or read other dapp data.
+    </p>
+    <table class="info">
+      <tr><td>endowment:name-lookup</td><td>Required &mdash; how MetaMask invokes the snap when you type a name</td></tr>
+      <tr><td>endowment:network-access</td><td>Only calls <code>insdomains.org/api/resolve</code> and <code>/api/reverse</code></td></tr>
+      <tr><td>Key access</td><td>None &mdash; the snap never sees or requests any private material</td></tr>
+      <tr><td>Persistent storage</td><td>None &mdash; nothing is cached client-side</td></tr>
+      <tr><td>Bundle size</td><td>1.3 KB minified</td></tr>
+      <tr><td>Source</td><td><a href="https://github.com/ItsGoonBoyCrypto/INSdomains/tree/main/snap" target="_blank" rel="noopener">github.com/ItsGoonBoyCrypto/INSdomains/tree/main/snap</a></td></tr>
+    </table>
+  </div>
+
+  <!-- INTEGRATE -->
+  <div class="card">
+    <h2>For wallet developers</h2>
+    <p style="margin-top: 0; color: rgba(255,255,255,0.7); font-size: 14px;">
+      Trigger snap install from your own dapp with a single request:
+    </p>
+    <pre><code>await window.ethereum.request({
+  method: 'wallet_requestSnaps',
+  params: { 'npm:ins-snap-resolver': {} },
+});</code></pre>
+    <p style="margin-bottom: 0; color: rgba(255,255,255,0.55); font-size: 13px; margin-top: 14px;">
+      Prefer pure REST? Hit <a href="/api/resolve?name=igranetwork.igra">insdomains.org/api/resolve</a> directly &mdash; no snap install required. Full API reference at <a href="https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/docs/API.md" target="_blank" rel="noopener">docs/API.md</a>.
+    </p>
+  </div>
+
+  <!-- FAQ -->
+  <div class="card" id="faq">
+    <h2>FAQ</h2>
+
+    <div class="faq-item">
+      <h3>Why does this require MetaMask Flask?</h3>
+      <p>MetaMask Flask is MetaMask&rsquo;s developer build, which lets you install Snaps directly from npm. Regular MetaMask only loads Snaps that are on the official <a href="https://snaps.metamask.io" target="_blank" rel="noopener">MetaMask Snap Directory</a>. INS Snap has been submitted for review &mdash; once approved, it&rsquo;ll install one-click in regular MetaMask too. Flask is completely free and runs side-by-side with regular MetaMask in your browser.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Will the snap ever see my private keys?</h3>
+      <p>No. The snap doesn&rsquo;t request any key-management permissions (<code>snap_getBip32Entropy</code>, <code>snap_manageAccounts</code>, etc.). It only receives the domain string you type, calls our public REST API, and returns the resolved address. MetaMask never exposes keys to it.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>What if your API goes down?</h3>
+      <p>The snap fails closed &mdash; you&rsquo;ll see the raw input you typed (e.g. <code>alice.igra</code>) instead of an address, and MetaMask will block sending until you paste a real address. The snap can never substitute a wrong address.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Does this need a .eth name?</h3>
+      <p>No. INS Snap is independent of ENS. It resolves <code>.igra</code> names directly via the INS registry on Igra L2. We do also have an ENS CCIP-Read resolver in the works for <code>*.insdomains.eth</code>, but the snap path needs nothing on Ethereum at all.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Which chains does it work on?</h3>
+      <p>Ethereum Mainnet (<code>eip155:1</code>) and Igra L2 (<code>eip155:38833</code>). The same <code>.igra</code> name resolves to the same address on both chains. Add more by extending the <code>chains</code> array in <code>snap.manifest.json</code>.</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>How do I report a bug or request a feature?</h3>
+      <p>Open an issue at <a href="https://github.com/ItsGoonBoyCrypto/INSdomains/issues" target="_blank" rel="noopener">github.com/ItsGoonBoyCrypto/INSdomains/issues</a>, DM <a href="https://x.com/GoonBoyCrypto" target="_blank" rel="noopener">@GoonBoyCrypto</a> on X, or email <code>GoonBoyCrypto@gmail.com</code>.</p>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer-meta">
+    <span>Snap ID: <code>npm:ins-snap-resolver</code></span>
+    <span class="meta-sep">·</span>
+    <span>Version: <code>0.1.0</code></span>
+    <span class="meta-sep">·</span>
+    <a href="https://www.npmjs.com/package/ins-snap-resolver" target="_blank" rel="noopener">npm</a>
+    <span class="meta-sep">·</span>
+    <a href="https://github.com/ItsGoonBoyCrypto/INSdomains/tree/main/snap" target="_blank" rel="noopener">source</a>
+    <span class="meta-sep">·</span>
+    <a href="/">insdomains.org</a>
+    <span class="meta-sep">·</span>
+    <a href="https://x.com/IgraNameService" target="_blank" rel="noopener">@IgraNameService</a>
   </div>
 
 </div>
 
 <script>
   const SNAP_ID = 'npm:ins-snap-resolver';
-  const btn = document.getElementById('install');
+  const btn = document.getElementById('install-btn');
   const status = document.getElementById('status');
   const walletsEl = document.getElementById('wallets');
 
   // EIP-6963 multi-wallet discovery — gathers all installed wallet extensions
   // so we can target MetaMask Flask specifically (vs whatever wins window.ethereum).
-  const providers = new Map();   // rdns -> { info, provider }
+  const providers = new Map();
 
   function flaskCandidate(p) {
     const rdns = (p.info?.rdns || '').toLowerCase();
@@ -138,7 +316,7 @@
 
   function render() {
     if (providers.size === 0) {
-      walletsEl.innerHTML = '<div class="wallet-row" style="color: rgba(255,255,255,0.45);">No EIP-6963 wallets announced yet.</div>';
+      walletsEl.innerHTML = '<div class="wallet-row" style="color: rgba(255,255,255,0.45);">No EIP-6963 wallets detected. Make sure MetaMask Flask is installed and enabled.</div>';
       return;
     }
     walletsEl.innerHTML = '';
@@ -147,7 +325,7 @@
       const isFlask = flaskCandidate({ info });
       row.className = 'wallet-row' + (isFlask ? ' flask' : '');
       const icon = info.icon ? `<img src="${info.icon}" alt="">` : '<span style="width:24px;height:24px;display:inline-block;background:rgba(255,255,255,0.1);border-radius:6px;"></span>';
-      const flag = isFlask ? ' <span class="pill">FLASK</span>' : '';
+      const flag = isFlask ? ' <span class="badge">FLASK</span>' : '';
       row.innerHTML = `${icon}<div><b>${info.name}</b>${flag}</div><div class="rdns">${info.rdns || '(no rdns)'}</div>`;
       walletsEl.appendChild(row);
     }
@@ -168,7 +346,6 @@
   }
 
   btn.addEventListener('click', async () => {
-    // Re-poll in case wallets came in late
     window.dispatchEvent(new Event('eip6963:requestProvider'));
     await new Promise(r => setTimeout(r, 200));
 
@@ -197,7 +374,7 @@
            'ok');
     } catch (e) {
       show('✗ Install failed: ' + (e && e.message ? e.message : String(e)) +
-           '\n\nIf this is a shasum error, the npm package may have a newer version than the manifest expects. Try again or report at github.com/ItsGoonBoyCrypto/INSdomains/issues',
+           '\n\nIf this is a shasum error, the package may have updated since the manifest was cached. Try again or report at github.com/ItsGoonBoyCrypto/INSdomains/issues',
            'err');
     } finally {
       btn.disabled = false;
