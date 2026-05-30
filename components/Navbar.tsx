@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Menu, X, ShieldCheck } from "lucide-react";
+import { Menu, X, ShieldCheck, Sparkles } from "lucide-react";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { RooftopMark } from "./RooftopMark";
@@ -15,6 +15,24 @@ const NAV_LINKS = [
   { label: "About", href: "/about" },
   { label: "FAQ", href: "/faq" },
 ];
+
+/** Highlighted launch CTA — points at the public snap install page. */
+function AddToMetaMaskCTA({ onClick }: { onClick?: () => void }) {
+  return (
+    <Link
+      href="/snap"
+      onClick={onClick}
+      className="group relative inline-flex items-center gap-1.5 rounded-full border border-cyan/40 bg-cyan/10 px-3 py-1 text-xs font-semibold text-cyan transition hover:bg-cyan/20 hover:shadow-[0_0_20px_rgba(0,240,255,0.35)]"
+    >
+      <span aria-hidden className="text-sm leading-none">🦊</span>
+      <span>Add to MetaMask</span>
+      <span className="ml-1 inline-flex items-center gap-0.5 rounded-full border border-emerald-400/40 bg-emerald-400/15 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-300">
+        <Sparkles className="h-2.5 w-2.5" />
+        New
+      </span>
+    </Link>
+  );
+}
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
@@ -42,6 +60,7 @@ export function Navbar() {
               <span className="absolute -bottom-1 left-0 h-px w-0 bg-cyan transition-all group-hover:w-full" />
             </Link>
           ))}
+          <AddToMetaMaskCTA />
           {showAdmin && (
             <Link
               href="/admin"
@@ -85,6 +104,18 @@ export function Navbar() {
                 {l.label}
               </Link>
             ))}
+            <Link
+              href="/snap"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 rounded-lg border border-cyan/30 bg-cyan/10 px-3 py-3 text-base font-semibold text-cyan hover:bg-cyan/20"
+            >
+              <span aria-hidden>🦊</span>
+              <span>Add to MetaMask</span>
+              <span className="ml-auto inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-400/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-300">
+                <Sparkles className="h-2.5 w-2.5" />
+                New
+              </span>
+            </Link>
             {showAdmin && (
               <Link
                 href="/admin"

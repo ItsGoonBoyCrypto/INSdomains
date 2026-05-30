@@ -15,6 +15,7 @@ const COLS: { title: string; items: FooterItem[] }[] = [
       { label: "App", href: "/app" },
       { label: "My Domains", href: "/domains" },
       { label: "Marketplace", href: "/marketplace" },
+      { label: "Add to MetaMask", href: "/snap" },
       { label: "About", href: "/about" },
       { label: "FAQ", href: "/faq" },
       { label: "Developers", href: "/developers" },

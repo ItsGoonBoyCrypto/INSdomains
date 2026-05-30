@@ -1,0 +1,101 @@
+name: Snap CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'snap/**'
+      - '.github/workflows/snap-ci.yml'
+  pull_request:
+    paths:
+      - 'snap/**'
+      - '.github/workflows/snap-ci.yml'
+  workflow_dispatch:
+
+# Cancel superseded runs on the same branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-verify:
+    name: Build + verify manifest shasum sync
+    runs-on: ubuntu-22.04
+    timeout-minutes: 8
+    defaults:
+      run:
+        working-directory: snap
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: snap/package-lock.json
+
+      - name: Install dependencies (pinned via lockfile)
+        run: npm ci
+
+      - name: Type-check snap source
+        run: npx tsc --noEmit
+
+      - name: Capture committed manifest shasum
+        id: before
+        run: |
+          SHA=$(node -e "console.log(require('./snap.manifest.json').source.shasum)")
+          echo "committed_shasum=$SHA" >> "$GITHUB_OUTPUT"
+          echo "Committed shasum: $SHA"
+
+      - name: Build snap
+        run: npm run build
+
+      - name: Capture freshly-built manifest shasum
+        id: after
+        run: |
+          SHA=$(node -e "console.log(require('./snap.manifest.json').source.shasum)")
+          echo "built_shasum=$SHA" >> "$GITHUB_OUTPUT"
+          echo "Built shasum:    $SHA"
+
+      - name: Verify manifest version matches package.json
+        run: |
+          PKG=$(node -e "console.log(require('./package.json').version)")
+          MAN=$(node -e "console.log(require('./snap.manifest.json').version)")
+          if [ "$PKG" != "$MAN" ]; then
+            echo "::error::Version mismatch — package.json=$PKG, snap.manifest.json=$MAN"
+            exit 1
+          fi
+          echo "✓ Versions in sync: $PKG"
+
+      - name: Verify manifest shasum is reproducible
+        run: |
+          if [ "${{ steps.before.outputs.committed_shasum }}" != "${{ steps.after.outputs.built_shasum }}" ]; then
+            echo "::error::Manifest shasum drift detected!"
+            echo "Committed: ${{ steps.before.outputs.committed_shasum }}"
+            echo "Built:     ${{ steps.after.outputs.built_shasum }}"
+            echo ""
+            echo "Run 'cd snap && npm run build' and commit the updated snap.manifest.json."
+            exit 1
+          fi
+          echo "✓ Shasum reproducible: ${{ steps.after.outputs.built_shasum }}"
+
+      - name: Verify bundle was emitted
+        run: |
+          if [ ! -f dist/snap.js ]; then
+            echo "::error::dist/snap.js missing after build"
+            exit 1
+          fi
+          SIZE=$(stat -c%s dist/snap.js)
+          echo "✓ Bundle built: $SIZE bytes"
+
+      - name: Verify advertised package name matches actual package
+        run: |
+          PKG_NAME=$(node -e "console.log(require('./package.json').name)")
+          MAN_PKG=$(node -e "console.log(require('./snap.manifest.json').source.location.npm.packageName)")
+          if [ "$PKG_NAME" != "$MAN_PKG" ]; then
+            echo "::error::Package name mismatch — package.json='$PKG_NAME', manifest='$MAN_PKG'"
+            exit 1
+          fi
+          echo "✓ Package name in sync: $PKG_NAME"

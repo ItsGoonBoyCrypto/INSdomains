@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🛡️ Security vulnerability
+    url: https://github.com/ItsGoonBoyCrypto/INSdomains/security/advisories/new
+    about: Found a security issue? Please use a private advisory instead of a public issue.
+  - name: 💬 Telegram community
+    url: https://t.me/IgraNameService
+    about: General questions and community chat live in Telegram.
+  - name: 𝕏 / Twitter
+    url: https://x.com/IgraNameService
+    about: Project updates and announcements.
+  - name: 📚 Snap docs
+    url: https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/snap/README.md
+    about: How to install + integrate the MetaMask Snap.
