@@ -1,0 +1,12 @@
+[Unit]
+Description=Run the snaps-registry watch 4 times a day
+Requires=ins-snap-registry-watch.service
+
+[Timer]
+OnCalendar=*-*-* 00,06,12,18:00:00 UTC
+Persistent=true
+RandomizedDelaySec=300
+Unit=ins-snap-registry-watch.service
+
+[Install]
+WantedBy=timers.target

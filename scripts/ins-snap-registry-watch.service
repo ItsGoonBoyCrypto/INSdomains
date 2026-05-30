@@ -1,0 +1,15 @@
+[Unit]
+Description=Poll MetaMask snaps-registry for INS Snap approval PR
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/bin/python3 /usr/local/bin/ins-snap-registry-watch.py
+Nice=10
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/ins-snap-registry-watch
+PrivateTmp=true
+NoNewPrivileges=true
