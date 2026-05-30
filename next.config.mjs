@@ -8,6 +8,7 @@ const nextConfig = {
       // Clean URLs for static snap pages (static files live at /public/<name>.html).
       { source: "/snap", destination: "/snap.html" },
       { source: "/snap-help", destination: "/snap-help.html" },
+      { source: "/snap-demo", destination: "/snap-demo.html" },
     ];
   },
 };
