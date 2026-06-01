@@ -42,7 +42,17 @@ const PARTNERS: Partner[] = [
     accent: "plum",
     live: true,
   },
-  // Coming soon — KasWare, Kastle, Igra explorer maintainers, ENS team
+  {
+    name: "Kastle",
+    url: "https://kastle.cc",
+    role: "Wallet · Native .igra resolution + L1/L2 support",
+    // Authoritative Kastle icon from forbole/kastle on GitHub —
+    // assets/images/kastle-icon.svg. SVG vector, scales to any resolution.
+    mark: { kind: "image", src: "/partner-logos/kastle.svg", alt: "Kastle" },
+    accent: "cyan",
+    live: true,
+  },
+  // Coming soon — KasWare, Igra explorer maintainers, ENS team
   // (.eth integration), DAO partner. Append as each lands.
 ];
 
