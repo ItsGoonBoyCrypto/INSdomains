@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Code2, ArrowLeft, Boxes, Globe, KeyRound, ShieldCheck, Zap } from "lucide-react";
+import { Code2, ArrowLeft, Boxes, Globe, KeyRound, ShieldCheck, Zap, BookOpen, Wallet, Award, Link2, Server, Puzzle, ExternalLink } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import {
@@ -231,6 +231,62 @@ export default function DevelopersPage() {
           <Bullet><b>Native NFT art</b> — <code className="font-mono text-cyan">tokenURI()</code> returns a Base64 SVG; no extra fetch.</Bullet>
         </ul>
 
+        {/* Full docs hub — pick by use case */}
+        <SectionTitle icon={<BookOpen className="h-4 w-4 text-cyan" />}>
+          Full integration guides
+        </SectionTitle>
+        <p className="mt-2 text-sm text-white/60">
+          The page above is the 5-minute quick start. For deeper docs, pick by
+          what you&apos;re building — every guide is a single markdown file on
+          GitHub, public + copy-pasteable.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <DocCard
+            icon={<Wallet className="h-4 w-4 text-cyan" />}
+            title="Wallet & explorer integration"
+            desc="Send-flow resolution, reverse-name display, on-chain NFT art, three integration paths (REST / contract / namehash)."
+            href="https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/docs/INTEGRATION.md"
+            tag="INTEGRATION.md"
+          />
+          <DocCard
+            icon={<Award className="h-4 w-4 text-cyan" />}
+            title="Attribution / leaderboard pages"
+            desc="Drop-in vanilla JS for mining pools, validator leaderboards, hall-of-fame pages — humanise 0x… into alice.igra in 30 lines."
+            href="https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/docs/INTEGRATION_ATTRIBUTION.md"
+            tag="INTEGRATION_ATTRIBUTION.md"
+            badge="NEW"
+          />
+          <DocCard
+            icon={<Link2 className="h-4 w-4 text-cyan" />}
+            title="ENS interop (.insdomains.eth)"
+            desc="CCIP-Read wildcard resolver — makes *.insdomains.eth resolve in every ENS-aware wallet (MetaMask, Rabby, Uniswap, Coinbase Wallet, Frame, Brave, Trust, Rainbow)."
+            href="https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/docs/ETH_INTEGRATION.md"
+            tag="ETH_INTEGRATION.md"
+          />
+          <DocCard
+            icon={<Server className="h-4 w-4 text-cyan" />}
+            title="REST API reference"
+            desc="Full endpoint catalogue: resolve, reverse, names-by-owner, names-recent, stats, nft-image, ccip — request/response schemas + caching guidance."
+            href="https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/docs/API.md"
+            tag="API.md"
+          />
+          <DocCard
+            icon={<Puzzle className="h-4 w-4 text-cyan" />}
+            title="MetaMask Snap (end-user)"
+            desc="Install INS Snap in MetaMask Flask. Native .igra resolution in the send field. Snap Directory submission filed for regular MetaMask."
+            href="/snap-help"
+            tag="/snap-help"
+            internal
+          />
+          <DocCard
+            icon={<ShieldCheck className="h-4 w-4 text-cyan" />}
+            title="Snap threat model"
+            desc="Permission scope, attacker capability analysis, network call surface area, reproducible builds, vulnerability reporting."
+            href="https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/snap/SECURITY.md"
+            tag="SECURITY.md"
+          />
+        </div>
+
         {/* Contact */}
         <div className="mt-12 rounded-2xl border border-cyan/20 bg-cyan/[0.04] p-6">
           <h2 className="text-base font-bold text-white">Get a hand integrating</h2>
@@ -342,5 +398,45 @@ function Bullet({ children }: { children: React.ReactNode }) {
       <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan" />
       <span>{children}</span>
     </li>
+  );
+}
+
+function DocCard({
+  icon, title, desc, href, tag, internal, badge,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  href: string;
+  tag: string;
+  internal?: boolean;
+  badge?: string;
+}) {
+  const cls =
+    "group flex flex-col gap-2 rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition hover:-translate-y-0.5 hover:border-cyan/40 hover:bg-white/[0.04] hover:shadow-[0_0_30px_rgba(0,240,255,0.08)]";
+  const inner = (
+    <>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {icon}
+          <span className="text-sm font-bold text-white">{title}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {badge && (
+            <span className="rounded-full border border-emerald-400/40 bg-emerald-400/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-300">
+              {badge}
+            </span>
+          )}
+          {!internal && <ExternalLink className="h-3.5 w-3.5 text-white/30 transition group-hover:text-white/70" />}
+        </div>
+      </div>
+      <p className="text-xs leading-relaxed text-white/55">{desc}</p>
+      <code className="mt-auto font-mono text-[11px] text-cyan/70">{tag}</code>
+    </>
+  );
+  return internal ? (
+    <Link href={href} className={cls}>{inner}</Link>
+  ) : (
+    <a href={href} target="_blank" rel="noreferrer noopener" className={cls}>{inner}</a>
   );
 }
