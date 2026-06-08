@@ -12,6 +12,7 @@ import {
 } from "wagmi";
 import {
   REGISTRY_ADDRESSES,
+  REGISTRY_V2_ADDRESS,
   REVERSE_RESOLVER_V2_ADDRESS,
   REVERSE_RESOLVER_ABI,
 } from "@/lib/contracts";
@@ -98,7 +99,14 @@ export function ShareToXModal({
   // Igra explorer (Blockscout-flavoured) deep-link for this specific NFT.
   // Path: /token/<registry>/instance/<tokenId>. Falls back to the contract
   // page if we somehow don't have a token id.
-  const igraRegistry = REGISTRY_ADDRESSES.igra;
+  //
+  // CRITICAL: V1 and V2 are SEPARATE ERC-721 contracts at different
+  // addresses — token #232 doesn't exist on V1 (V1 only has ~14 tokens),
+  // so a V2 mint with the V1 prefix returns a 404 on the explorer.
+  // Pick the right registry from `registryVersion` so the link resolves.
+  // Reported by @pavel from Igra Labs after he hit the V1 URL for V2 #232.
+  const igraRegistry =
+    registryVersion === "v2" ? REGISTRY_V2_ADDRESS : REGISTRY_ADDRESSES.igra;
   const explorerUrl = tokenIdStr
     ? `${EXPLORER}/token/${igraRegistry}/instance/${tokenIdStr}`
     : `${EXPLORER}/address/${igraRegistry}`;
