@@ -1,0 +1,13 @@
+[Unit]
+Description=Poll the TreasurySplitter every 5 minutes
+Requires=ins-splitter-watch.service
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+Persistent=true
+RandomizedDelaySec=30
+Unit=ins-splitter-watch.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,15 @@
+[Unit]
+Description=Watch TreasurySplitter on Igra L2 for Funded + Flushed events
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/bin/python3 /usr/local/bin/ins-splitter-watch.py
+Nice=10
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/ins-splitter-watch
+PrivateTmp=true
+NoNewPrivileges=true
