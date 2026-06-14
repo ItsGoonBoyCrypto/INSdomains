@@ -37,10 +37,10 @@ export async function GET(req: Request) {
   ];
 
   const STEPS: [string, string, string][] = [
-    ["1", "Follow", CYAN],
-    ["2", "Like", PLUM],
-    ["3", "Repost", "#34d399"],
-    ["4", "Join TG", "#fb7185"],
+    ["1", "Quote-RT", CYAN],
+    ["2", "Drop your dream .igra", PLUM],
+    ["3", "Top 3 win", "#34d399"],
+    ["4", "Sun 21:00 UTC", "#fbbf24"],
   ];
 
   return new ImageResponse(
@@ -154,12 +154,12 @@ export async function GET(req: Request) {
                 .igra name
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: s(14), marginTop: s(26), fontSize: s(36), fontWeight: 800 }}>
-                <span style={{ display: "flex", color: "#34d399" }}>FREE</span>
+                <span style={{ display: "flex", color: "#34d399" }}>3 WINNERS</span>
                 <span style={{ display: "flex", color: "rgba(255,255,255,0.35)" }}>·</span>
-                <span style={{ display: "flex", color: "#fff" }}>1 random winner</span>
+                <span style={{ display: "flex", color: "#fff" }}>Most creative picks</span>
               </div>
               <div style={{ display: "flex", marginTop: s(10), fontSize: s(26), fontWeight: 600, color: "rgba(255,255,255,0.6)" }}>
-                Pay once. Own forever.
+                Forever tier. Minted to your wallet. No strings.
               </div>
             </div>
 
