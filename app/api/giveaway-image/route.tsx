@@ -40,7 +40,7 @@ export async function GET(req: Request) {
     ["1", "Quote-RT", CYAN],
     ["2", "Drop your dream .igra", PLUM],
     ["3", "Top 3 win", "#34d399"],
-    ["4", "Sun 21:00 UTC", "#fbbf24"],
+    ["4", "Wed 21:00 UTC", "#fbbf24"],
   ];
 
   return new ImageResponse(
