@@ -214,6 +214,11 @@ fs.writeFileSync("emoji-premium-prices.json", JSON.stringify({ generated_at_bloc
 // ===== Safe batch JSON =====
 // Format: Safe multisend / batch import format compatible with Safe Web app
 // Replace REGISTRY_V2_ADDRESS_PLACEHOLDER with the actual address before importing.
+// Pre-fill the real Igra L2 addresses so the JSON drag-drops straight into
+// Safe Web's Transaction Builder with no edits required.
+const TREASURY_SAFE = "0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1"; // INS Treasury Safe
+const REGISTRY_V2  = "0x7E7018959bf44045F01D176D8db1594894CBf4E9"; // INSRegistryIgraV2
+
 const safeBatch = {
   version: "1.0",
   chainId: "38833",
@@ -222,12 +227,12 @@ const safeBatch = {
     name: "INS V2 emoji premium prices",
     description: `Set premium price = ${PRICE_IKAS} iKAS Forever for ${out.length} emoji labels`,
     txBuilderVersion: "1.16.5",
-    createdFromSafeAddress: "REPLACE_WITH_SAFE_ADDRESS",
+    createdFromSafeAddress: TREASURY_SAFE,
     createdFromOwnerAddress: "",
     checksum: "",
   },
   transactions: out.map((r) => ({
-    to: "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+    to: REGISTRY_V2,
     value: "0",
     data: null,
     contractMethod: {
