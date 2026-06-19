@@ -270,15 +270,31 @@ const FAQS: { section: string; items: FaqItem[] }[] = [
         q: "How is emoji-name pricing decided?",
         a: (
           <>
-            Pricing follows the on-chain label length of the{" "}
-            <code>xn--</code> encoding. A single emoji like <code>🔥</code>{" "}
-            encodes to <code>xn--4v8h</code> (8 bytes) so it lands in the
-            standard 5+ tier — <strong>500 iKAS Forever / 50 iKAS/yr</strong>.
-            That&rsquo;s the price for every emoji name at launch, single or
-            ZWJ-compound. First-come, first-served: no emoji is reserved or
-            held back. A future premium tier for the most-iconic emoji (the
-            bangers — fire, rocket, top flags) may be added post-launch via
-            on-chain admin action, but the standard tier always remains open.
+            Emoji names mirror our 3-tier ASCII pricing model:
+            <ul className="mt-3 ml-5 list-disc space-y-1">
+              <li>
+                <strong>ULTRA tier — 4,000 iKAS Forever / 1,000 iKAS/yr.</strong>{" "}
+                The 10 most-iconic emoji (🔥 🚀 💎 ❤️ 🌙 🦄 👑 ⚡ 🌟 🎯) — matches
+                the 1-char ASCII tier.
+              </li>
+              <li>
+                <strong>PREMIUM tier — 2,000 iKAS Forever / 800 iKAS/yr.</strong>{" "}
+                The next ~40 strong picks (✨ 💯 🏆 🎰 🎁 😎 🤩 👍 💪 ❤️
+                colour-hearts, top country flags, popular animals) — matches the
+                2-char ASCII tier.
+              </li>
+              <li>
+                <strong>Standard tier — 500 iKAS Forever / 50 iKAS/yr.</strong>{" "}
+                Every other emoji, ZWJ family, or flag pair — matches the 5+ char
+                ASCII tier.
+              </li>
+            </ul>
+            <p className="mt-3">
+              First-come, first-served across all tiers. No emoji is reserved or
+              held back. The premium tiers are enforced on chain via the
+              Registry&rsquo;s <code>premiumPrice</code> mapping, set by the INS
+              Treasury Safe — visible to anyone reading the contract.
+            </p>
           </>
         ),
       },
