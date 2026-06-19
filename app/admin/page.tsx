@@ -35,7 +35,7 @@ import {
   TLDS, LIVE_TLDS, isTldLive, tldSuffix,
   type Tld,
 } from "@/lib/contracts";
-import { cleanLabel, isValidLabel, shortAddr } from "@/lib/names";
+import { cleanLabel, isValidLabel, shortAddr, cleanLabelEmoji, prepareForContract, displayLabel, isPunycodeLabel } from "@/lib/names";
 import { RESERVED_NAMES } from "@/lib/mock-registry";
 import { formatPrice, TIER_RESERVED } from "@/lib/pricing";
 
@@ -1907,9 +1907,20 @@ function PremiumOverridesCard({ tld }: { tld: Tld }) {
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
   const busy = isPending || isConfirming;
 
-  const clean = cleanLabel(label);
+  // Accept emoji input: 🔥 → xn--4v8h before hitting the contract. Shows the
+  // user the canonical form they're paying for in the "stored as" hint below.
+  const cleanedInput = cleanLabelEmoji(label);
+  const { clean, displayForm, labelValid } = (() => {
+    if (!cleanedInput) return { clean: "", displayForm: "", labelValid: false };
+    try {
+      const c = prepareForContract(cleanedInput);
+      return { clean: c, displayForm: displayLabel(c), labelValid: true };
+    } catch {
+      return { clean: cleanedInput, displayForm: cleanedInput, labelValid: false };
+    }
+  })();
   const parsed = Number(price);
-  const valid = isValidLabel(clean) && Number.isFinite(parsed) && parsed >= 0;
+  const valid = labelValid && Number.isFinite(parsed) && parsed >= 0;
 
   // Multi-TLD apply-all toggle for premium overrides — dormant since the
   // .igra-only pivot. Toggle UI was deleted; state retained for future use.
@@ -2100,7 +2111,7 @@ function PremiumOverridesCard({ tld }: { tld: Tld }) {
         <input
           value={label}
           onChange={(e) => setLabel(e.target.value)}
-          placeholder="name"
+          placeholder="name or emoji (🔥 → xn--4v8h)"
           className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm placeholder:text-white/30 focus:outline-none focus:border-plum/40"
           spellCheck={false}
         />
@@ -2119,6 +2130,17 @@ function PremiumOverridesCard({ tld }: { tld: Tld }) {
         </button>
       </div>
 
+      {labelValid && isPunycodeLabel(clean) && (
+        <div className="mt-2 text-xs text-white/55">
+          stored on chain as <span className="font-mono text-plum">{clean}{tldSuffix(tld)}</span> · displays as <span className="font-semibold">{displayForm}{tldSuffix(tld)}</span>
+        </div>
+      )}
+      {!labelValid && cleanedInput && (
+        <div className="mt-2 text-xs text-amber-300/80">
+          &ldquo;{cleanedInput}&rdquo; isn&rsquo;t a valid name (Cyrillic / mixed-script / invisible chars are rejected). Use plain ASCII, a single emoji, or paste an <code>xn--…</code> Punycode form.
+        </div>
+      )}
+
       <div className="mt-2 flex items-center justify-between">
         <TxError message={error?.message} onReset={reset} />
         <TxLink hash={hash} />
@@ -2128,6 +2150,7 @@ function PremiumOverridesCard({ tld }: { tld: Tld }) {
         {items.map((x) => (
           <li key={x.label} className="flex items-center justify-between px-3 py-2 text-sm">
             <span className="font-mono">
+              {isPunycodeLabel(x.label) ? `${displayLabel(x.label)} ` : ""}
               {x.label}
               <span className="text-white/30">
                 {applyAllTlds && LIVE_TLDS.length > 1 ? ` (× ${LIVE_TLDS.length} TLDs)` : tldSuffix(tld)}
