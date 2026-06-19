@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { shortAddr } from "@/lib/names";
+import { shortAddr, displayLabel, prepareForContract } from "@/lib/names";
 import { explorerAddr } from "@/lib/igra-chain";
 import {
   REGISTRY_ABI,
@@ -137,8 +137,23 @@ function Browse() {
     const min = parseIkasToWei(minPrice);
     const max = parseIkasToWei(maxPrice);
 
+    // Emoji-aware query: if the user typed an emoji or pre-encoded xn--, we
+    // canonicalize to the contract label before matching. Falls back to
+    // substring on the raw input so plain ASCII partial matches still work.
+    let qContract = q;
+    if (q) {
+      try {
+        qContract = prepareForContract(q).toLowerCase();
+      } catch {
+        qContract = q;
+      }
+    }
     const filtered = listings.list.filter((l) => {
-      if (q && !l.label.toLowerCase().includes(q)) return false;
+      if (q) {
+        const labelLower = l.label.toLowerCase();
+        const displayLower = displayLabel(l.label).toLowerCase();
+        if (!labelLower.includes(qContract) && !displayLower.includes(q)) return false;
+      }
       if (lengthBucket !== "all") {
         const len = l.label.length;
         if (lengthBucket === "5+") { if (len < 5) return false; }
@@ -582,7 +597,7 @@ function ListingCard({
       </div>
 
       <h3 className="relative mt-5 text-2xl font-bold">
-        <span className="ins-gradient-text">{listing.label}</span>
+        <span className="ins-gradient-text">{displayLabel(listing.label)}</span>
         <span className={`${
           listing.tld === "ins"  ? "text-cyan/50" :
           listing.tld === "igra" ? "text-plum/50" :

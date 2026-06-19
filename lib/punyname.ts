@@ -3,7 +3,10 @@ import tr46 from "tr46";
 import { ens_normalize, ens_beautify, ens_tokenize } from "@adraffy/ens-normalize";
 
 const MAX_GRAPHEMES = 32;
-const MAX_PUNYCODE_BYTES = 63;
+// Must match the on-chain `_isValidLabelBytes` length cap in
+// INSRegistryIgraV2.sol — exceeding this passes off-chain validation but
+// reverts the register() tx. Don't bump this without bumping the contract.
+const MAX_PUNYCODE_BYTES = 32;
 const TLD = "igra";
 
 const segmenter =
@@ -77,8 +80,42 @@ export function toContractLabel(rawInput: string): string {
     throw new NameValidationError("too-long", `Name exceeds ${MAX_GRAPHEMES} graphemes.`);
   }
 
+  // CRITICAL: pre-encoded Punycode input (`xn--…`) is pure ASCII, so without
+  // this branch it would slip past every ENSIP-15 safety check and let
+  // attackers register homograph / mixed-script / bidi names by hand-crafting
+  // the encoded form. Decode it back to Unicode, run the full safety pipeline,
+  // and confirm the user-supplied Punycode matches what we'd produce from the
+  // normalized form. Anything that doesn't round-trip is rejected.
+  if (isPureAscii(raw) && /^xn--/i.test(raw)) {
+    const lowerRaw = raw.toLowerCase();
+    const decoded = tr46.toUnicode(lowerRaw);
+    if (decoded.error) {
+      throw new NameValidationError("punycode-failed", "Malformed Punycode label.");
+    }
+    let normalizedDisplay: string;
+    try {
+      normalizedDisplay = ens_normalize(decoded.domain);
+    } catch (e) {
+      throw new NameValidationError("ensip15-rejected", `Name rejected by safety rules: ${(e as Error).message}`);
+    }
+    const reEncoded = tr46.toASCII(normalizedDisplay);
+    if (!reEncoded || reEncoded.toLowerCase() !== lowerRaw) {
+      throw new NameValidationError("round-trip-failed", "Punycode label does not round-trip canonically.");
+    }
+    if (lowerRaw.length > MAX_PUNYCODE_BYTES) {
+      throw new NameValidationError("too-long-encoded", `Encoded name exceeds ${MAX_PUNYCODE_BYTES} bytes.`);
+    }
+    if (lowerRaw.startsWith("-") || lowerRaw.endsWith("-") || !ASCII_LABEL_RE.test(lowerRaw)) {
+      throw new NameValidationError("invalid-ascii", "Encoded label fails contract char set check.");
+    }
+    return lowerRaw;
+  }
+
   if (isPureAscii(raw)) {
     const lower = raw.toLowerCase();
+    if (lower.length > MAX_PUNYCODE_BYTES) {
+      throw new NameValidationError("too-long-encoded", `Name exceeds ${MAX_PUNYCODE_BYTES} bytes.`);
+    }
     if (lower.startsWith("-") || lower.endsWith("-")) {
       throw new NameValidationError("leading-or-trailing-hyphen", "Label cannot start or end with a hyphen.");
     }
@@ -132,9 +169,15 @@ export function toDisplayLabel(contractLabel: string): string {
   const decoded = tr46.toUnicode(contractLabel);
   if (decoded.error) return contractLabel;
   try {
+    // Round-trip safety: only return the beautified form if ens_normalize
+    // ACCEPTS the decoded label. Anything that fails normalize (homograph,
+    // mixed-script, bidi controls) is rendered as the raw `xn--…` form so
+    // users see the Punycode they're actually looking at, not the spoofed
+    // glyph the attacker intended. Closes the audit's CRITICAL bypass.
+    ens_normalize(decoded.domain);
     return ens_beautify(decoded.domain);
   } catch {
-    return decoded.domain;
+    return contractLabel;
   }
 }
 
@@ -173,21 +216,14 @@ export interface NameQuartet {
 }
 
 export function nameQuartetFromContractLabel(contractLabel: string): NameQuartet {
+  // Use ONE source of truth for both `name` and `normalized`. toDisplayLabel
+  // now returns contractLabel when ens_normalize rejects, so `display` and
+  // `normalized` agree on character set — no integrator-confusing mismatch
+  // where one field is Unicode and the other is Punycode.
   const display = toDisplayLabel(contractLabel);
-  const normalizedLabel = isPunycodeLabel(contractLabel)
-    ? (() => {
-        const dec = tr46.toUnicode(contractLabel);
-        if (dec.error) return contractLabel;
-        try {
-          return ens_normalize(dec.domain);
-        } catch {
-          return contractLabel;
-        }
-      })()
-    : contractLabel;
   return {
     name: `${display}.${TLD}`,
-    normalized: `${normalizedLabel}.${TLD}`,
+    normalized: `${display}.${TLD}`,
     punycode: `${contractLabel}.${TLD}`,
     label: contractLabel,
   };

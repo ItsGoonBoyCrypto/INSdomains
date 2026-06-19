@@ -2,6 +2,12 @@
  * Tiered pricing for .ins names. Mirrors the on-chain logic in
  * INSRegistry.sol::priceFor so the UI can quote prices instantly
  * before a contract read round-trips.
+ *
+ * Emoji names: the on-chain contract uses `bytes(label).length` and so
+ * does the dApp's UI quote — Punycode-encoded labels (≥ 8 bytes for the
+ * smallest single emoji) naturally fall in the 5+ bucket. Until the
+ * Registry exposes a separate emoji bucket, displayed tier and quoted
+ * price both follow what the chain will actually charge.
  */
 
 import { TAKEN_NAMES } from "./mock-registry";

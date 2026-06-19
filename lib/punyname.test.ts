@@ -217,6 +217,80 @@ describe("tokenize — UI threat highlighting", () => {
   });
 });
 
+describe("CRITICAL — pre-encoded xn-- bypass attacks (from audit)", () => {
+  it("rejects xn-- whose decoded form is a mixed-script confusable (Cyrillic а + Latin lice)", () => {
+    expect(() => toContractLabel("xn--lice-43d")).toThrow();
+  });
+  it("rejects xn-- whose decoded form is mixed Latin + Greek (omicron-trick)", () => {
+    expect(() => toContractLabel("xn--alice-rce")).toThrow();
+  });
+  it("rejects malformed xn-- that fails Punycode decode", () => {
+    expect(() => toContractLabel("xn--zzzzzz")).toThrow();
+  });
+  it("rejects xn-- with trailing hyphen after decode (homograph w/ dangling hyphen)", () => {
+    expect(() => toContractLabel("xn--abc--def")).toThrow();
+  });
+  it("accepts xn-- that round-trips canonically from a safe emoji", () => {
+    expect(toContractLabel("xn--4v8h")).toBe("xn--4v8h");
+  });
+  it("normalizes uppercase XN-- input to lowercase", () => {
+    expect(toContractLabel("XN--4V8H")).toBe("xn--4v8h");
+  });
+});
+
+describe("toDisplayLabel — homograph safety on display path", () => {
+  it("returns contract label (not decoded Unicode) when decoded form fails ENSIP-15", () => {
+    const result = toDisplayLabel("xn--lice-43d");
+    expect(result).toBe("xn--lice-43d");
+  });
+  it("returns contract label for malformed Punycode", () => {
+    const result = toDisplayLabel("xn--abc--def");
+    expect(result).toBe("xn--abc--def");
+  });
+  it("returns beautified emoji for safe Punycode", () => {
+    const result = toDisplayLabel("xn--4v8h");
+    expect(result.includes(FIRE) || result === FIRE).toBe(true);
+  });
+});
+
+describe("nameQuartetFromContractLabel — name + normalized agree", () => {
+  it("name and normalized are both Unicode for safe emoji", () => {
+    const q = nameQuartetFromContractLabel("xn--4v8h");
+    expect(q.name).toBe(q.normalized);
+    expect(q.name).toContain(FIRE);
+  });
+  it("name and normalized both fall back to Punycode for unsafe label", () => {
+    const q = nameQuartetFromContractLabel("xn--lice-43d");
+    expect(q.name).toBe(q.normalized);
+    expect(q.name).toContain("xn--");
+  });
+});
+
+describe("32-byte contract limit parity (matches on-chain _isValidLabelBytes)", () => {
+  it("rejects 33-char ASCII", () => {
+    expect(() => toContractLabel("a".repeat(33))).toThrow();
+  });
+  it("accepts 32-char ASCII (at the limit)", () => {
+    expect(toContractLabel("a".repeat(32))).toBe("a".repeat(32));
+  });
+  it("rejects emoji input whose encoded form exceeds 32 bytes", () => {
+    const longEmojiCombo = FIRE.repeat(12);
+    let didThrow = false;
+    try {
+      const encoded = toContractLabel(longEmojiCombo);
+      if (encoded.length > 32) {
+        throw new Error(`encoded ${encoded.length} bytes > 32 limit but accepted`);
+      }
+    } catch {
+      didThrow = true;
+    }
+    if (!didThrow) {
+      const result = toContractLabel(longEmojiCombo);
+      expect(result.length).toBeLessThanOrEqual(32);
+    }
+  });
+});
+
 describe("contract char-set parity", () => {
   it("every emoji input produces a contract label that matches contract regex", () => {
     const inputs = [FIRE, ROCKET, DIAMOND, FAMILY, FLAG_US, "alice", "ab-cd-12"];

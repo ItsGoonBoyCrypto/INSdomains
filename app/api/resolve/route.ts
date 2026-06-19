@@ -11,7 +11,7 @@ import {
   tldSuffix,
   type Tld,
 } from "@/lib/contracts";
-import { prepareForContract, buildNameEnvelope, NameValidationError } from "@/lib/names";
+import { prepareForContract, buildNameEnvelope, displayLabel, NameValidationError } from "@/lib/names";
 
 export const runtime = "nodejs";
 
@@ -121,11 +121,17 @@ export async function GET(req: Request) {
     );
   }
 
-  // Subname path (e.g. pay.alice.igra). Only attempted when:
+  // Subname path (e.g. pay.alice.igra OR 🔥.alice.igra). Only attempted when:
   //   1. SUBNAME_EXTENSION_ADDRESS is set in env (gate A)
   //   2. The contract reports enabled = true (gate B, checked below)
   //   3. The TLD has a registered SubnameExtension (currently .igra only)
-  if (parsed.subLabel && validLabel(parsed.subLabel) && tld === "igra" && SUBNAME_EXTENSION_ADDRESS !== ZERO) {
+  //
+  // The sub-label runs through the same emoji-aware canonicalization as the
+  // parent — required so `🔥.alice.igra` resolves to the on-chain
+  // `xn--4v8h.alice.igra` subname (not silently dropped per the earlier audit
+  // finding). subContractLabel is the canonical contract form for the chain.
+  const subContractLabel = parsed.subLabel ? toContractFormOrNull(parsed.subLabel) : null;
+  if (parsed.subLabel && subContractLabel && validLabel(subContractLabel) && tld === "igra" && SUBNAME_EXTENSION_ADDRESS !== ZERO) {
     try {
       const extEnabled = (await client.readContract({
         address: SUBNAME_EXTENSION_ADDRESS,
@@ -144,7 +150,7 @@ export async function GET(req: Request) {
             address: SUBNAME_EXTENSION_ADDRESS,
             abi: SUBNAME_EXTENSION_ABI,
             functionName: "subnameOf",
-            args: [parentTokenId, parsed.subLabel],
+            args: [parentTokenId, subContractLabel],
           })) as bigint;
           if (subTokenId !== 0n) {
             const [target, subOwner] = await Promise.all([
@@ -162,16 +168,16 @@ export async function GET(req: Request) {
               }) as Promise<Address>,
             ]);
             const parentEnv = buildNameEnvelope(label, tld);
-            const subContract = toContractFormOrNull(parsed.subLabel) ?? parsed.subLabel;
+            const subDisplay = displayLabel(subContractLabel);
             return Response.json(
               {
-                name: `${parsed.subLabel}.${parentEnv.display_label}${tldSuffix(tld)}`,
-                subLabel: subContract,
-                display_subLabel: parsed.subLabel,
+                name: `${subDisplay}.${parentEnv.display_label}${tldSuffix(tld)}`,
+                subLabel: subContractLabel,
+                display_subLabel: subDisplay,
                 label,
                 display_label: parentEnv.display_label,
-                punycode_name: `${subContract}.${label}${tldSuffix(tld)}`,
-                normalized_name: `${parsed.subLabel}.${parentEnv.display_label}${tldSuffix(tld)}`,
+                punycode_name: `${subContractLabel}.${label}${tldSuffix(tld)}`,
+                normalized_name: `${subDisplay}.${parentEnv.display_label}${tldSuffix(tld)}`,
                 tld,
                 tokenId: subTokenId.toString(),
                 parentTokenId: parentTokenId.toString(),
@@ -190,11 +196,12 @@ export async function GET(req: Request) {
     }
     // Subname requested but not found → 404 with the subname-shaped envelope
     const parentEnv = buildNameEnvelope(label, tld);
+    const subDisplay = subContractLabel ? displayLabel(subContractLabel) : parsed.subLabel;
     return Response.json(
       {
-        name: `${parsed.subLabel}.${parentEnv.display_label}${tldSuffix(tld)}`,
-        subLabel: toContractFormOrNull(parsed.subLabel) ?? parsed.subLabel,
-        display_subLabel: parsed.subLabel,
+        name: `${subDisplay}.${parentEnv.display_label}${tldSuffix(tld)}`,
+        subLabel: subContractLabel ?? parsed.subLabel,
+        display_subLabel: subDisplay,
         label,
         display_label: parentEnv.display_label,
         tld,
