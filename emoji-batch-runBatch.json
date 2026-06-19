@@ -2,8 +2,8 @@
   "version": "1.0",
   "chainId": "38833",
   "meta": {
-    "name": "InsBatchPriceSetter.runBatch — 50 emoji premium prices",
-    "description": "Ultra tier (10) at 4000/1000 iKAS, Premium tier (40) at 2000/800 iKAS",
+    "name": "InsBatchPriceSetter.runBatch — 51 emoji premium prices",
+    "description": "Ultra tier (10) at 4000/1000 iKAS, Premium tier (41) at 2000/800 iKAS",
     "txBuilderVersion": "1.16.5",
     "createdFromSafeAddress": "0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1",
     "createdFromOwnerAddress": "",

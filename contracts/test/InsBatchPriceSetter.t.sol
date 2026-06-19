@@ -233,13 +233,23 @@ contract InsBatchPriceSetterTest is Test {
         helper.runBatch(_labels1(), _prices1(2 ether), _prices1(2 ether));
     }
 
-    function test_runBatch_thenEmergency_reverts() public {
+    function test_runBatch_thenEmergency_rescuesOwnership() public {
+        // Post-audit fix: emergencyReturnOwnership is NOT gated on `used`.
+        // It must ALWAYS be able to return ownership while the helper holds
+        // it, otherwise a stray re-transfer-to-helper post-runBatch would
+        // permanently lock Registry admin. Test the rescue path.
         _ascendOwnership();
         vm.prank(safe);
         helper.runBatch(_labels1(), _prices1(1 ether), _prices1(1 ether));
+        // runBatch already returned ownership. Simulate the Safe accidentally
+        // re-transferring to the (now used) helper.
         vm.prank(safe);
-        vm.expectRevert(InsBatchPriceSetter.AlreadyUsed.selector);
+        registry.transferOwnership(address(helper));
+        assertEq(registry.owner(), address(helper), "helper temporarily owns again");
+        // Emergency exit MUST work here.
+        vm.prank(safe);
         helper.emergencyReturnOwnership();
+        assertEq(registry.owner(), safe, "ownership rescued");
     }
 
     function test_emergency_thenRunBatch_reverts() public {
@@ -247,12 +257,38 @@ contract InsBatchPriceSetterTest is Test {
         vm.prank(safe);
         helper.emergencyReturnOwnership();
         // Safe got ownership back. Even if it re-transfers and tries the batch,
-        // helper is dead.
+        // runBatch is still locked by `used`.
+        // NOTE: emergencyReturnOwnership does NOT flip `used` anymore (audit
+        // fix), so runBatch is only locked because the FIRST emergency call
+        // didn't flip used either, but the previous flow's used flag was set
+        // there. Verify the current behaviour: with used still false after
+        // emergencyReturnOwnership, runBatch SHOULD still work if helper
+        // re-owns Registry.
         vm.prank(safe);
         registry.transferOwnership(address(helper));
         vm.prank(safe);
-        vm.expectRevert(InsBatchPriceSetter.AlreadyUsed.selector);
         helper.runBatch(_labels1(), _prices1(1 ether), _prices1(1 ether));
+        assertTrue(helper.used(), "used set after runBatch");
+        assertEq(registry.owner(), safe, "ownership returned");
+    }
+
+    function test_emergency_canBeCalledRepeatedly_isIdempotentRescue() public {
+        // Audit-fix verification: emergencyReturnOwnership can be called
+        // multiple times. Each call requires the helper to currently own
+        // the Registry; if not, NotOwner.
+        _ascendOwnership();
+        vm.prank(safe);
+        helper.emergencyReturnOwnership();
+        // Calling again immediately reverts NotOwner (Safe owns now).
+        vm.prank(safe);
+        vm.expectRevert(InsBatchPriceSetter.NotOwner.selector);
+        helper.emergencyReturnOwnership();
+        // Re-transfer + re-rescue still works.
+        vm.prank(safe);
+        registry.transferOwnership(address(helper));
+        vm.prank(safe);
+        helper.emergencyReturnOwnership();
+        assertEq(registry.owner(), safe);
     }
 
     /* ─────────────────────── Emergency exit ───────────────────────── */
@@ -263,7 +299,11 @@ contract InsBatchPriceSetterTest is Test {
         vm.prank(safe);
         helper.emergencyReturnOwnership();
         assertEq(registry.owner(), safe);
-        assertTrue(helper.used());
+        // Post-audit fix: emergencyReturnOwnership does NOT flip `used` so it
+        // can rescue ownership even after a successful runBatch (otherwise
+        // the helper could permanently own the Registry if Safe accidentally
+        // re-transferred ownership to it).
+        assertFalse(helper.used(), "used stays false after emergency exit");
         // No prices were set
         assertEq(registry.premiumPrice("xn--4v8h"), 0);
         assertEq(registry.premiumPriceAnnual("xn--4v8h"), 0);

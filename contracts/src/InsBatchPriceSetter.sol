@@ -133,18 +133,28 @@ contract InsBatchPriceSetter {
     /* ─────────────────────── Emergency exit ─────────────────────────── */
 
     /**
-     * @notice Return Registry ownership to the Safe without running the batch.
-     *         Use if the Safe transferred ownership but decided NOT to execute
-     *         the batch (e.g. reviewed the labels and found a mistake).
+     * @notice Return Registry ownership to the Safe whenever this contract is
+     *         the current Registry owner. Two scenarios this catches:
      *
-     * @dev Requires this contract to be the current Registry owner.
+     *         1. The Safe transferred ownership but decided NOT to execute the
+     *            batch (e.g. reviewed the labels and spotted a mistake).
+     *         2. (Critical safety net) After a successful runBatch the helper
+     *            is `used`, but a follow-up tx accidentally re-transfers
+     *            Registry ownership to this contract. Without this escape
+     *            hatch, ownership would be PERMANENTLY locked — the helper
+     *            would own the Registry forever with no function able to
+     *            unlock it. So this function is intentionally NOT gated on
+     *            `used`: it's a one-way return-only valve to `safe`, and the
+     *            two access checks (msg.sender + registry.owner()) make it
+     *            already safe.
+     *
+     * @dev Requires this contract to be the current Registry owner. Cannot
+     *      route ownership anywhere except `safe` — the constant is immutable.
      */
     function emergencyReturnOwnership() external {
         if (msg.sender != safe) revert OnlySafe();
-        if (used) revert AlreadyUsed();
         if (registry.owner() != address(this)) revert NotOwner();
 
-        used = true;
         registry.transferOwnership(safe);
         emit OwnershipReturned(safe);
     }

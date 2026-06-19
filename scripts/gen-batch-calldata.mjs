@@ -1,63 +1,35 @@
 // Generates ABI-encoded calldata for InsBatchPriceSetter.runBatch(labels, forever, annual)
-// using the curated TOP-50 set from gen-emoji-top50.mjs. Output: emoji-batch-calldata.txt
+// directly from emoji-top50.json (produced by gen-emoji-top50.mjs).
 //
-// Paste this calldata into Safe's "Contract Interaction" flow:
-//   - Contract address: <InsBatchPriceSetter deployment>
-//   - Calldata: the long 0x... blob from emoji-batch-calldata.txt
-//   - Value: 0
+// Output: emoji-batch-calldata.txt + emoji-batch-runBatch.json
 //
-// Or use cast to send directly:
-//   cast send <HELPER_ADDR> $(cat emoji-batch-calldata.txt) --rpc-url $IGRA_RPC --legacy --slow ...
+// USAGE (RUN BOTH SCRIPTS IN ORDER):
+//   1. node scripts/gen-emoji-top50.mjs     — generates emoji-top50.json + checklist
+//   2. node scripts/gen-batch-calldata.mjs  — reads emoji-top50.json, builds calldata
+//
+// Prereqs:
+//   npm install (uses tr46 + @adraffy/ens-normalize + viem from package.json)
+//
+// SINGLE SOURCE OF TRUTH: the curated emoji list lives in gen-emoji-top50.mjs.
+// This script imports the OUTPUT (emoji-top50.json) — so any edit to the
+// curated list propagates to both the human checklist AND the calldata
+// without manual sync.
 
-import tr46 from "tr46/index.js";
-import { ens_normalize } from "@adraffy/ens-normalize";
 import { encodeFunctionData } from "viem";
 import fs from "node:fs";
 
-// SAME curated TOP 50 as in gen-emoji-top50.mjs — keep in sync.
-const TOP_10 = [
-  ["🔥", "fire"], ["🚀", "rocket"], ["💎", "diamond"], ["❤️", "red_heart"],
-  ["🌙", "moon"], ["🦄", "unicorn"], ["👑", "crown"], ["⚡", "lightning"],
-  ["🌟", "glowing_star"], ["🎯", "target"],
-];
-const NEXT_40 = [
-  ["✨", "sparkles"], ["💯", "100"], ["🏆", "trophy"], ["💰", "money_bag"],
-  ["🎰", "slot"], ["🎁", "gift"], ["💍", "gem_ring"], ["🔑", "key"],
-  ["⚽", "soccer"], ["🍀", "clover"],
-  ["😎", "cool"], ["🤩", "star_struck"], ["😍", "heart_eyes"], ["🤔", "thinking"],
-  ["🤯", "mind_blown"], ["🥶", "cold"], ["💀", "skull"], ["👻", "ghost"],
-  ["👍", "thumbs_up"], ["🙌", "raised_hands"], ["💪", "muscle"], ["✊", "fist"],
-  ["👌", "ok_hand"], ["🤙", "call_me"],
-  ["💖", "sparkle_heart"], ["💜", "purple_heart"], ["💙", "blue_heart"], ["💚", "green_heart"],
-  ["🐉", "dragon"], ["🦊", "fox"], ["🐻", "bear"], ["🐼", "panda"], ["🦁", "lion"], ["🐺", "wolf"],
-  ["🌈", "rainbow"], ["🌊", "wave"],
-  ["🇺🇸", "flag_us"], ["🇬🇧", "flag_uk"], ["🇪🇺", "flag_eu"], ["🇯🇵", "flag_jp"], ["🇰🇷", "flag_kr"],
-];
-
-const ULTRA_FOREVER_WEI = 4000n * 10n**18n;
-const ULTRA_ANNUAL_WEI  = 1000n * 10n**18n;
-const PREM_FOREVER_WEI  = 2000n * 10n**18n;
-const PREM_ANNUAL_WEI   = 800n  * 10n**18n;
-
-function encode(emoji) {
-  const norm = ens_normalize(emoji);
-  return tr46.toASCII(norm).toLowerCase();
+if (!fs.existsSync("emoji-top50.json")) {
+  console.error("emoji-top50.json not found. Run `node scripts/gen-emoji-top50.mjs` first.");
+  process.exit(1);
 }
 
-const labels = [];
-const forever = [];
-const annual = [];
+const data = JSON.parse(fs.readFileSync("emoji-top50.json", "utf8"));
 
-for (const [emoji] of TOP_10) {
-  labels.push(encode(emoji));
-  forever.push(ULTRA_FOREVER_WEI);
-  annual.push(ULTRA_ANNUAL_WEI);
-}
-for (const [emoji] of NEXT_40) {
-  labels.push(encode(emoji));
-  forever.push(PREM_FOREVER_WEI);
-  annual.push(PREM_ANNUAL_WEI);
-}
+const labels = data.labels.map((r) => r.contractLabel);
+const forever = data.labels.map((r) => BigInt(r.foreverWei));
+const annual  = data.labels.map((r) => BigInt(r.annualWei));
+const ultraCount = data.labels.filter((r) => r.tier === "ULTRA").length;
+const premiumCount = data.labels.filter((r) => r.tier === "PREMIUM").length;
 
 const ABI = [{
   type: "function",
@@ -85,8 +57,8 @@ const safeJson = {
   version: "1.0",
   chainId: "38833",
   meta: {
-    name: "InsBatchPriceSetter.runBatch — 50 emoji premium prices",
-    description: "Ultra tier (10) at 4000/1000 iKAS, Premium tier (40) at 2000/800 iKAS",
+    name: `InsBatchPriceSetter.runBatch — ${labels.length} emoji premium prices`,
+    description: `Ultra tier (${ultraCount}) at 4000/1000 iKAS, Premium tier (${premiumCount}) at 2000/800 iKAS`,
     txBuilderVersion: "1.16.5",
     createdFromSafeAddress: "0x7447F0e5CDfa55ceF123F8d2E0B2c981d1807aA1",
     createdFromOwnerAddress: "",
@@ -101,8 +73,8 @@ const safeJson = {
 fs.writeFileSync("emoji-batch-runBatch.json", JSON.stringify(safeJson, null, 2));
 
 console.log(`Generated runBatch calldata for ${labels.length} labels`);
-console.log(`  Ultra (4000/1000): ${TOP_10.length}`);
-console.log(`  Premium (2000/800): ${NEXT_40.length}`);
+console.log(`  Ultra (4000/1000): ${ultraCount}`);
+console.log(`  Premium (2000/800): ${premiumCount}`);
 console.log(`Files:`);
 console.log(`  emoji-batch-calldata.txt    — raw 0x… calldata`);
 console.log(`  emoji-batch-runBatch.json   — Safe Tx Builder import (replace helper addr)`);
