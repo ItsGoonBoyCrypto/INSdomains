@@ -4,6 +4,21 @@ import {
   REGISTRY_ADDRESSES, REGISTRY_ABI,
   REGISTRY_V2_ADDRESS, REGISTRY_V2_ABI,
 } from "@/lib/contracts";
+import { displayLabel, isPunycodeLabel } from "@/lib/names";
+
+const segmenter =
+  typeof Intl !== "undefined" && typeof (Intl as { Segmenter?: unknown }).Segmenter === "function"
+    ? new Intl.Segmenter(undefined, { granularity: "grapheme" })
+    : null;
+
+function countGraphemes(s: string): number {
+  if (segmenter) {
+    let n = 0;
+    for (const _ of segmenter.segment(s)) n++;
+    return n;
+  }
+  return [...s].length;
+}
 
 export const runtime = "nodejs";
 
@@ -169,10 +184,17 @@ export async function GET(
     }
   }
 
-  const safeLabel = label && /^[a-z0-9-]{1,32}$/.test(label) ? label : "igra";
+  // Contract label vs visual rendering: the chain stores the Punycode form
+  // (`xn--4v8h`) but the NFT card renders the beautified emoji (`🔥`). All
+  // size + tier math drives off the DISPLAY grapheme count (1 for a single
+  // emoji), not the contract label byte count (8 for `xn--4v8h`), so the
+  // card looks right regardless of encoding.
+  const safeLabel = label && /^[a-z0-9-]{1,63}$/.test(label) ? label : "igra";
+  const visualLabel = isPunycodeLabel(safeLabel) ? displayLabel(safeLabel) : safeLabel;
+  const visualLen = countGraphemes(visualLabel);
   const tier = tierFor(safeLabel);
-  const labelSize = s(labelFontSize(safeLabel.length));
-  const suffSize  = s(suffixFontSize(safeLabel.length));
+  const labelSize = s(labelFontSize(visualLen));
+  const suffSize  = s(suffixFontSize(visualLen));
   // Use renderedAsV2 (post-fallback) — ensures the V2 badge + Annual pill
   // render correctly even when a ?v=2 link was satisfied from V1, or vice-versa.
   const isAnnual = renderedAsV2 && expiresAt !== 0n;
@@ -298,7 +320,7 @@ export async function GET(
               paddingRight: s(2),
             }}
           >
-            {safeLabel}
+            {visualLabel}
           </div>
           <div
             style={{
@@ -352,6 +374,10 @@ export async function GET(
     {
       width: size,
       height: size,
+      // Default twemoji glyphs for emoji ZWJ sequences (family, flags,
+      // skin tones, etc.). Without this, native font fallback renders
+      // tofu for most emoji on the server. See @vercel/og emoji docs.
+      emoji: "twemoji",
       headers: {
         "Cache-Control": "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
         "Content-Type": "image/png",

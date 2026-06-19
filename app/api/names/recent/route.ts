@@ -15,6 +15,7 @@ import {
   type Tld,
 } from "@/lib/contracts";
 import { getLogsChunked, parallelReadContract } from "@/lib/api-utils";
+import { displayLabel } from "@/lib/names";
 
 export const runtime = "nodejs";
 
@@ -172,10 +173,13 @@ export async function GET(req: Request) {
       const isV2 = log._version === "v2";
       const expiresAt =
         isV2 && expiresAtR.status === "success" ? Number(expiresAtR.result as bigint) : 0;
+      const display = displayLabel(label);
       return {
         tokenId: tokenId.toString(),
         label,
-        name: `${label}${tldSuffix(tld)}`,
+        display_label: display,
+        name: `${display}${tldSuffix(tld)}`,
+        punycode_name: `${label}${tldSuffix(tld)}`,
         owner: ownerR.status === "success" ? (ownerR.result as Address) : null,
         target: targetR.status === "success" ? (targetR.result as Address) : null,
         mintedAt:

@@ -11,6 +11,7 @@ import {
   tldSuffix,
   type Tld,
 } from "@/lib/contracts";
+import { prepareForContract, buildNameEnvelope, NameValidationError } from "@/lib/names";
 
 export const runtime = "nodejs";
 
@@ -32,9 +33,13 @@ const CORS_HEADERS = {
  *  names like `pay.alice.igra`. Returns tld=null when no recognised suffix is
  *  present so callers can fall back to `?tld=` param. */
 function parseName(input: string): { label: string; subLabel: string | null; tld: Tld | null } {
-  const s = input.trim().toLowerCase();
+  // Preserve Unicode case (don't pre-lowercase) so ENSIP-15 normalize can act
+  // on emoji and ZWJ sequences cleanly. parseName only splits on dots + TLD —
+  // it's prepareForContract that handles canonicalization downstream.
+  const s = input.trim();
+  const lower = s.toLowerCase();
   for (const tld of TLDS) {
-    if (s.endsWith("." + tld)) {
+    if (lower.endsWith("." + tld)) {
       const stripped = s.slice(0, -(tld.length + 1));
       // 3-segment? "pay.alice.igra" → after stripping ".igra" we get "pay.alice"
       const dot = stripped.indexOf(".");
@@ -45,6 +50,24 @@ function parseName(input: string): { label: string; subLabel: string | null; tld
     }
   }
   return { label: s, subLabel: null, tld: null };
+}
+
+/**
+ * Try to canonicalize user input into the contract label form. Returns the
+ * encoded contract label (ASCII or `xn--…`) on success, null on rejection.
+ *
+ * For emoji input (`🔥`) this returns `xn--4v8h`. For ASCII input this
+ * returns the lowercased + validated form. Sub-labels for subnames get
+ * the same treatment so emoji subnames work too (`🔥.alice.igra`).
+ */
+function toContractFormOrNull(raw: string): string | null {
+  if (!raw) return null;
+  try {
+    return prepareForContract(raw);
+  } catch (e) {
+    if (e instanceof NameValidationError) return null;
+    return null;
+  }
 }
 
 function validLabel(s: string): boolean {
@@ -84,11 +107,16 @@ export async function GET(req: Request) {
     (tldParam && (TLDS as readonly string[]).includes(tldParam)
       ? (tldParam as Tld)
       : null);
-  const label = parsed.label;
+
+  // Canonicalize the user-supplied label. Accepts ASCII (`alice`), emoji
+  // (`🔥`), or pre-encoded Punycode (`xn--4v8h`). All three round-trip
+  // through prepareForContract to the contract-facing form before we
+  // touch the chain — the same string the contract sees.
+  const label = toContractFormOrNull(parsed.label);
 
   if (!label || !validLabel(label)) {
     return Response.json(
-      { error: "invalid_label", label, tld },
+      { error: "invalid_label", label: parsed.label, tld },
       { status: 400, headers: CORS_HEADERS },
     );
   }
@@ -133,11 +161,17 @@ export async function GET(req: Request) {
                 args: [subTokenId],
               }) as Promise<Address>,
             ]);
+            const parentEnv = buildNameEnvelope(label, tld);
+            const subContract = toContractFormOrNull(parsed.subLabel) ?? parsed.subLabel;
             return Response.json(
               {
-                name: `${parsed.subLabel}.${label}${tldSuffix(tld)}`,
-                subLabel: parsed.subLabel,
+                name: `${parsed.subLabel}.${parentEnv.display_label}${tldSuffix(tld)}`,
+                subLabel: subContract,
+                display_subLabel: parsed.subLabel,
                 label,
+                display_label: parentEnv.display_label,
+                punycode_name: `${subContract}.${label}${tldSuffix(tld)}`,
+                normalized_name: `${parsed.subLabel}.${parentEnv.display_label}${tldSuffix(tld)}`,
                 tld,
                 tokenId: subTokenId.toString(),
                 parentTokenId: parentTokenId.toString(),
@@ -155,11 +189,14 @@ export async function GET(req: Request) {
       // fall through — treat as not found
     }
     // Subname requested but not found → 404 with the subname-shaped envelope
+    const parentEnv = buildNameEnvelope(label, tld);
     return Response.json(
       {
-        name: `${parsed.subLabel}.${label}${tldSuffix(tld)}`,
-        subLabel: parsed.subLabel,
+        name: `${parsed.subLabel}.${parentEnv.display_label}${tldSuffix(tld)}`,
+        subLabel: toContractFormOrNull(parsed.subLabel) ?? parsed.subLabel,
+        display_subLabel: parsed.subLabel,
         label,
+        display_label: parentEnv.display_label,
         tld,
         isSubname: true,
         address: null,
@@ -201,10 +238,10 @@ export async function GET(req: Request) {
             args: [tokenId],
           }) as Promise<bigint>,
         ]);
+        const env = buildNameEnvelope(label, "igra");
         return Response.json(
           {
-            name: `${label}.igra`,
-            label,
+            ...env,
             tld: "igra" as const,
             tokenId: tokenId.toString(),
             address: target,
@@ -257,10 +294,10 @@ export async function GET(req: Request) {
         }) as Promise<Address>,
       ]);
 
+      const env = buildNameEnvelope(label, t);
       return Response.json(
         {
-          name: `${label}${tldSuffix(t)}`,
-          label,
+          ...env,
           tld: t,
           tokenId: tokenId.toString(),
           address: target,
@@ -278,10 +315,10 @@ export async function GET(req: Request) {
     }
   }
 
+  const env = tld ? buildNameEnvelope(label, tld) : { name: label, label, display_label: label, punycode_name: label, normalized_name: label };
   return Response.json(
     {
-      name: tld ? `${label}${tldSuffix(tld)}` : label,
-      label,
+      ...env,
       tld,
       address: null,
       exists: false,

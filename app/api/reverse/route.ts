@@ -6,6 +6,7 @@ import {
   TLDS,
   type Tld,
 } from "@/lib/contracts";
+import { displayLabel } from "@/lib/names";
 
 export const runtime = "nodejs";
 
@@ -111,37 +112,51 @@ export async function GET(req: Request) {
   for (const r of v1Results) v1ByTld[r.tld as Tld] = r.name;
 
   // Precedence: V2 .igra → V1 .igra → V1 .ins → V1 .ikas.
+  // For emoji primaries: the chain stores the Punycode form (xn--…) but the
+  // `primary` field returns the BEAUTIFIED form so wallets/explorers show
+  // 🔥.igra to users; raw Punycode is preserved in `primaries.*_label`.
   let primary: string | null;
+  let primary_label: string | null;
   let primary_version: "v1" | "v2" | null;
   if (v2Name) {
-    primary = `${v2Name}.igra`;
+    primary = `${displayLabel(v2Name)}.igra`;
+    primary_label = v2Name;
     primary_version = "v2";
   } else if (v1ByTld.igra) {
-    primary = `${v1ByTld.igra}.igra`;
+    primary = `${displayLabel(v1ByTld.igra)}.igra`;
+    primary_label = v1ByTld.igra;
     primary_version = "v1";
   } else if (v1ByTld.ins) {
-    primary = `${v1ByTld.ins}.ins`;
+    primary = `${displayLabel(v1ByTld.ins)}.ins`;
+    primary_label = v1ByTld.ins;
     primary_version = "v1";
   } else if (v1ByTld.ikas) {
-    primary = `${v1ByTld.ikas}.ikas`;
+    primary = `${displayLabel(v1ByTld.ikas)}.ikas`;
+    primary_label = v1ByTld.ikas;
     primary_version = "v1";
   } else {
     primary = null;
+    primary_label = null;
     primary_version = null;
   }
 
   // Keep the v1 shape (`primaries.ins/igra/ikas`) populated for backwards
   // compat with integrators on the original API. The V2 entry is added
-  // alongside as `igra_v2`.
+  // alongside as `igra_v2`. Both raw Punycode and beautified forms are
+  // available so integrators can pick whichever rendering they prefer.
   const primaries = {
     igra_v2: v2Name,
+    igra_v2_display: v2Name ? displayLabel(v2Name) : null,
     igra: v1ByTld.igra,
+    igra_display: v1ByTld.igra ? displayLabel(v1ByTld.igra) : null,
     ins: v1ByTld.ins,
+    ins_display: v1ByTld.ins ? displayLabel(v1ByTld.ins) : null,
     ikas: v1ByTld.ikas,
+    ikas_display: v1ByTld.ikas ? displayLabel(v1ByTld.ikas) : null,
   };
 
   return Response.json(
-    { address, primary, primary_version, primaries },
+    { address, primary, primary_label, primary_version, primaries },
     { headers: CORS_HEADERS },
   );
 }

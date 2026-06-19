@@ -3,22 +3,32 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Search, Check, X, ArrowRight, Sparkles, Lock, Gem } from "lucide-react";
-import { cleanLabel, isValidLabel } from "@/lib/names";
+import { cleanLabelEmoji, prepareForContract, displayLabel, NameValidationError } from "@/lib/names";
 import { mockAvailable, RESERVED_NAMES } from "@/lib/mock-registry";
 import { rarityFor, tierLabel, formatPrice } from "@/lib/pricing";
 
 export function HeroSearch() {
   const [raw, setRaw] = useState("");
 
-  const label = useMemo(() => cleanLabel(raw), [raw]);
-  const valid = useMemo(() => label.length >= 1 && isValidLabel(label), [label]);
+  const cleaned = useMemo(() => cleanLabelEmoji(raw), [raw]);
+  const { contractLabel, valid, display } = useMemo(() => {
+    if (!cleaned) return { contractLabel: "", valid: false, display: "" };
+    try {
+      const c = prepareForContract(cleaned);
+      return { contractLabel: c, valid: true, display: displayLabel(c) };
+    } catch (e) {
+      if (e instanceof NameValidationError) return { contractLabel: "", valid: false, display: cleaned };
+      return { contractLabel: "", valid: false, display: cleaned };
+    }
+  }, [cleaned]);
+
   const available = useMemo(
-    () => (valid ? mockAvailable(label) : null),
-    [valid, label]
+    () => (valid ? mockAvailable(contractLabel) : null),
+    [valid, contractLabel]
   );
   const rarity = useMemo(
-    () => (valid ? rarityFor(label, RESERVED_NAMES) : null),
-    [valid, label]
+    () => (valid ? rarityFor(contractLabel, RESERVED_NAMES) : null),
+    [valid, contractLabel]
   );
 
   return (
@@ -35,13 +45,13 @@ export function HeroSearch() {
             autoComplete="off"
             spellCheck={false}
           />
-          {label.length >= 1 && (
+          {cleaned.length >= 1 && (
             <div className="mr-2 hidden sm:block">
               <AvailabilityPill available={available} valid={valid} />
             </div>
           )}
           <Link
-            href={valid ? `/app?q=${encodeURIComponent(label)}` : "#"}
+            href={valid ? `/app?q=${encodeURIComponent(contractLabel)}` : "#"}
             aria-disabled={!valid}
             className={`relative overflow-hidden rounded-xl bg-ins-gradient px-6 py-3 text-sm font-bold text-black transition ${
               valid ? "hover:shadow-glow-mix" : "opacity-40 pointer-events-none"
@@ -53,9 +63,15 @@ export function HeroSearch() {
         </div>
       </div>
 
-      {label.length >= 1 && (
+      {cleaned.length >= 1 && (
         <div className="mt-3 block sm:hidden">
           <AvailabilityPill available={available} valid={valid} />
+        </div>
+      )}
+
+      {valid && display && display !== contractLabel && (
+        <div className="mt-3 text-center text-xs text-white/40">
+          will be stored as <span className="text-white/70 font-mono">{contractLabel}.igra</span>
         </div>
       )}
 

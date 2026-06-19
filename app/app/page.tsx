@@ -12,7 +12,7 @@ import { NameCard } from "@/components/NameCard";
 import { ShareToXModal } from "@/components/ShareToXModal";
 import { RegisterButtonV2 } from "@/components/RegisterButtonV2";
 import { ClaimReservedModal } from "@/components/ClaimReservedModal";
-import { cleanLabel, isValidLabel } from "@/lib/names";
+import { cleanLabel, isValidLabel, cleanLabelEmoji, prepareForContract, displayLabel, NameValidationError } from "@/lib/names";
 import { mockAvailable, TAKEN_NAMES, RESERVED_NAMES } from "@/lib/mock-registry";
 import { rarityFor, tierLabel, formatPrice, type Rarity } from "@/lib/pricing";
 import {
@@ -59,8 +59,18 @@ function AppInner() {
     setRaw(params.get("q") ?? "");
   }, [params]);
 
-  const label = useMemo(() => cleanLabel(raw), [raw]);
-  const valid = isValidLabel(label);
+  const cleaned = useMemo(() => cleanLabelEmoji(raw), [raw]);
+  const { label, valid, display, isEmoji } = useMemo(() => {
+    if (!cleaned) return { label: "", valid: false, display: "", isEmoji: false };
+    try {
+      const c = prepareForContract(cleaned);
+      const d = displayLabel(c);
+      return { label: c, valid: true, display: d, isEmoji: c.startsWith("xn--") };
+    } catch (e) {
+      void e;
+      return { label: cleaned, valid: false, display: cleaned, isEmoji: false };
+    }
+  }, [cleaned]);
   const rarity = valid ? rarityFor(label, RESERVED_NAMES) : null;
 
   const suggestions = useMemo(() => genSuggestions(label), [label]);
@@ -84,7 +94,15 @@ function AppInner() {
             onChange={(e) => {
               const v = e.target.value;
               setRaw(v);
-              const q = cleanLabel(v);
+              const cleanedV = cleanLabelEmoji(v);
+              let q = "";
+              if (cleanedV) {
+                try {
+                  q = prepareForContract(cleanedV);
+                } catch {
+                  q = "";
+                }
+              }
               const url = q ? `/app?q=${encodeURIComponent(q)}` : "/app";
               router.replace(url, { scroll: false });
             }}
@@ -224,7 +242,7 @@ function TierSample({
 function InvalidHint({ label }: { label: string }) {
   return (
     <div className="mt-10 rounded-3xl border border-amber-500/30 bg-amber-500/5 p-6 text-center text-sm text-amber-200">
-      <strong>"{label}"</strong> isn't a valid name — use 1–32 lowercase letters, digits, or hyphens (no leading / trailing hyphen).
+      <strong>&quot;{label}&quot;</strong> isn&apos;t a valid name. Allowed: 1&ndash;32 graphemes of ASCII <span className="font-mono text-amber-100">a-z 0-9 -</span> or emoji (🔥🚀💎). Mixed-script names (e.g. Latin + Cyrillic look-alikes) are blocked for safety.
     </div>
   );
 }
@@ -393,6 +411,9 @@ function TldRow({
     igra: "border-plum/30 bg-gradient-to-r from-plum/[0.06] to-transparent",
     ikas: "border-emerald-500/30 bg-gradient-to-r from-emerald-500/[0.06] to-transparent",
   };
+  const display = displayLabel(label);
+  const isEmoji = label.startsWith("xn--");
+  const avatarChar = isEmoji ? Array.from(display)[0] ?? "?" : (label[0]?.toUpperCase() ?? "?");
 
   return (
     <div
@@ -410,13 +431,18 @@ function TldRow({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-ins-gradient text-lg font-black text-black">
-            {label[0]?.toUpperCase() ?? "?"}
+            {avatarChar}
           </div>
           <div>
             <div className="text-xl font-bold sm:text-2xl">
-              <span className="text-white">{label}</span>
+              <span className="text-white">{display}</span>
               <span className={cn("font-bold", tldAccent[tld])}>{tldSuffix(tld)}</span>
             </div>
+            {isEmoji && (
+              <div className="mt-0.5 text-[10px] font-mono uppercase tracking-wider text-white/35">
+                stored: {label}{tldSuffix(tld)}
+              </div>
+            )}
             <div className="mt-1 text-xs text-white/55">
               {isReserved ? (
                 <span className="inline-flex items-center gap-1.5 text-red-300">
