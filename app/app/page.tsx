@@ -735,17 +735,23 @@ function NameRow({ label }: { label: string }) {
     r.kind === "reserved" ? "Reserved" :
     r.kind === "premium" ? formatPrice(r.price) :
     formatPrice(r.price);
+  // Decode xn-- back to its emoji form for display — keeps the row legible
+  // (otherwise viewers see "xn--4v8h" instead of 🔥). The href still uses
+  // the raw contract label so the /app router picks it up correctly.
+  const isEmoji = label.startsWith("xn--");
+  const display = isEmoji ? displayLabel(label) : label;
+  const avatarChar = isEmoji ? (Array.from(display)[0] ?? "?") : (label[0]?.toUpperCase() ?? "?");
   return (
     <Link
-      href={`/app?q=${label}`}
+      href={`/app?q=${encodeURIComponent(label)}`}
       className="flex items-center justify-between rounded-2xl glass px-5 py-4 glass-hover"
     >
       <div className="flex items-center gap-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-ins-gradient text-sm font-black text-black">
-          {label[0]?.toUpperCase()}
+          {avatarChar}
         </div>
         <span className="font-mono text-base">
-          {label}
+          {display}
           <span className="ml-1 text-[10px] uppercase tracking-wider text-white/35">all TLDs</span>
         </span>
       </div>
@@ -767,8 +773,18 @@ function NameRow({ label }: { label: string }) {
   );
 }
 
+// Popular emoji shown as "you might also like" when the user is on an emoji
+// search. Pre-encoded to Punycode so they match what the contract sees.
+//   🚀 🦄 💎 ⚡ 🌙 ❤️ 👑 🌟
+const EMOJI_ALTERNATES = ["xn--158h", "xn--3s9h", "xn--tr8h", "xn--57h", "xn--5g8h", "xn--qei", "xn--2p8h", "xn--ch8h"];
+
 function genSuggestions(label: string): string[] {
   if (!label || label.length < 3) return [];
+  // For emoji searches, appending "lab"/"pro"/"x" produces nonsense Punycode
+  // that users can't read. Show a curated mix of OTHER popular emoji instead.
+  if (label.startsWith("xn--")) {
+    return EMOJI_ALTERNATES.filter((s) => s !== label).slice(0, 5);
+  }
   return [
     `${label}x`, `${label}1`, `${label}-hq`,
     `my${label}`, `${label}pro`, `the${label}`,
