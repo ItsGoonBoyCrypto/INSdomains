@@ -28,9 +28,68 @@ export const LENGTH_PRICE: Record<number, number> = {
   5: 500,             // standard (5–32 chars)
 };
 
-/** Curated premium overrides — these mirror the admin-set on-chain mapping. */
+/**
+ * Curated premium overrides — these mirror the on-chain premiumPrice
+ * mapping set via InsBatchPriceSetter (commit 7171d5c series). Keep in
+ * sync if the on-chain mapping is updated.
+ *
+ * Source of truth: emoji-top50.json + the runBatch tx from
+ * 0xb095b7fdad60eedd24d8c38c2e9505b3e1587bfc (one-shot helper, now dead).
+ */
 export const PREMIUM_OVERRIDES: Record<string, number> = {
-  // (populated from /admin in real deploy; mock seed below)
+  // ULTRA tier (10) — 4000 iKAS Forever / 1000 iKAS Annual
+  "xn--4v8h": 4000,   // 🔥 fire
+  "xn--158h": 4000,   // 🚀 rocket
+  "xn--tr8h": 4000,   // 💎 diamond
+  "xn--qei":  4000,   // ❤️ red_heart
+  "xn--5g8h": 4000,   // 🌙 moon
+  "xn--3s9h": 4000,   // 🦄 unicorn
+  "xn--2p8h": 4000,   // 👑 crown
+  "xn--57h":  4000,   // ⚡ lightning
+  "xn--ch8h": 4000,   // 🌟 glowing_star
+  "xn--gl8h": 4000,   // 🎯 target
+  // PREMIUM tier (41) — 2000 iKAS Forever / 800 iKAS Annual
+  "xn--0ci":   2000,  // ✨ sparkles
+  "xn--rs8h":  2000,  // 💯 hundred
+  "xn--3l8h":  2000,  // 🏆 trophy
+  "xn--ss8h":  2000,  // 💰 money_bag
+  "xn--hl8h":  2000,  // 🎰 slot
+  "xn--4j8h":  2000,  // 🎁 gift
+  "xn--sr8h":  2000,  // 💍 gem_ring
+  "xn--kv8h":  2000,  // 🔑 key
+  "xn--y8h":   2000,  // ⚽ soccer
+  "xn--9h8h":  2000,  // 🍀 clover
+  "xn--s28h":  2000,  // 😎 cool
+  "xn--iq9h":  2000,  // 🤩 star_struck
+  "xn--r28h":  2000,  // 😍 heart_eyes
+  "xn--wp9h":  2000,  // 🤔 thinking
+  "xn--oq9h":  2000,  // 🤯 mind_blown
+  "xn--ps9h":  2000,  // 🥶 cold
+  "xn--fr8h":  2000,  // 💀 skull
+  "xn--9q8h":  2000,  // 👻 ghost
+  "xn--yp8h":  2000,  // 👍 thumbs_up
+  "xn--k48h":  2000,  // 🙌 raised_hands
+  "xn--ms8h":  2000,  // 💪 muscle
+  "xn--5bi":   2000,  // ✊ fist
+  "xn--xp8h":  2000,  // 👌 ok_hand
+  "xn--1p9h":  2000,  // 🤙 call_me
+  "xn--1r8h":  2000,  // 💖 sparkle_heart
+  "xn--7r8h":  2000,  // 💜 purple_heart
+  "xn--4r8h":  2000,  // 💙 blue_heart
+  "xn--5r8h":  2000,  // 💚 green_heart
+  "xn--0n8h":  2000,  // 🐉 dragon
+  "xn--9s9h":  2000,  // 🦊 fox
+  "xn--gp8h":  2000,  // 🐻 bear
+  "xn--hp8h":  2000,  // 🐼 panda
+  "xn--0s9h":  2000,  // 🦁 lion
+  "xn--fp8h":  2000,  // 🐺 wolf
+  "xn--og8h":  2000,  // 🌈 rainbow
+  "xn--qg8h":  2000,  // 🌊 wave
+  "xn--w77hd":  2000, // 🇺🇸 flag_us
+  "xn--f77hja": 2000, // 🇬🇧 flag_uk
+  "xn--i77h6a": 2000, // 🇪🇺 flag_eu
+  "xn--n77hma": 2000, // 🇯🇵 flag_jp
+  "xn--o77hoa": 2000, // 🇰🇷 flag_kr
 };
 
 export type Rarity =
