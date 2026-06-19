@@ -273,14 +273,12 @@ const FAQS: { section: string; items: FaqItem[] }[] = [
             Pricing follows the on-chain label length of the{" "}
             <code>xn--</code> encoding. A single emoji like <code>🔥</code>{" "}
             encodes to <code>xn--4v8h</code> (8 bytes) so it lands in the
-            standard 5+ tier — <strong>500 iKAS Forever / 50 iKAS/yr</strong>{" "}
-            by default. A curated set of popular emoji (top hearts, flags,
-            faces, common objects) are admin-bumped to{" "}
-            <strong>1000 iKAS Forever / 500 iKAS/yr</strong> as a premium tier
-            so the obvious bangers signal scarcity. Everything else is
-            first-come, first-served at the standard tier. No emoji is
-            reserved or held back — every label on chain is mintable by
-            anyone.
+            standard 5+ tier — <strong>500 iKAS Forever / 50 iKAS/yr</strong>.
+            That&rsquo;s the price for every emoji name at launch, single or
+            ZWJ-compound. First-come, first-served: no emoji is reserved or
+            held back. A future premium tier for the most-iconic emoji (the
+            bangers — fire, rocket, top flags) may be added post-launch via
+            on-chain admin action, but the standard tier always remains open.
           </>
         ),
       },
