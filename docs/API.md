@@ -67,7 +67,21 @@ curl https://insdomains.org/api/resolve?name=alice.igra
 
 **400 (bad label):** `{ "error": "invalid_label", "label": "...", "tld": null }`
 
-Label rules: 1–32 chars, lowercase `a-z` / digits / hyphens, no leading or trailing hyphen.
+Label rules:
+- ASCII labels: 1–32 chars, lowercase `a-z` / digits / hyphens, no leading or trailing hyphen.
+- **Emoji & Unicode**: pass either the beautified form (`🔥.igra`) or the Punycode form (`xn--4v8h.igra`). The API canonicalizes via ENSIP-15 (the ENS normalization standard, Unicode 17.0) + Punycode encoding. Max 32 graphemes; the encoded `xn--…` form must fit the same 32-byte on-chain cap. Mixed-script and homograph labels (Cyrillic `а` look-alikes, Latin+Greek mixes, zero-width invisibles, bidi controls) are rejected at the API boundary.
+
+Every successful response includes the full quartet so integrators can pick whichever form fits their UI:
+
+```json
+{
+  "name":            "🔥.igra",          // beautified for display
+  "label":           "xn--4v8h",         // contract label (use for namehash, register())
+  "display_label":   "🔥",
+  "punycode_name":   "xn--4v8h.igra",    // pure ASCII form
+  "normalized_name": "🔥.igra"           // ENSIP-15 canonical (FE0F stripped)
+}
+```
 
 ---
 

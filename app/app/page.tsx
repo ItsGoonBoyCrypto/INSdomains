@@ -164,16 +164,16 @@ function EmptyHint() {
         {(
           [
             { s: "vitalik", tld: "igra", colour: "text-plum" },
+            { s: "🔥",      tld: "igra", colour: "text-plum" },
             { s: "satoshi", tld: "igra", colour: "text-plum" },
-            { s: "grok",    tld: "igra", colour: "text-plum" },
+            { s: "🚀",      tld: "igra", colour: "text-plum" },
             { s: "kaspa",   tld: "igra", colour: "text-plum" },
-            { s: "zeal",    tld: "igra", colour: "text-plum" },
-            { s: "alice",   tld: "igra", colour: "text-plum" },
+            { s: "💎",      tld: "igra", colour: "text-plum" },
           ] as const
         ).map((x) => (
           <Link
             key={x.s + x.tld}
-            href={`/app?q=${x.s}`}
+            href={`/app?q=${encodeURIComponent(x.s)}`}
             className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 text-xs text-white/70 transition hover:border-cyan/30 hover:text-white"
           >
             {x.s}<span className={x.colour}>.{x.tld}</span> →

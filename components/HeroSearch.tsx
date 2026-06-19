@@ -99,9 +99,9 @@ export function HeroSearch() {
           [
             { label: "igranetwork", tld: "igra" },
             { label: "insdomains",  tld: "igra" },
-            { label: "zealous",     tld: "igra" },
-            { label: "kaskad",      tld: "igra" },
-            { label: "kaspacom",    tld: "igra" },
+            { label: "🔥",          tld: "igra" },
+            { label: "💎",          tld: "igra" },
+            { label: "🚀",          tld: "igra" },
           ] as const
         ).map((s) => (
           <button

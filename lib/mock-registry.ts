@@ -59,6 +59,10 @@ export const DEMO_OWNED = [
 // names (same pills as the HeroSearch suggestions) and rounds out with
 // notable reserved labels to keep the carousel rich without ever surfacing
 // a name a sniper could front-run. Every label here is reserved on chain.
+//
+// Emoji entries showcase the new emoji-names feature. The marquee renders
+// labels verbatim, so include the beautified emoji form (the routing layer
+// encodes to Punycode if you click through).
 export const TRENDING = [
   // 5 hero ecosystem names (also live as HeroSearch pills)
   "igranetwork.igra", "insdomains.igra", "zealous.igra",
@@ -69,6 +73,9 @@ export const TRENDING = [
   "katbridge.igra",   "kspr.igra",       "kasplex.igra",
   "kaspa.igra",       "igra.igra",       "igralabs.igra",
   "klaudeonkas.igra", "iforge.igra",     "alphaprism.igra",
+  // Emoji feature showcase — sprinkled through the rotation
+  "🔥.igra",          "🚀.igra",          "💎.igra",
+  "⚽.igra",          "🌙.igra",          "🎯.igra",
 ];
 
 // Former mock STATS export removed 2026-04-24 — homepage StatsRow now reads

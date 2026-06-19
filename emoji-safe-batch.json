@@ -1,0 +1,6590 @@
+{
+  "version": "1.0",
+  "chainId": "38833",
+  "createdAt": 0,
+  "meta": {
+    "name": "INS V2 emoji premium prices",
+    "description": "Set premium price = 1000 iKAS Forever for 263 emoji labels",
+    "txBuilderVersion": "1.16.5",
+    "createdFromSafeAddress": "REPLACE_WITH_SAFE_ADDRESS",
+    "createdFromOwnerAddress": "",
+    "checksum": ""
+  },
+  "transactions": [
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--gp8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--lo8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--bt9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--5o8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--co8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--2o8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--bp8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--0o8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--0n8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--4s9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--go8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--9s9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--dp8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--ep8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--8o8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--wo8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--0s9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--9o8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1o8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--ho8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--8s9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--hp8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--vo8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--cp8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ug26z3843b",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--4o8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--7s9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--4n8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--3o8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--qo8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--3s9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--7o8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--fp8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--rs8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--qv9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--0p8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--9p9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--s28h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--m28h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--mp8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--5bi",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--9q8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--r28h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--oq9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--ms8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--xp8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--e4h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--n48h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--k48h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--fr8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--e28h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--iq9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--wp9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--zp8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--yp8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--wp8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--n28h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--e77hia",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--e77h8a",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--e77hgb",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--e77hib",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--f77hga",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--f77h6a",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--e77hd",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--g77hka",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--g77hsa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--g77hwa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--g77hya",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--h77hc",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--h77hoa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--i77hea",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--i77h2a",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--i77h6a",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--j77hga",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--j77hya",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--k77hwa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--l77hga",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--h77hja",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--i77hha",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--m77hga",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--m77hka",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--m77hwa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--n77hma",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--i77hla",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--o77hoa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--o77hya",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--q77hwa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--q77hya",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--k77hna",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--p77hd",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--r77hc",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--r77hya",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--i77hva",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--l77hpa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ug31v1937b",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--p77hha",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--t77hia",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--e77h5a",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--v77hga",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--e77h9a",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--i77h1a",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--k77hxa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--l77hxa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--v77hd",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--x77hga",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--e77hhb",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--f77hja",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--w77hd",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--r77hpa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--e77hrb",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--oi8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--mi8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--xj8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--ui8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--5j8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--7q9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--si8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--zh8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--vj8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--53h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--hj8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--gj8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--hi8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--mj8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--dj8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--vi8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--2j8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--2i8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--ti8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--9i8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--rh8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--ji8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--8q9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--uj8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--yr8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--rz8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--4r8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--zr8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--3r8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--5r8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--2r8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--qr8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--rr8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--rv9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--7r8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--qei",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1r8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--pp9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--6r8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--cr8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--z8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--xl8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--nv8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--fs8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--kl8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--ds8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--tu8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--009h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--fl8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--2p8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--i18h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--gl8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--tr8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--jl8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--xs8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--6q9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--4v8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--5l8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--sr8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--pl8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--7k8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--kv8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--57h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--lv8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--8v9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--2l8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--4k8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--cw8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--ss8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--5g8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--ql8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--hm8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--yp9h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--158h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--888h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--ol8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--t88h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--i98h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--y8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--0ci",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--f7i",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--k3h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--gl8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--dw8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--vl8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--3l8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--rl8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--h98h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--5k8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--em8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--yh8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--l3h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--ug8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--vg8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--tg8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--9h8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--ei8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--og8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--2h8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--uh8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--tdi",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--58h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--4h8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--nh8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--wh8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--0h8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--rg8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--qg8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--3bi",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--j68h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--h78h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--e68h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--p68h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--sbi",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--258h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--bm8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--l68h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--kbi",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--n68h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--u68h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--358h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--s68h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--x88h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ug6825poqa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ug6825prqa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ugz855p8kb",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ug1855p5kb",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ug4025p7ua",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ug4025pbva",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--wr8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--ur8h",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ugaa20709bdadi",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1uga50807afag",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1uga80807afab",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1uga50807afab",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ug59wvn45b",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ug59wyn45b",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ug39wyn45b",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ugz855poqa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ug1855plqa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ugz7y3t53b",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ugz7y6t53b",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ug31v1937b",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ugy405pdua",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ugz855p3qa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ug1855p0qa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ugy825p0qa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ugy825p3qa",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ugx935pxka",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ugx935p0ka",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ugz855pfha",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ug1855pcha",
+        "price": "1000000000000000000000"
+      }
+    },
+    {
+      "to": "REGISTRY_V2_ADDRESS_PLACEHOLDER",
+      "value": "0",
+      "data": null,
+      "contractMethod": {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "label",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          }
+        ],
+        "name": "setPremiumPrice",
+        "payable": false
+      },
+      "contractInputsValues": {
+        "label": "xn--1ug39w1n45b",
+        "price": "1000000000000000000000"
+      }
+    }
+  ]
+}

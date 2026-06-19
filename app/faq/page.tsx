@@ -248,34 +248,39 @@ const FAQS: { section: string; items: FaqItem[] }[] = [
           <>
             <strong>At the protocol level, yes — via{" "}
             <a href="https://en.wikipedia.org/wiki/Punycode" target="_blank" rel="noreferrer" className="text-cyan underline decoration-dotted underline-offset-2">Punycode</a></strong>,
-            the same standard ENS uses. The Registry accepts the ASCII-safe
-            encoded form of an emoji name (e.g. <code>xn--ls8h.igra</code> for{" "}
-            <code>🦄.igra</code>), and IDN-aware wallets &amp; browsers render
-            that back as the original glyph.
+            the same standard ENS uses, transparently in both directions. You
+            type <code>🔥</code> in the search box, the dApp normalizes via
+            ENSIP-15 + encodes to <code>xn--4v8h.igra</code> for the chain, and
+            every UI — wallet, explorer, NFT card, REST API — beautifies it
+            back to <code>🔥.igra</code> for display.
             <p className="mt-3">
-              <strong>The honest caveat:</strong> the dApp doesn&rsquo;t yet
-              have a one-click emoji flow — if you paste a raw emoji into the
-              search box it&rsquo;s stripped, and we currently display the{" "}
-              <code>xn--</code> form rather than the glyph. To register an
-              emoji name today you&rsquo;d encode it to Punycode yourself and
-              register that <code>xn--…</code> label. A first-class &ldquo;type
-              the emoji, see the emoji&rdquo; experience (with confusable/
-              homograph protection) is on the roadmap.
+              <strong>Confusable / homograph protection is on by default.</strong> A
+              Cyrillic <code>а</code> that looks identical to Latin{" "}
+              <code>a</code> is rejected. Mixed-script names (Latin + Greek,
+              Latin + Cyrillic) are rejected. Zero-width invisibles, bidi
+              controls (RTL marks), and pre-encoded <code>xn--</code> spoofs
+              that decode to homographs are all rejected end-to-end. Single
+              emoji, ZWJ families (<code>👨‍👩‍👧‍👦</code>), flag pairs (
+              <code>🇺🇸</code>), and skin-tone modifiers all work.
             </p>
           </>
         ),
       },
       {
-        q: "Are there any emoji-name reservations?",
+        q: "How is emoji-name pricing decided?",
         a: (
           <>
-            When the first-class emoji flow ships, popular single- and
-            double-emoji names will sit on the reserved list and be
-            admin-minted to verified holders only, to stop day-1 sniping.
-            Note that pricing follows the on-chain label length of the{" "}
-            <code>xn--</code> encoding (a single emoji encodes to ~7–9 ASCII
-            characters, so it falls in the standard tier today — not the
-            1-/2-character premium tiers).
+            Pricing follows the on-chain label length of the{" "}
+            <code>xn--</code> encoding. A single emoji like <code>🔥</code>{" "}
+            encodes to <code>xn--4v8h</code> (8 bytes) so it lands in the
+            standard 5+ tier — <strong>500 iKAS Forever / 50 iKAS/yr</strong>{" "}
+            by default. A curated set of popular emoji (top hearts, flags,
+            faces, common objects) are admin-bumped to{" "}
+            <strong>1000 iKAS Forever / 500 iKAS/yr</strong> as a premium tier
+            so the obvious bangers signal scarcity. Everything else is
+            first-come, first-served at the standard tier. No emoji is
+            reserved or held back — every label on chain is mintable by
+            anyone.
           </>
         ),
       },

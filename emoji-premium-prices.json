@@ -1,0 +1,2639 @@
+{
+  "generated_at_block": "<paste tx block>",
+  "price_ikas": 1000,
+  "price_wei": "1000000000000000000000",
+  "total": 263,
+  "skipped": 0,
+  "entries": [
+    {
+      "category": "ANIMALS",
+      "key": "bear",
+      "emoji": "🐻",
+      "display": "🐻",
+      "contractLabel": "xn--gp8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "bee",
+      "emoji": "🐝",
+      "display": "🐝",
+      "contractLabel": "xn--lo8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "butterfly",
+      "emoji": "🦋",
+      "display": "🦋",
+      "contractLabel": "xn--bt9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "cat",
+      "emoji": "🐱",
+      "display": "🐱",
+      "contractLabel": "xn--5o8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "chicken",
+      "emoji": "🐔",
+      "display": "🐔",
+      "contractLabel": "xn--co8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "cow",
+      "emoji": "🐮",
+      "display": "🐮",
+      "contractLabel": "xn--2o8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "dog",
+      "emoji": "🐶",
+      "display": "🐶",
+      "contractLabel": "xn--bp8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "dolphin",
+      "emoji": "🐬",
+      "display": "🐬",
+      "contractLabel": "xn--0o8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "dragon",
+      "emoji": "🐉",
+      "display": "🐉",
+      "contractLabel": "xn--0n8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "eagle",
+      "emoji": "🦅",
+      "display": "🦅",
+      "contractLabel": "xn--4s9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "elephant",
+      "emoji": "🐘",
+      "display": "🐘",
+      "contractLabel": "xn--go8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "fox",
+      "emoji": "🦊",
+      "display": "🦊",
+      "contractLabel": "xn--9s9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "frog",
+      "emoji": "🐸",
+      "display": "🐸",
+      "contractLabel": "xn--dp8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "hamster",
+      "emoji": "🐹",
+      "display": "🐹",
+      "contractLabel": "xn--ep8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "horse",
+      "emoji": "🐴",
+      "display": "🐴",
+      "contractLabel": "xn--8o8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "koala",
+      "emoji": "🐨",
+      "display": "🐨",
+      "contractLabel": "xn--wo8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "lion",
+      "emoji": "🦁",
+      "display": "🦁",
+      "contractLabel": "xn--0s9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "monkey",
+      "emoji": "🐵",
+      "display": "🐵",
+      "contractLabel": "xn--9o8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "mouse",
+      "emoji": "🐭",
+      "display": "🐭",
+      "contractLabel": "xn--1o8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "octopus",
+      "emoji": "🐙",
+      "display": "🐙",
+      "contractLabel": "xn--ho8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "owl",
+      "emoji": "🦉",
+      "display": "🦉",
+      "contractLabel": "xn--8s9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "panda",
+      "emoji": "🐼",
+      "display": "🐼",
+      "contractLabel": "xn--hp8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "penguin",
+      "emoji": "🐧",
+      "display": "🐧",
+      "contractLabel": "xn--vo8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "pig",
+      "emoji": "🐷",
+      "display": "🐷",
+      "contractLabel": "xn--cp8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "polar_bear",
+      "emoji": "🐻‍❄️",
+      "display": "🐻‍❄",
+      "contractLabel": "xn--1ug26z3843b",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "rabbit",
+      "emoji": "🐰",
+      "display": "🐰",
+      "contractLabel": "xn--4o8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "shark",
+      "emoji": "🦈",
+      "display": "🦈",
+      "contractLabel": "xn--7s9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "snake",
+      "emoji": "🐍",
+      "display": "🐍",
+      "contractLabel": "xn--4n8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "tiger",
+      "emoji": "🐯",
+      "display": "🐯",
+      "contractLabel": "xn--3o8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "turtle",
+      "emoji": "🐢",
+      "display": "🐢",
+      "contractLabel": "xn--qo8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "unicorn",
+      "emoji": "🦄",
+      "display": "🦄",
+      "contractLabel": "xn--3s9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "whale",
+      "emoji": "🐳",
+      "display": "🐳",
+      "contractLabel": "xn--7o8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ANIMALS",
+      "key": "wolf",
+      "emoji": "🐺",
+      "display": "🐺",
+      "contractLabel": "xn--fp8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "100",
+      "emoji": "💯",
+      "display": "💯",
+      "contractLabel": "xn--rs8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "brain",
+      "emoji": "🧠",
+      "display": "🧠",
+      "contractLabel": "xn--qv9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "clap",
+      "emoji": "👏",
+      "display": "👏",
+      "contractLabel": "xn--0p8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "clown",
+      "emoji": "🤡",
+      "display": "🤡",
+      "contractLabel": "xn--9p9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "cool",
+      "emoji": "😎",
+      "display": "😎",
+      "contractLabel": "xn--s28h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "devil",
+      "emoji": "😈",
+      "display": "😈",
+      "contractLabel": "xn--m28h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "eye",
+      "emoji": "👁️",
+      "display": "👁",
+      "contractLabel": "xn--mp8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "fist",
+      "emoji": "✊",
+      "display": "✊",
+      "contractLabel": "xn--5bi",
+      "bytes": 7,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "ghost",
+      "emoji": "👻",
+      "display": "👻",
+      "contractLabel": "xn--9q8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "heart_eyes",
+      "emoji": "😍",
+      "display": "😍",
+      "contractLabel": "xn--r28h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "mind_blown",
+      "emoji": "🤯",
+      "display": "🤯",
+      "contractLabel": "xn--oq9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "muscle",
+      "emoji": "💪",
+      "display": "💪",
+      "contractLabel": "xn--ms8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "ok_hand",
+      "emoji": "👌",
+      "display": "👌",
+      "contractLabel": "xn--xp8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "point_up",
+      "emoji": "☝️",
+      "display": "☝",
+      "contractLabel": "xn--e4h",
+      "bytes": 7,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "pray",
+      "emoji": "🙏",
+      "display": "🙏",
+      "contractLabel": "xn--n48h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "raised_hands",
+      "emoji": "🙌",
+      "display": "🙌",
+      "contractLabel": "xn--k48h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "skull",
+      "emoji": "💀",
+      "display": "💀",
+      "contractLabel": "xn--fr8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "smile",
+      "emoji": "😀",
+      "display": "😀",
+      "contractLabel": "xn--e28h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "star_struck",
+      "emoji": "🤩",
+      "display": "🤩",
+      "contractLabel": "xn--iq9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "thinking",
+      "emoji": "🤔",
+      "display": "🤔",
+      "contractLabel": "xn--wp9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "thumbs_down",
+      "emoji": "👎",
+      "display": "👎",
+      "contractLabel": "xn--zp8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "thumbs_up",
+      "emoji": "👍",
+      "display": "👍",
+      "contractLabel": "xn--yp8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "wave",
+      "emoji": "👋",
+      "display": "👋",
+      "contractLabel": "xn--wp8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FACES",
+      "key": "wink",
+      "emoji": "😉",
+      "display": "😉",
+      "contractLabel": "xn--n28h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_ae",
+      "emoji": "🇦🇪",
+      "display": "🇦🇪",
+      "contractLabel": "xn--e77hia",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_ar",
+      "emoji": "🇦🇷",
+      "display": "🇦🇷",
+      "contractLabel": "xn--e77h8a",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_at",
+      "emoji": "🇦🇹",
+      "display": "🇦🇹",
+      "contractLabel": "xn--e77hgb",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_au",
+      "emoji": "🇦🇺",
+      "display": "🇦🇺",
+      "contractLabel": "xn--e77hib",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_be",
+      "emoji": "🇧🇪",
+      "display": "🇧🇪",
+      "contractLabel": "xn--f77hga",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_br",
+      "emoji": "🇧🇷",
+      "display": "🇧🇷",
+      "contractLabel": "xn--f77h6a",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_ca",
+      "emoji": "🇨🇦",
+      "display": "🇨🇦",
+      "contractLabel": "xn--e77hd",
+      "bytes": 9,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_ch",
+      "emoji": "🇨🇭",
+      "display": "🇨🇭",
+      "contractLabel": "xn--g77hka",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_cl",
+      "emoji": "🇨🇱",
+      "display": "🇨🇱",
+      "contractLabel": "xn--g77hsa",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_cn",
+      "emoji": "🇨🇳",
+      "display": "🇨🇳",
+      "contractLabel": "xn--g77hwa",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_co",
+      "emoji": "🇨🇴",
+      "display": "🇨🇴",
+      "contractLabel": "xn--g77hya",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_de",
+      "emoji": "🇩🇪",
+      "display": "🇩🇪",
+      "contractLabel": "xn--h77hc",
+      "bytes": 9,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_dk",
+      "emoji": "🇩🇰",
+      "display": "🇩🇰",
+      "contractLabel": "xn--h77hoa",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_eg",
+      "emoji": "🇪🇬",
+      "display": "🇪🇬",
+      "contractLabel": "xn--i77hea",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_es",
+      "emoji": "🇪🇸",
+      "display": "🇪🇸",
+      "contractLabel": "xn--i77h2a",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_eu",
+      "emoji": "🇪🇺",
+      "display": "🇪🇺",
+      "contractLabel": "xn--i77h6a",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_fi",
+      "emoji": "🇫🇮",
+      "display": "🇫🇮",
+      "contractLabel": "xn--j77hga",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_fr",
+      "emoji": "🇫🇷",
+      "display": "🇫🇷",
+      "contractLabel": "xn--j77hya",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_gr",
+      "emoji": "🇬🇷",
+      "display": "🇬🇷",
+      "contractLabel": "xn--k77hwa",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_hk",
+      "emoji": "🇭🇰",
+      "display": "🇭🇰",
+      "contractLabel": "xn--l77hga",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_id",
+      "emoji": "🇮🇩",
+      "display": "🇮🇩",
+      "contractLabel": "xn--h77hja",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_ie",
+      "emoji": "🇮🇪",
+      "display": "🇮🇪",
+      "contractLabel": "xn--i77hha",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_il",
+      "emoji": "🇮🇱",
+      "display": "🇮🇱",
+      "contractLabel": "xn--m77hga",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_in",
+      "emoji": "🇮🇳",
+      "display": "🇮🇳",
+      "contractLabel": "xn--m77hka",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_it",
+      "emoji": "🇮🇹",
+      "display": "🇮🇹",
+      "contractLabel": "xn--m77hwa",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_jp",
+      "emoji": "🇯🇵",
+      "display": "🇯🇵",
+      "contractLabel": "xn--n77hma",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_ke",
+      "emoji": "🇰🇪",
+      "display": "🇰🇪",
+      "contractLabel": "xn--i77hla",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_kr",
+      "emoji": "🇰🇷",
+      "display": "🇰🇷",
+      "contractLabel": "xn--o77hoa",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_kw",
+      "emoji": "🇰🇼",
+      "display": "🇰🇼",
+      "contractLabel": "xn--o77hya",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_mx",
+      "emoji": "🇲🇽",
+      "display": "🇲🇽",
+      "contractLabel": "xn--q77hwa",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_my",
+      "emoji": "🇲🇾",
+      "display": "🇲🇾",
+      "contractLabel": "xn--q77hya",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_ng",
+      "emoji": "🇳🇬",
+      "display": "🇳🇬",
+      "contractLabel": "xn--k77hna",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_nl",
+      "emoji": "🇳🇱",
+      "display": "🇳🇱",
+      "contractLabel": "xn--p77hd",
+      "bytes": 9,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_no",
+      "emoji": "🇳🇴",
+      "display": "🇳🇴",
+      "contractLabel": "xn--r77hc",
+      "bytes": 9,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_nz",
+      "emoji": "🇳🇿",
+      "display": "🇳🇿",
+      "contractLabel": "xn--r77hya",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_pe",
+      "emoji": "🇵🇪",
+      "display": "🇵🇪",
+      "contractLabel": "xn--i77hva",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_ph",
+      "emoji": "🇵🇭",
+      "display": "🇵🇭",
+      "contractLabel": "xn--l77hpa",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_pirate",
+      "emoji": "🏴‍☠️",
+      "display": "🏴‍☠",
+      "contractLabel": "xn--1ug31v1937b",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_pl",
+      "emoji": "🇵🇱",
+      "display": "🇵🇱",
+      "contractLabel": "xn--p77hha",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_pt",
+      "emoji": "🇵🇹",
+      "display": "🇵🇹",
+      "contractLabel": "xn--t77hia",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_qa",
+      "emoji": "🇶🇦",
+      "display": "🇶🇦",
+      "contractLabel": "xn--e77h5a",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_ru",
+      "emoji": "🇷🇺",
+      "display": "🇷🇺",
+      "contractLabel": "xn--v77hga",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_sa",
+      "emoji": "🇸🇦",
+      "display": "🇸🇦",
+      "contractLabel": "xn--e77h9a",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_se",
+      "emoji": "🇸🇪",
+      "display": "🇸🇪",
+      "contractLabel": "xn--i77h1a",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_sg",
+      "emoji": "🇸🇬",
+      "display": "🇸🇬",
+      "contractLabel": "xn--k77hxa",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_th",
+      "emoji": "🇹🇭",
+      "display": "🇹🇭",
+      "contractLabel": "xn--l77hxa",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_tr",
+      "emoji": "🇹🇷",
+      "display": "🇹🇷",
+      "contractLabel": "xn--v77hd",
+      "bytes": 9,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_tw",
+      "emoji": "🇹🇼",
+      "display": "🇹🇼",
+      "contractLabel": "xn--x77hga",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_ua",
+      "emoji": "🇺🇦",
+      "display": "🇺🇦",
+      "contractLabel": "xn--e77hhb",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_uk",
+      "emoji": "🇬🇧",
+      "display": "🇬🇧",
+      "contractLabel": "xn--f77hja",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_us",
+      "emoji": "🇺🇸",
+      "display": "🇺🇸",
+      "contractLabel": "xn--w77hd",
+      "bytes": 9,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_vn",
+      "emoji": "🇻🇳",
+      "display": "🇻🇳",
+      "contractLabel": "xn--r77hpa",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FLAGS_TOP",
+      "key": "flag_za",
+      "emoji": "🇿🇦",
+      "display": "🇿🇦",
+      "contractLabel": "xn--e77hrb",
+      "bytes": 10,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "apple",
+      "emoji": "🍎",
+      "display": "🍎",
+      "contractLabel": "xn--oi8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "banana",
+      "emoji": "🍌",
+      "display": "🍌",
+      "contractLabel": "xn--mi8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "beer",
+      "emoji": "🍺",
+      "display": "🍺",
+      "contractLabel": "xn--xj8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "burger",
+      "emoji": "🍔",
+      "display": "🍔",
+      "contractLabel": "xn--ui8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "cake",
+      "emoji": "🎂",
+      "display": "🎂",
+      "contractLabel": "xn--5j8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "champagne",
+      "emoji": "🥂",
+      "display": "🥂",
+      "contractLabel": "xn--7q9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "cherry",
+      "emoji": "🍒",
+      "display": "🍒",
+      "contractLabel": "xn--si8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "chili",
+      "emoji": "🌶️",
+      "display": "🌶",
+      "contractLabel": "xn--zh8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "cocktail",
+      "emoji": "🍸",
+      "display": "🍸",
+      "contractLabel": "xn--vj8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "coffee",
+      "emoji": "☕",
+      "display": "☕",
+      "contractLabel": "xn--53h",
+      "bytes": 7,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "cookie",
+      "emoji": "🍪",
+      "display": "🍪",
+      "contractLabel": "xn--hj8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "donut",
+      "emoji": "🍩",
+      "display": "🍩",
+      "contractLabel": "xn--gj8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "grapes",
+      "emoji": "🍇",
+      "display": "🍇",
+      "contractLabel": "xn--hi8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "honey",
+      "emoji": "🍯",
+      "display": "🍯",
+      "contractLabel": "xn--mj8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "ice_cream",
+      "emoji": "🍦",
+      "display": "🍦",
+      "contractLabel": "xn--dj8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "pizza",
+      "emoji": "🍕",
+      "display": "🍕",
+      "contractLabel": "xn--vi8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "popcorn",
+      "emoji": "🍿",
+      "display": "🍿",
+      "contractLabel": "xn--2j8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "ramen",
+      "emoji": "🍜",
+      "display": "🍜",
+      "contractLabel": "xn--2i8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "strawberry",
+      "emoji": "🍓",
+      "display": "🍓",
+      "contractLabel": "xn--ti8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "sushi",
+      "emoji": "🍣",
+      "display": "🍣",
+      "contractLabel": "xn--9i8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "taco",
+      "emoji": "🌮",
+      "display": "🌮",
+      "contractLabel": "xn--rh8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "watermelon",
+      "emoji": "🍉",
+      "display": "🍉",
+      "contractLabel": "xn--ji8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "whiskey",
+      "emoji": "🥃",
+      "display": "🥃",
+      "contractLabel": "xn--8q9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "FOOD",
+      "key": "wine",
+      "emoji": "🍷",
+      "display": "🍷",
+      "contractLabel": "xn--uj8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HEARTS",
+      "key": "beating_heart",
+      "emoji": "💓",
+      "display": "💓",
+      "contractLabel": "xn--yr8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HEARTS",
+      "key": "black_heart",
+      "emoji": "🖤",
+      "display": "🖤",
+      "contractLabel": "xn--rz8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HEARTS",
+      "key": "blue_heart",
+      "emoji": "💙",
+      "display": "💙",
+      "contractLabel": "xn--4r8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HEARTS",
+      "key": "broken_heart",
+      "emoji": "💔",
+      "display": "💔",
+      "contractLabel": "xn--zr8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HEARTS",
+      "key": "cupid",
+      "emoji": "💘",
+      "display": "💘",
+      "contractLabel": "xn--3r8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HEARTS",
+      "key": "green_heart",
+      "emoji": "💚",
+      "display": "💚",
+      "contractLabel": "xn--5r8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HEARTS",
+      "key": "growing_heart",
+      "emoji": "💗",
+      "display": "💗",
+      "contractLabel": "xn--2r8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HEARTS",
+      "key": "kiss_mark",
+      "emoji": "💋",
+      "display": "💋",
+      "contractLabel": "xn--qr8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HEARTS",
+      "key": "love_letter",
+      "emoji": "💌",
+      "display": "💌",
+      "contractLabel": "xn--rr8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HEARTS",
+      "key": "orange_heart",
+      "emoji": "🧡",
+      "display": "🧡",
+      "contractLabel": "xn--rv9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HEARTS",
+      "key": "purple_heart",
+      "emoji": "💜",
+      "display": "💜",
+      "contractLabel": "xn--7r8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HEARTS",
+      "key": "red_heart",
+      "emoji": "❤️",
+      "display": "❤",
+      "contractLabel": "xn--qei",
+      "bytes": 7,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HEARTS",
+      "key": "sparkle_heart",
+      "emoji": "💖",
+      "display": "💖",
+      "contractLabel": "xn--1r8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HEARTS",
+      "key": "white_heart",
+      "emoji": "🤍",
+      "display": "🤍",
+      "contractLabel": "xn--pp9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HEARTS",
+      "key": "yellow_heart",
+      "emoji": "💛",
+      "display": "💛",
+      "contractLabel": "xn--6r8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "alien",
+      "emoji": "👽",
+      "display": "👽",
+      "contractLabel": "xn--cr8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "baseball",
+      "emoji": "⚾",
+      "display": "⚾",
+      "contractLabel": "xn--z8h",
+      "bytes": 7,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "basketball",
+      "emoji": "🏀",
+      "display": "🏀",
+      "contractLabel": "xn--xl8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "bell",
+      "emoji": "🔔",
+      "display": "🔔",
+      "contractLabel": "xn--nv8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "bomb",
+      "emoji": "💣",
+      "display": "💣",
+      "contractLabel": "xn--fs8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "bowling",
+      "emoji": "🎳",
+      "display": "🎳",
+      "contractLabel": "xn--kl8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "bulb",
+      "emoji": "💡",
+      "display": "💡",
+      "contractLabel": "xn--ds8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "camera",
+      "emoji": "📷",
+      "display": "📷",
+      "contractLabel": "xn--tu8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "coin",
+      "emoji": "🪙",
+      "display": "🪙",
+      "contractLabel": "xn--009h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "controller",
+      "emoji": "🎮",
+      "display": "🎮",
+      "contractLabel": "xn--fl8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "crown",
+      "emoji": "👑",
+      "display": "👑",
+      "contractLabel": "xn--2p8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "dagger",
+      "emoji": "🗡️",
+      "display": "🗡",
+      "contractLabel": "xn--i18h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "dart",
+      "emoji": "🎯",
+      "display": "🎯",
+      "contractLabel": "xn--gl8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "diamond",
+      "emoji": "💎",
+      "display": "💎",
+      "contractLabel": "xn--tr8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "dice",
+      "emoji": "🎲",
+      "display": "🎲",
+      "contractLabel": "xn--jl8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "dollar",
+      "emoji": "💵",
+      "display": "💵",
+      "contractLabel": "xn--xs8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "drums",
+      "emoji": "🥁",
+      "display": "🥁",
+      "contractLabel": "xn--6q9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "fire",
+      "emoji": "🔥",
+      "display": "🔥",
+      "contractLabel": "xn--4v8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "football",
+      "emoji": "🏈",
+      "display": "🏈",
+      "contractLabel": "xn--5l8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "gem",
+      "emoji": "💍",
+      "display": "💍",
+      "contractLabel": "xn--sr8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "guitar",
+      "emoji": "🎸",
+      "display": "🎸",
+      "contractLabel": "xn--pl8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "headphones",
+      "emoji": "🎧",
+      "display": "🎧",
+      "contractLabel": "xn--7k8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "key",
+      "emoji": "🔑",
+      "display": "🔑",
+      "contractLabel": "xn--kv8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "lightning",
+      "emoji": "⚡",
+      "display": "⚡",
+      "contractLabel": "xn--57h",
+      "bytes": 7,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "lock",
+      "emoji": "🔒",
+      "display": "🔒",
+      "contractLabel": "xn--lv8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "magnet",
+      "emoji": "🧲",
+      "display": "🧲",
+      "contractLabel": "xn--8v9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "medal",
+      "emoji": "🏅",
+      "display": "🏅",
+      "contractLabel": "xn--2l8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "mic",
+      "emoji": "🎤",
+      "display": "🎤",
+      "contractLabel": "xn--4k8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "microscope",
+      "emoji": "🔬",
+      "display": "🔬",
+      "contractLabel": "xn--cw8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "money_bag",
+      "emoji": "💰",
+      "display": "💰",
+      "contractLabel": "xn--ss8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "moon",
+      "emoji": "🌙",
+      "display": "🌙",
+      "contractLabel": "xn--5g8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "piano",
+      "emoji": "🎹",
+      "display": "🎹",
+      "contractLabel": "xn--ql8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "pingpong",
+      "emoji": "🏓",
+      "display": "🏓",
+      "contractLabel": "xn--hm8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "robot",
+      "emoji": "🤖",
+      "display": "🤖",
+      "contractLabel": "xn--yp9h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "rocket",
+      "emoji": "🚀",
+      "display": "🚀",
+      "contractLabel": "xn--158h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "satellite",
+      "emoji": "🛰️",
+      "display": "🛰",
+      "contractLabel": "xn--888h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "saxophone",
+      "emoji": "🎷",
+      "display": "🎷",
+      "contractLabel": "xn--ol8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "shield",
+      "emoji": "🛡️",
+      "display": "🛡",
+      "contractLabel": "xn--t88h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "skateboard",
+      "emoji": "🛹",
+      "display": "🛹",
+      "contractLabel": "xn--i98h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "soccer",
+      "emoji": "⚽",
+      "display": "⚽",
+      "contractLabel": "xn--y8h",
+      "bytes": 7,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "sparkles",
+      "emoji": "✨",
+      "display": "✨",
+      "contractLabel": "xn--0ci",
+      "bytes": 7,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "star",
+      "emoji": "⭐",
+      "display": "⭐",
+      "contractLabel": "xn--f7i",
+      "bytes": 7,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "sun",
+      "emoji": "☀️",
+      "display": "☀",
+      "contractLabel": "xn--k3h",
+      "bytes": 7,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "target",
+      "emoji": "🎯",
+      "display": "🎯",
+      "contractLabel": "xn--gl8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "telescope",
+      "emoji": "🔭",
+      "display": "🔭",
+      "contractLabel": "xn--dw8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "tennis",
+      "emoji": "🎾",
+      "display": "🎾",
+      "contractLabel": "xn--vl8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "trophy",
+      "emoji": "🏆",
+      "display": "🏆",
+      "contractLabel": "xn--3l8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "trumpet",
+      "emoji": "🎺",
+      "display": "🎺",
+      "contractLabel": "xn--rl8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "ufo",
+      "emoji": "🛸",
+      "display": "🛸",
+      "contractLabel": "xn--h98h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "video",
+      "emoji": "🎥",
+      "display": "🎥",
+      "contractLabel": "xn--5k8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "HOT_OBJECTS",
+      "key": "volleyball",
+      "emoji": "🏐",
+      "display": "🏐",
+      "contractLabel": "xn--em8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "NATURE",
+      "key": "cactus",
+      "emoji": "🌵",
+      "display": "🌵",
+      "contractLabel": "xn--yh8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "NATURE",
+      "key": "cloud",
+      "emoji": "☁️",
+      "display": "☁",
+      "contractLabel": "xn--l3h",
+      "bytes": 7,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "NATURE",
+      "key": "earth_americas",
+      "emoji": "🌎",
+      "display": "🌎",
+      "contractLabel": "xn--ug8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "NATURE",
+      "key": "earth_asia",
+      "emoji": "🌏",
+      "display": "🌏",
+      "contractLabel": "xn--vg8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "NATURE",
+      "key": "earth_globe",
+      "emoji": "🌍",
+      "display": "🌍",
+      "contractLabel": "xn--tg8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "NATURE",
+      "key": "leaf",
+      "emoji": "🍀",
+      "display": "🍀",
+      "contractLabel": "xn--9h8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "NATURE",
+      "key": "mushroom",
+      "emoji": "🍄",
+      "display": "🍄",
+      "contractLabel": "xn--ei8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "NATURE",
+      "key": "rainbow",
+      "emoji": "🌈",
+      "display": "🌈",
+      "contractLabel": "xn--og8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "NATURE",
+      "key": "rose",
+      "emoji": "🌹",
+      "display": "🌹",
+      "contractLabel": "xn--2h8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "NATURE",
+      "key": "seedling",
+      "emoji": "🌱",
+      "display": "🌱",
+      "contractLabel": "xn--uh8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "NATURE",
+      "key": "snowflake",
+      "emoji": "❄️",
+      "display": "❄",
+      "contractLabel": "xn--tdi",
+      "bytes": 7,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "NATURE",
+      "key": "snowman",
+      "emoji": "⛄",
+      "display": "⛄",
+      "contractLabel": "xn--58h",
+      "bytes": 7,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "NATURE",
+      "key": "sunflower",
+      "emoji": "🌻",
+      "display": "🌻",
+      "contractLabel": "xn--4h8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "NATURE",
+      "key": "tornado",
+      "emoji": "🌪️",
+      "display": "🌪",
+      "contractLabel": "xn--nh8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "NATURE",
+      "key": "tree",
+      "emoji": "🌳",
+      "display": "🌳",
+      "contractLabel": "xn--wh8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "NATURE",
+      "key": "tulip",
+      "emoji": "🌷",
+      "display": "🌷",
+      "contractLabel": "xn--0h8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "NATURE",
+      "key": "volcano",
+      "emoji": "🌋",
+      "display": "🌋",
+      "contractLabel": "xn--rg8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "NATURE",
+      "key": "wave",
+      "emoji": "🌊",
+      "display": "🌊",
+      "contractLabel": "xn--qg8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "TRANSPORT",
+      "key": "airplane",
+      "emoji": "✈️",
+      "display": "✈",
+      "contractLabel": "xn--3bi",
+      "bytes": 7,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "TRANSPORT",
+      "key": "ambulance",
+      "emoji": "🚑",
+      "display": "🚑",
+      "contractLabel": "xn--j68h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "TRANSPORT",
+      "key": "bicycle",
+      "emoji": "🚲",
+      "display": "🚲",
+      "contractLabel": "xn--h78h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "TRANSPORT",
+      "key": "bus",
+      "emoji": "🚌",
+      "display": "🚌",
+      "contractLabel": "xn--e68h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "TRANSPORT",
+      "key": "car",
+      "emoji": "🚗",
+      "display": "🚗",
+      "contractLabel": "xn--p68h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "TRANSPORT",
+      "key": "fuel",
+      "emoji": "⛽",
+      "display": "⛽",
+      "contractLabel": "xn--sbi",
+      "bytes": 7,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "TRANSPORT",
+      "key": "helicopter",
+      "emoji": "🚁",
+      "display": "🚁",
+      "contractLabel": "xn--258h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "TRANSPORT",
+      "key": "motorcycle",
+      "emoji": "🏍️",
+      "display": "🏍",
+      "contractLabel": "xn--bm8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "TRANSPORT",
+      "key": "police_car",
+      "emoji": "🚓",
+      "display": "🚓",
+      "contractLabel": "xn--l68h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "TRANSPORT",
+      "key": "sailboat",
+      "emoji": "⛵",
+      "display": "⛵",
+      "contractLabel": "xn--kbi",
+      "bytes": 7,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "TRANSPORT",
+      "key": "taxi",
+      "emoji": "🚕",
+      "display": "🚕",
+      "contractLabel": "xn--n68h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "TRANSPORT",
+      "key": "tractor",
+      "emoji": "🚜",
+      "display": "🚜",
+      "contractLabel": "xn--u68h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "TRANSPORT",
+      "key": "train",
+      "emoji": "🚂",
+      "display": "🚂",
+      "contractLabel": "xn--358h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "TRANSPORT",
+      "key": "truck",
+      "emoji": "🚚",
+      "display": "🚚",
+      "contractLabel": "xn--s68h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "TRANSPORT",
+      "key": "yacht",
+      "emoji": "🛥️",
+      "display": "🛥",
+      "contractLabel": "xn--x88h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "artist_m",
+      "emoji": "👨‍🎨",
+      "display": "👨‍🎨",
+      "contractLabel": "xn--1ug6825poqa",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "artist_w",
+      "emoji": "👩‍🎨",
+      "display": "👩‍🎨",
+      "contractLabel": "xn--1ug6825prqa",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "astronaut_m",
+      "emoji": "👨‍🚀",
+      "display": "👨‍🚀",
+      "contractLabel": "xn--1ugz855p8kb",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "astronaut_w",
+      "emoji": "👩‍🚀",
+      "display": "👩‍🚀",
+      "contractLabel": "xn--1ug1855p5kb",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "chef_m",
+      "emoji": "👨‍🍳",
+      "display": "👨‍🍳",
+      "contractLabel": "xn--1ug4025p7ua",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "chef_w",
+      "emoji": "👩‍🍳",
+      "display": "👩‍🍳",
+      "contractLabel": "xn--1ug4025pbva",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "couple_heart",
+      "emoji": "💑",
+      "display": "💑",
+      "contractLabel": "xn--wr8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "couple_kiss",
+      "emoji": "💏",
+      "display": "💏",
+      "contractLabel": "xn--ur8h",
+      "bytes": 8,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "family",
+      "emoji": "👨‍👩‍👧‍👦",
+      "display": "👨‍👩‍👧‍👦",
+      "contractLabel": "xn--1ugaa20709bdadi",
+      "bytes": 19,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "family_2",
+      "emoji": "👨‍👩‍👦",
+      "display": "👨‍👩‍👦",
+      "contractLabel": "xn--1uga50807afag",
+      "bytes": 17,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "family_ff",
+      "emoji": "👩‍👩‍👧",
+      "display": "👩‍👩‍👧",
+      "contractLabel": "xn--1uga80807afab",
+      "bytes": 17,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "family_mm",
+      "emoji": "👨‍👨‍👦",
+      "display": "👨‍👨‍👦",
+      "contractLabel": "xn--1uga50807afab",
+      "bytes": 17,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "judge_m",
+      "emoji": "👨‍⚖️",
+      "display": "👨‍⚖",
+      "contractLabel": "xn--1ug59wvn45b",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "judge_w",
+      "emoji": "👩‍⚖️",
+      "display": "👩‍⚖",
+      "contractLabel": "xn--1ug59wyn45b",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "man_doctor",
+      "emoji": "👨‍⚕️",
+      "display": "👨‍⚕",
+      "contractLabel": "xn--1ug39wyn45b",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "mechanic_m",
+      "emoji": "👨‍🔧",
+      "display": "👨‍🔧",
+      "contractLabel": "xn--1ugz855poqa",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "mechanic_w",
+      "emoji": "👩‍🔧",
+      "display": "👩‍🔧",
+      "contractLabel": "xn--1ug1855plqa",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "pilot_m",
+      "emoji": "👨‍✈️",
+      "display": "👨‍✈",
+      "contractLabel": "xn--1ugz7y3t53b",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "pilot_w",
+      "emoji": "👩‍✈️",
+      "display": "👩‍✈",
+      "contractLabel": "xn--1ugz7y6t53b",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "pirate_flag",
+      "emoji": "🏴‍☠️",
+      "display": "🏴‍☠",
+      "contractLabel": "xn--1ug31v1937b",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "rainbow_flag",
+      "emoji": "🏳️‍🌈",
+      "display": "🏳‍🌈",
+      "contractLabel": "xn--1ugy405pdua",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "scientist_m",
+      "emoji": "👨‍🔬",
+      "display": "👨‍🔬",
+      "contractLabel": "xn--1ugz855p3qa",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "scientist_w",
+      "emoji": "👩‍🔬",
+      "display": "👩‍🔬",
+      "contractLabel": "xn--1ug1855p0qa",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "singer_m",
+      "emoji": "👨‍🎤",
+      "display": "👨‍🎤",
+      "contractLabel": "xn--1ugy825p0qa",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "singer_w",
+      "emoji": "👩‍🎤",
+      "display": "👩‍🎤",
+      "contractLabel": "xn--1ugy825p3qa",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "teacher_m",
+      "emoji": "👨‍🏫",
+      "display": "👨‍🏫",
+      "contractLabel": "xn--1ugx935pxka",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "teacher_w",
+      "emoji": "👩‍🏫",
+      "display": "👩‍🏫",
+      "contractLabel": "xn--1ugx935p0ka",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "tech_m",
+      "emoji": "👨‍💻",
+      "display": "👨‍💻",
+      "contractLabel": "xn--1ugz855pfha",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "tech_w",
+      "emoji": "👩‍💻",
+      "display": "👩‍💻",
+      "contractLabel": "xn--1ug1855pcha",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    },
+    {
+      "category": "ZWJ_FAMILY",
+      "key": "woman_doctor",
+      "emoji": "👩‍⚕️",
+      "display": "👩‍⚕",
+      "contractLabel": "xn--1ug39w1n45b",
+      "bytes": 15,
+      "priceIkas": 1000,
+      "priceWei": "1000000000000000000000"
+    }
+  ]
+}

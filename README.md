@@ -45,6 +45,7 @@ Earlier this year we shipped sister TLDs `.ins` and `.ikas`. Their Registries + 
 - **On-chain SVG artwork** (Base64 data URI — no IPFS dependency). V2 cards show a tenure pill (Forever / Annual · exp May 2027).
 - **Reserved names** for ecosystem partners (admin batch-set)
 - **Reverse resolution** — opt-in `setPrimary(tokenId)` lets wallets + explorers render `foo.igra` for an address.
+- **Emoji & Unicode names** — type `🔥`, `🚀`, `👨‍👩‍👧‍👦`, or `🇺🇸` — encoded via ENSIP-15 (the ENS normalization standard, Unicode 17.0) + Punycode end-to-end. Confusables blocked: Cyrillic homographs, mixed-script labels, zero-width invisibles, bidi controls. Render in every INS-integrated wallet via the same REST API.
 - **Zero-custody marketplace** — `setApprovalForAll` once, NFT stays in your wallet until the moment of sale; 2% seller fee + optional 1% featured promotion; buyer pays 0%.
 - **Live activity feed** — `@insdomainsbot` in the [INS Telegram](https://t.me/IgraNameService) posts every mint, listing, and sale in real time.
 - **Subnames (post-launch)** — code shipped + 27 Foundry tests passing. Owners of `.igra` names can mint free children like `pay.alice.igra`, `vault.alice.igra`. Contract launches with `enabled = false`; activation planned ~1 month post-mainnet. Full design + integration guide in [`docs/SUBNAMES.md`](./docs/SUBNAMES.md).
