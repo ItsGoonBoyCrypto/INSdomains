@@ -84,8 +84,25 @@ function AppInner() {
         Mint once, own forever. Permanent <span className="text-plum">.igra</span> identity for any wallet, contract, or community on Igra Network. Tiered pricing in iKAS.
       </p>
 
+      {/* Emoji-names launch promo — click to try a 🔥.igra search */}
+      <div className="mt-6 flex justify-center">
+        <Link
+          href="/app?q=%F0%9F%94%A5"
+          className="group inline-flex items-center gap-2 rounded-full border border-cyan/30 bg-gradient-to-r from-cyan/10 via-plum/15 to-cyan/10 px-4 py-1.5 text-xs font-semibold text-white shadow-[0_0_24px_rgba(168,85,247,0.25)] transition hover:border-cyan/60 hover:from-cyan/20 hover:to-plum/25"
+        >
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan" />
+          </span>
+          <span className="rounded-full bg-cyan/20 px-1.5 py-px text-[10px] uppercase tracking-wider text-cyan">New</span>
+          <span>Emoji names are live</span>
+          <span className="text-base leading-none">🔥</span>
+          <span className="opacity-60 transition group-hover:translate-x-0.5 group-hover:opacity-100">→</span>
+        </Link>
+      </div>
+
       {/* Search */}
-      <div className="mt-10 rounded-2xl glass p-2 pl-5">
+      <div className="mt-6 rounded-2xl glass p-2 pl-5">
         <div className="flex items-center gap-3">
           <Search className="h-5 w-5 text-cyan" />
           <input
