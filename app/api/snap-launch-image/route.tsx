@@ -111,7 +111,7 @@ export async function GET(req: Request) {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: s(10), borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: s(10) }}>
                 <div style={{ display: "flex", width: s(34), height: s(34), borderRadius: s(8), background: FOX, alignItems: "center", justifyContent: "center", fontSize: s(20) }}>🦊</div>
-                <div style={{ display: "flex", fontSize: s(20), fontWeight: 700, color: "rgba(255,255,255,0.85)" }}>MetaMask Flask</div>
+                <div style={{ display: "flex", fontSize: s(20), fontWeight: 700, color: "rgba(255,255,255,0.85)" }}>MetaMask</div>
                 <div style={{ display: "flex", padding: `${s(3)}px ${s(10)}px`, borderRadius: 999, background: "rgba(98,179,253,0.18)", border: "1px solid rgba(98,179,253,0.4)", fontSize: s(13), fontWeight: 700, color: "#93c5fd", marginLeft: s(8) }}>Ethereum Mainnet</div>
               </div>
               <div style={{ display: "flex", fontSize: s(15), fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: s(2) }}>SEND</div>
@@ -199,6 +199,7 @@ export async function GET(req: Request) {
     {
       width: w,
       height: h,
+      emoji: "twemoji",
       headers: {
         "Cache-Control": "public, max-age=21600, s-maxage=21600, stale-while-revalidate=86400",
         "Content-Type": "image/png",
