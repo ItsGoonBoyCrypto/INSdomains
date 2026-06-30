@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Resolve .igra names natively in MetaMask. No extension switching, no copy-paste. Powered by INS on Igra L2.",
   "proposedName": "INS - Igra Name Service",
   "repository": {
@@ -7,7 +7,7 @@
     "url": "git+https://github.com/ItsGoonBoyCrypto/INSdomains.git"
   },
   "source": {
-    "shasum": "eR30Sd3707bsrGo7O99TXs/qdpreDwxy8BgmT54ShnE=",
+    "shasum": "H8rJHH07q7j6VVd/Sq4A8+3NjNQs11ENWqtHJp2RVws=",
     "location": {
       "npm": {
         "filePath": "dist/snap.js",
@@ -23,6 +23,6 @@
     },
     "endowment:network-access": {}
   },
-  "platformVersion": "11.1.1",
+  "platformVersion": "11.0.0",
   "manifestVersion": "0.1"
 }
