@@ -29,7 +29,7 @@ PACKAGE = "ins-snap-resolver"
 SNAP_ID = "npm:ins-snap-resolver"
 PR_LIST_URL = "https://api.github.com/repos/MetaMask/snaps-registry/pulls?state=all&per_page=50&sort=created&direction=desc"
 REGISTRY_JSON_URL = "https://raw.githubusercontent.com/MetaMask/snaps-registry/main/src/registry.json"
-FRONTEND_URL = "https://snaps.metamask.io/snap/npm:ins-snap-resolver/"
+FRONTEND_URL = "https://snaps.metamask.io/snap/npm/ins-snap-resolver/"
 UA = "ins-snap-registry-watch/2.0 (github.com/ItsGoonBoyCrypto/INSdomains)"
 
 
