@@ -10,9 +10,9 @@ Resolve `.igra` names natively in MetaMask's send field. No copy-paste, no exten
 
 ## Quick install
 
-Open https://insdomains.org/snap in a browser with [MetaMask Flask](https://metamask.io/flask) installed, click **Install INS Snap**, approve the popup. That's it.
+Open the [official Snap Directory listing](https://snaps.metamask.io/snap/npm/ins-snap-resolver/) in a browser with **regular MetaMask** installed, click **Install**, approve the popup. That's it.
 
-> **Why Flask?** Regular MetaMask only loads snaps from the official [Snap Directory](https://snaps.metamask.io). Our directory submission is pending — once approved, the snap will install one-click in regular MetaMask as well. Flask is MetaMask's developer build and runs side-by-side with regular MetaMask in the same browser.
+> **Verified snap, no warnings.** INS Snap is live in the official [MetaMask Snap Directory](https://snaps.metamask.io) as of 2026-06-25 (registry PR [#1504](https://github.com/MetaMask/snaps-registry/pull/1504)) with `platformVersion` 11.0.0, so it installs cleanly on every current-stable MetaMask release. No Flask required.
 
 ## What it does
 

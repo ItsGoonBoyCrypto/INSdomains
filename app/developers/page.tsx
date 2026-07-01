@@ -273,10 +273,11 @@ export default function DevelopersPage() {
           <DocCard
             icon={<Puzzle className="h-4 w-4 text-cyan" />}
             title="MetaMask Snap (end-user)"
-            desc="Install INS Snap in MetaMask Flask. Native .igra resolution in the send field. Snap Directory submission filed for regular MetaMask."
-            href="/snap-help"
-            tag="/snap-help"
+            desc="INS Snap is LIVE in the official MetaMask Snap Directory. Type any .igra name in MetaMask's send field — it resolves natively, no extension switching."
+            href="/snap"
+            tag="/snap"
             internal
+            badge="LIVE"
           />
           <DocCard
             icon={<ShieldCheck className="h-4 w-4 text-cyan" />}
