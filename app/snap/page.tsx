@@ -4,6 +4,7 @@ import { Footer } from "@/components/Footer";
 import {
   ArrowLeft, ArrowRight, CheckCircle2, Search, Zap, Keyboard,
   Send, Inbox, Globe, ExternalLink, Code2, ShieldCheck, KeyRound,
+  HelpCircle,
 } from "lucide-react";
 
 export const metadata = {
@@ -31,6 +32,7 @@ export default function SnapPage() {
         <UserGuideSection />
         <UnlocksSection />
         <BuildersSection />
+        <FAQSection />
 
         {/* Bottom CTAs + back link */}
         <div className="mt-16 rounded-3xl border border-emerald-400/20 bg-emerald-400/[0.04] p-6 sm:p-8">
@@ -382,5 +384,153 @@ function Chip({ children }: { children: React.ReactNode }) {
     <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 font-mono text-[11px] font-bold text-emerald-300">
       {children}
     </span>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * FAQ — reflects the current state (LIVE in the Snap Directory)
+ * ───────────────────────────────────────────────────────────────────────── */
+function FAQSection() {
+  return (
+    <section id="faq" className="mt-16 rounded-3xl border border-white/10 bg-black/40 p-6 sm:p-10">
+      <div className="flex items-center gap-2">
+        <HelpCircle className="h-4 w-4 text-emerald-300" />
+        <div className="text-[11px] font-mono uppercase tracking-widest text-emerald-300/80">
+          Frequently asked
+        </div>
+      </div>
+      <h2 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">
+        Everything about the INS Snap
+      </h2>
+      <p className="mt-2 text-sm text-white/60">
+        Install, security model, chains, support. Missing something?{" "}
+        <a
+          href="https://t.me/GoonBoyCrypto"
+          target="_blank"
+          rel="noreferrer"
+          className="text-emerald-300 underline decoration-dotted underline-offset-2"
+        >
+          DM @GoonBoyCrypto
+        </a>{" "}
+        or open a GitHub issue.
+      </p>
+
+      <div className="mt-8 space-y-3">
+        <FAQItem q="How do I install the INS Snap?">
+          One click.{" "}
+          <a
+            href={SNAP_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="text-emerald-300 underline decoration-dotted underline-offset-2"
+          >
+            Open the official Snap Directory page
+          </a>{" "}
+          in any browser that has regular MetaMask, click{" "}
+          <b>Add to MetaMask</b>, and approve the popup. That&apos;s it — INS
+          Snap is a verified snap so you won&apos;t see any &ldquo;unverified&rdquo;
+          or &ldquo;experimental&rdquo; warnings during install. Works on every
+          current-stable MetaMask (platform version 11.0+).
+        </FAQItem>
+
+        <FAQItem q="Will the snap ever see my private keys?">
+          <b>No.</b> The snap doesn&apos;t request any key-management
+          permissions (<code className="font-mono text-emerald-300">snap_getBip32Entropy</code>,{" "}
+          <code className="font-mono text-emerald-300">snap_manageAccounts</code>, etc.).
+          It only receives the domain string you type, calls our public REST API,
+          and returns the resolved address. MetaMask never exposes keys to it.
+        </FAQItem>
+
+        <FAQItem q="What if your API goes down?">
+          The snap <b>fails closed</b> — you&apos;ll see the raw input you typed
+          (e.g. <code className="font-mono text-emerald-300">alice.igra</code>)
+          instead of an address, and MetaMask will block sending until you paste
+          a real address. The snap can never substitute a wrong address.
+        </FAQItem>
+
+        <FAQItem q="Does this need a .eth name or ENS?">
+          <b>No.</b> INS Snap is independent of ENS. It resolves{" "}
+          <code className="font-mono text-emerald-300">.igra</code> names
+          directly via the INS registry on Igra L2. We also have a CCIP-Read
+          resolver at{" "}
+          <code className="font-mono text-emerald-300">*.insdomains.eth</code>{" "}
+          for ENS-only wallets — but the snap path needs nothing on Ethereum at all.
+        </FAQItem>
+
+        <FAQItem q="Which chains does it work on?">
+          Ethereum Mainnet (<code className="font-mono text-emerald-300">eip155:1</code>)
+          and Igra L2 (<code className="font-mono text-emerald-300">eip155:38833</code>).
+          The same <code className="font-mono text-emerald-300">.igra</code> name
+          resolves to the same address on both. We&apos;ll extend to more chains
+          alongside our multi-coin reverse resolver (ENSIP-9) rollout.
+        </FAQItem>
+
+        <FAQItem q="Is the snap open-source? Can I audit it?">
+          Yes — MIT-licensed. Source at{" "}
+          <a
+            href="https://github.com/ItsGoonBoyCrypto/INSdomains/tree/main/snap"
+            target="_blank"
+            rel="noreferrer"
+            className="text-emerald-300 underline decoration-dotted underline-offset-2"
+          >
+            github.com/ItsGoonBoyCrypto/INSdomains/tree/main/snap
+          </a>. Bundle is 1.3&nbsp;KB — readable end-to-end in about two
+          minutes. Full threat model in{" "}
+          <a
+            href="https://github.com/ItsGoonBoyCrypto/INSdomains/blob/main/snap/SECURITY.md"
+            target="_blank"
+            rel="noreferrer"
+            className="text-emerald-300 underline decoration-dotted underline-offset-2"
+          >
+            snap/SECURITY.md
+          </a>.
+        </FAQItem>
+
+        <FAQItem q="How do I report a bug or request a feature?">
+          Best paths, ranked:{" "}
+          <a
+            href="https://github.com/ItsGoonBoyCrypto/INSdomains/issues/new/choose"
+            target="_blank"
+            rel="noreferrer"
+            className="text-emerald-300 underline decoration-dotted underline-offset-2"
+          >
+            open a GitHub issue
+          </a>{" "}
+          (fastest — templates handle triage),{" "}
+          <a
+            href="https://t.me/GoonBoyCrypto"
+            target="_blank"
+            rel="noreferrer"
+            className="text-emerald-300 underline decoration-dotted underline-offset-2"
+          >
+            DM @GoonBoyCrypto on Telegram
+          </a>{" "}
+          for anything live-fire, or email{" "}
+          <span className="font-mono text-emerald-300">GoonBoyCrypto@gmail.com</span>{" "}
+          for security disclosures.
+        </FAQItem>
+
+        <FAQItem q="How do I uninstall the snap?">
+          MetaMask &rarr; Settings &rarr; Snaps &rarr; <b>INS - Igra Name Service</b>{" "}
+          &rarr; Remove. Removing the snap has no on-chain effect — your{" "}
+          <code className="font-mono text-emerald-300">.igra</code> names, primary
+          name, and marketplace listings all remain unchanged.
+        </FAQItem>
+      </div>
+    </section>
+  );
+}
+
+function FAQItem({ q, children }: { q: string; children: React.ReactNode }) {
+  return (
+    <details className="group rounded-2xl border border-white/10 bg-white/[0.02] p-5 open:border-emerald-400/25 open:bg-emerald-400/[0.04]">
+      <summary className="flex cursor-pointer items-center justify-between gap-4 text-base font-black text-white [&::-webkit-details-marker]:hidden">
+        <span>{q}</span>
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-emerald-300 transition-transform group-open:rotate-45">
+          +
+        </span>
+      </summary>
+      <div className="mt-3 text-sm leading-relaxed text-white/70">{children}</div>
+    </details>
   );
 }
