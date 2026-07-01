@@ -30,8 +30,8 @@ Single source of truth for every aggregator / registry / list where Igra Network
 
 | Channel | Coverage |
 |---|---|
-| **MetaMask Flask + INS Snap** | `.igra` direct resolution today |
-| **CCIP-Read via `*.insdomains.eth`** | Resolves in **MetaMask (regular), Coinbase Wallet, Frame, Rainbow, Brave, Trust, Uniswap, others** — every ENS-aware wallet |
+| **MetaMask + INS Snap** | `.igra` direct resolution — LIVE in the official [MetaMask Snap Directory](https://snaps.metamask.io/snap/npm/ins-snap-resolver/), one-click install |
+| **CCIP-Read via `*.insdomains.eth`** | Resolves in **Coinbase Wallet, Frame, Rainbow, Brave, Trust, Uniswap, others** — every ENS-aware wallet |
 
 ---
 
@@ -39,7 +39,7 @@ Single source of truth for every aggregator / registry / list where Igra Network
 
 | Platform | Status | Action |
 |---|---|---|
-| **MetaMask Snap Directory listing** | 📨 Submission filed today | Auto-monitored, TG DM on approval (5-14 days) |
+| **MetaMask Snap Directory listing** | ✅ LIVE (0.1.1, PR #1504 merged 2026-06-25) | — |
 | **awesome-metamask-snaps PR** | 📝 Ready to file | Drop-in instructions: `docs/awesome-snaps-pr.md` |
 | **Rabby native PR** | 📝 Ready to file | Drop-in: `docs/rabby-pr/` |
 
@@ -76,7 +76,7 @@ Use this once the awesome-snaps PR is merged and the Snap Directory approval lan
 ```
 🟣 INS distribution update — where you can find us:
 
-✅ MetaMask (Flask now / regular soon — Directory pending)
+✅ MetaMask — INS Snap LIVE in the official Snap Directory (npm:ins-snap-resolver)
 ✅ Rabby, Coinbase Wallet, Frame, Rainbow, Brave, Trust (via *.insdomains.eth CCIP-Read)
 ✅ chainlist.org (Igra Mainnet + Testnet)
 ✅ DeFiLlama ($1.95M TVL on Igra)

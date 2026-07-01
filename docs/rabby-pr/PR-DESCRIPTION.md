@@ -18,8 +18,9 @@ INS is the canonical name service for Igra Network — an EVM-equivalent L2
 (chain ID 38833) built on Kaspa BlockDAG. Over 150 names registered to date.
 We've shipped:
 
-- **MetaMask Snap** (live on npm: `ins-snap-resolver`, directory submission
-  filed) — works in MetaMask Flask today
+- **MetaMask Snap** — LIVE in the official MetaMask Snap Directory
+  ([`ins-snap-resolver`](https://snaps.metamask.io/snap/npm/ins-snap-resolver/)),
+  one-click install in regular MetaMask
 - **CCIP-Read on Ethereum L1** via `*.insdomains.eth` wildcard (works in
   MetaMask, but **not in Rabby** because Rabby's ENS resolver doesn't
   follow `OffchainLookup` reverts)

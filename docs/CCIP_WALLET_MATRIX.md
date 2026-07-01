@@ -16,7 +16,7 @@
 | **Rabby Wallet** | ethers 5.8.0 + viem 2.47.6 | ❌ NOT enabled | ❌ **CONFIRMED BROKEN** | Searched repo: zero `ccipRead` / `OffchainLookup` references. Liam tested → falls through to whitelist prompt |
 | **Phantom (EVM)** | Closed source | 🟡 Unknown | 🟡 **NEEDS TEST** | New EVM support; ENS resolution path unclear |
 | **OKX Wallet** | Closed source | 🟡 Unknown | 🟡 **NEEDS TEST** | Limited ENS docs available |
-| **MetaMask Flask + INS Snap** | Our snap | N/A (direct `.igra`) | ✅ **VERIFIED WORKING** | Native `.igra` resolution, no CCIP needed |
+| **MetaMask + INS Snap** | Our snap (directory-listed) | N/A (direct `.igra`) | ✅ **LIVE** | Native `.igra` resolution in regular MetaMask, one-click install |
 
 ## How to test in any wallet (~10 sec each)
 

@@ -43,8 +43,9 @@ export default function SnapPage() {
                 Install the snap in one click.
               </h2>
               <p className="mt-2 text-sm text-white/60">
-                Verified in the official directory. No warnings, no Flask, no
-                second extension. Works in every MetaMask on every EVM chain.
+                Verified in the official directory. No warnings, no second
+                extension, no extra app. Works in every MetaMask on every
+                EVM chain.
               </p>
             </div>
             <a

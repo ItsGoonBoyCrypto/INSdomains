@@ -30,7 +30,7 @@ body:
     attributes:
       label: What happened?
       description: A clear, concrete description of the bug.
-      placeholder: When I type `alice.igra` in MetaMask Flask's send field, the snap returns…
+      placeholder: When I type `alice.igra` in MetaMask's send field, the snap returns…
     validations:
       required: true
 
@@ -48,8 +48,8 @@ body:
       label: Steps to reproduce
       description: Numbered steps. Include exact names / addresses / chain IDs.
       placeholder: |
-        1. Install snap via insdomains.org/snap
-        2. Open Flask, switch to Ethereum Mainnet
+        1. Install snap via snaps.metamask.io/snap/npm/ins-snap-resolver/
+        2. Open MetaMask, switch to Ethereum Mainnet
         3. Click Send, type `…`
         4. Observe …
     validations:
@@ -66,7 +66,7 @@ body:
     id: browser
     attributes:
       label: Browser + MetaMask version
-      placeholder: "Chrome 138 / MetaMask Flask 12.x"
+      placeholder: "Chrome 138 / MetaMask 12.x"
 
   - type: textarea
     id: console

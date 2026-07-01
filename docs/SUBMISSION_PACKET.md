@@ -65,7 +65,7 @@ Would love to be added to the Kaspa Hub ecosystem page under Utilities
 or as a new "Names & Identity" category. Quick facts:
 
 🌐 Website:   https://insdomains.org
-📦 MetaMask Snap: https://insdomains.org/snap  (live in Flask, Directory pending)
+📦 MetaMask Snap: https://snaps.metamask.io/snap/npm/ins-snap-resolver/  (LIVE in the Directory)
 🛠 Source:    https://github.com/ItsGoonBoyCrypto/INSdomains  (MIT)
 📚 Docs:      https://insdomains.org/snap-help
 🐦 X:         https://x.com/IgraNameService
@@ -120,8 +120,8 @@ register permanent on-chain .igra names that resolve to wallet addresses
 across multiple wallets.
 
 Two distribution channels: (1) MetaMask Snap published to npm as 
-ins-snap-resolver, enabling native .igra resolution in MetaMask Flask 
-today and regular MetaMask once the Snap Directory submission is approved. 
+ins-snap-resolver and LIVE in the official MetaMask Snap Directory,
+enabling one-click install and native .igra resolution in regular MetaMask.
 (2) CCIP-Read wildcard resolver at insdomains.eth, which makes 
 *.insdomains.eth subdomain resolution work in every ENS-aware wallet 
 including Rabby, Coinbase Wallet, Frame, Rainbow, Brave, Trust, Uniswap 
