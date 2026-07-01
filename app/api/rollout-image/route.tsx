@@ -1,6 +1,22 @@
 import { ImageResponse } from "next/og";
+import fs from "fs";
+import path from "path";
 
 export const runtime = "nodejs";
+
+/** Read a logo from public/wallet-logos and inline it as a data URL so
+ *  next/og doesn't have to network-fetch during render. */
+function logoDataUrl(filename: string, mime: string): string {
+  const p = path.join(process.cwd(), "public", "wallet-logos", filename);
+  return `data:${mime};base64,${fs.readFileSync(p).toString("base64")}`;
+}
+
+const LOGOS = {
+  kasware:  logoDataUrl("kasware.png",  "image/png"),
+  kastle:   logoDataUrl("kastle.png",   "image/png"),
+  kurncy:   logoDataUrl("kurncy.jpg",   "image/jpeg"),
+  kasperia: logoDataUrl("kasperia.jpg", "image/jpeg"),
+};
 
 /**
  * GET /api/rollout-image?size=hd|qhd|4k
@@ -33,17 +49,21 @@ const SIZES: Record<string, { w: number; h: number; scale: number }> = {
 
 type Wallet = {
   name: string;
-  monogram: string; // 1-2 char text mark since we don't have logo files
-  mark: string;     // teal or accent color for the monogram tile
+  /** if set, use a real image logo; otherwise fall back to the monogram/mark */
+  logoUrl?: string;
+  monogram?: string;
+  mark?: string;
   status: "LIVE" | "CONFIRMED";
 };
 
 const WALLETS: Wallet[] = [
-  { name: "MetaMask", monogram: "M",  mark: ORANGE, status: "LIVE" },
-  { name: "Kastle",   monogram: "K",  mark: TEAL,   status: "CONFIRMED" },
-  { name: "Kasware",  monogram: "Kw", mark: TEAL,   status: "CONFIRMED" },
-  { name: "Kurncy",   monogram: "Ku", mark: TEAL,   status: "CONFIRMED" },
-  { name: "Kasperia", monogram: "Kp", mark: TEAL,   status: "CONFIRMED" },
+  // MetaMask keeps the M-on-orange monogram treatment (looks clean, matches design)
+  { name: "MetaMask", monogram: "M", mark: ORANGE, status: "LIVE" },
+  // Kaspa-native wallets get their real brand logos
+  { name: "Kastle",   logoUrl: LOGOS.kastle,   status: "CONFIRMED" },
+  { name: "Kasware",  logoUrl: LOGOS.kasware,  status: "CONFIRMED" },
+  { name: "Kurncy",   logoUrl: LOGOS.kurncy,   status: "CONFIRMED" },
+  { name: "Kasperia", logoUrl: LOGOS.kasperia, status: "CONFIRMED" },
 ];
 
 export async function GET(req: Request) {
@@ -207,24 +227,48 @@ export async function GET(req: Request) {
                     minWidth: s(190),
                   }}
                 >
-                  {/* monogram tile */}
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: s(64),
-                      height: s(64),
-                      borderRadius: s(14),
-                      background: wallet.mark,
-                      color: "#000",
-                      fontSize: s(30),
-                      fontWeight: 900,
-                      letterSpacing: s(-1),
-                    }}
-                  >
-                    {wallet.monogram}
-                  </div>
+                  {/* logo tile — real image for Kaspa-native wallets, monogram for MetaMask */}
+                  {wallet.logoUrl ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: s(64),
+                        height: s(64),
+                        borderRadius: s(14),
+                        overflow: "hidden",
+                        background: "rgba(255,255,255,0.04)",
+                      }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={wallet.logoUrl}
+                        alt={wallet.name}
+                        width={s(64)}
+                        height={s(64)}
+                        style={{ display: "block", objectFit: "cover" }}
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: s(64),
+                        height: s(64),
+                        borderRadius: s(14),
+                        background: wallet.mark ?? TEAL,
+                        color: "#000",
+                        fontSize: s(30),
+                        fontWeight: 900,
+                        letterSpacing: s(-1),
+                      }}
+                    >
+                      {wallet.monogram}
+                    </div>
+                  )}
 
                   {/* name */}
                   <div
