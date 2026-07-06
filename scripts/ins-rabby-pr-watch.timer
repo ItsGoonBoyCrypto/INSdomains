@@ -1,0 +1,11 @@
+[Unit]
+Description=Trigger ins-rabby-pr-watch.service every 30 minutes
+Requires=ins-rabby-pr-watch.service
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=30min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

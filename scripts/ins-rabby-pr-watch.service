@@ -1,0 +1,22 @@
+[Unit]
+Description=Poll RabbyHub/Rabby PR #3826 for any state change and DM Liam
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/ins-rabby-pr-watch.py
+
+# Hardening — mirrors ins-snap-registry-watch.service
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/lib/ins-rabby-pr-watch
+PrivateTmp=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+[Install]
+WantedBy=multi-user.target
