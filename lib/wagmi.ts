@@ -26,13 +26,17 @@ import { igra } from "./igra-chain";
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "";
 
 /**
- * Kaspa-native wallets (Kasware, Kastle) inject their EVM provider under a
- * custom namespace rather than only taking over `window.ethereum`, so we
- * can target them explicitly and keep the user's MetaMask/Rabby intact.
- *   - Kasware: window.kasware.ethereum   (docs.kasware.xyz/.../evm)
- *   - Kastle : window.kastle.ethereum    (docs.kastle.cc)
- * Falls back to the root namespace object if `.ethereum` isn't exposed
- * in an older build.
+ * Kaspa-native wallets inject their EVM provider under a custom namespace
+ * rather than only taking over `window.ethereum`, so we can target them
+ * explicitly and keep the user's MetaMask/Rabby intact.
+ *   - Kasware : window.kasware.ethereum   (docs.kasware.xyz/.../evm)
+ *   - Kastle  : window.kastle.ethereum    (docs.kastle.cc)
+ *   - Kasperia: window.kasperia.ethereum  (2026-07-08, Kasperia dev DM'd Liam
+ *               that clicking Connect didn't surface their wallet — root cause
+ *               was that we didn't have a connector for them at all)
+ *   - Kurncy  : window.kurncy.ethereum    (added same batch; docs coming)
+ * Each falls back to the root namespace object AND to `.provider` in case a
+ * build ships either shape.
  */
 function resolveProvider(paths: string[]): unknown {
   if (typeof window === "undefined") return undefined;
@@ -92,11 +96,55 @@ const kastleWallet = (): Wallet => ({
   name: "Kastle",
   iconUrl: "/wallet-icons/kastle.png",
   iconBackground: "#ffffff",
-  installed: hasProvider(["kastle.ethereum", "kastle"]),
+  installed: hasProvider(["kastle.ethereum", "kastle.provider", "kastle"]),
   downloadUrls: {
     browserExtension: "https://kastle.cc",
   },
-  createConnector: injectedFrom("kastle", "Kastle", ["kastle.ethereum", "kastle"]),
+  createConnector: injectedFrom("kastle", "Kastle", [
+    "kastle.ethereum",
+    "kastle.provider",
+    "kastle",
+  ]),
+});
+
+const kasperiaWallet = (): Wallet => ({
+  id: "kasperia",
+  name: "Kasperia",
+  iconUrl: "/wallet-icons/kasperia.jpg",
+  iconBackground: "#0a1929",
+  installed: hasProvider([
+    "kasperia.ethereum",
+    "kasperia.provider",
+    "kasperia",
+  ]),
+  downloadUrls: {
+    browserExtension: "https://kasperia.com",
+  },
+  createConnector: injectedFrom("kasperia", "Kasperia", [
+    "kasperia.ethereum",
+    "kasperia.provider",
+    "kasperia",
+  ]),
+});
+
+const kurncyWallet = (): Wallet => ({
+  id: "kurncy",
+  name: "Kurncy",
+  iconUrl: "/wallet-icons/kurncy.jpg",
+  iconBackground: "#0a1142",
+  installed: hasProvider([
+    "kurncy.ethereum",
+    "kurncy.provider",
+    "kurncy",
+  ]),
+  downloadUrls: {
+    browserExtension: "https://kurncy.com",
+  },
+  createConnector: injectedFrom("kurncy", "Kurncy", [
+    "kurncy.ethereum",
+    "kurncy.provider",
+    "kurncy",
+  ]),
 });
 
 const connectors = connectorsForWallets(
@@ -108,6 +156,8 @@ const connectors = connectorsForWallets(
         rabbyWallet,
         kaswareWallet,
         kastleWallet,
+        kasperiaWallet,
+        kurncyWallet,
         walletConnectWallet,
       ],
     },
@@ -122,7 +172,8 @@ const connectors = connectorsForWallets(
         phantomWallet,
         safeWallet,
         ledgerWallet,
-        injectedWallet,
+        injectedWallet, // EIP-6963 catch-all — any wallet that self-announces
+                        // shows up here even if we don't have a named connector.
       ],
     },
   ],
