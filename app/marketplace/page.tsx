@@ -225,9 +225,17 @@ function Browse() {
             </span>
           </p>
         </div>
-        <Link href="/domains" className="btn-primary self-start sm:self-auto">
-          <Tag className="mr-1 inline h-4 w-4" /> List a name
-        </Link>
+        <div className="flex flex-col gap-2 self-start sm:flex-row sm:self-auto">
+          <Link
+            href="/marketplace/sales"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-400/25 bg-emerald-400/[0.06] px-4 py-2 text-sm font-bold text-emerald-300 transition hover:bg-emerald-400/[0.12]"
+          >
+            <Clock className="h-4 w-4" /> Sales history
+          </Link>
+          <Link href="/domains" className="btn-primary">
+            <Tag className="mr-1 inline h-4 w-4" /> List a name
+          </Link>
+        </div>
       </header>
 
       {listings.loading && (
