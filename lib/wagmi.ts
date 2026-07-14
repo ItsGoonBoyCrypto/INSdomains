@@ -166,7 +166,7 @@ const kastleWallet = (): Wallet => ({
 const kasperiaWallet = (): Wallet => ({
   id: "kasperia",
   name: "Kasperia",
-  iconUrl: "/wallet-icons/kasperia.png",
+  iconUrl: "/wallet-icons/kasperia.jpg",
   iconBackground: "#0a1929",
   installed: hasAnyProvider(
     ["kasperia.ethereum", "kasperia.provider", "kasperia"],
