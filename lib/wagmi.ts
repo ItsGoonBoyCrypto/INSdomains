@@ -57,36 +57,63 @@ function hasProvider(paths: string[]): boolean {
 }
 
 /**
- * Look up an EIP-6963 announced provider by matching against its rdns
- * or announced name. Wallets that follow the spec (per Kasperia dev's
- * confirmation, 2026-07-14) announce a `EIP6963ProviderDetail` including
- * `info.rdns` (reverse-DNS identifier) + `info.name` + `info.icon` + a
- * `provider` handle. `mipd` (Multi Injected Provider Discovery) ships
- * with wagmi and gives us the whole set without hand-writing the DOM
- * event dance.
+ * Persistent module-level EIP-6963 store. CRITICAL bug fix from the
+ * 2026-07-14 Kasperia dev report: previously we called createMipdStore()
+ * inside every eip6963Provider() lookup, which returned a fresh empty
+ * store synchronously — and since EIP-6963 announcements arrive
+ * ASYNCHRONOUSLY in response to the initial requestProvider event,
+ * the store literally never had any providers to return. That's why
+ * clicking Connect for Kasperia did nothing — target() kept returning
+ * undefined, so wagmi's injected connector had no provider to hand off.
  *
- * We return the first provider whose rdns OR name loosely matches any
- * substring in `matchers` (case-insensitive). Loose matching is
- * deliberate — a wallet might announce as `com.kasperia.wallet` OR
- * `io.kasperia` OR plain `kasperia`; substring on `kasperia` catches
- * all three.
+ * The fix: create the store ONCE at module load (client-only), let it
+ * accumulate announcements over the app's whole lifetime, and query
+ * it at connect time. By the time a user clicks Connect, all announces
+ * that were going to fire have already fired.
  */
-function eip6963Provider(matchers: string[]): unknown {
-  if (typeof window === "undefined") return undefined;
-  try {
-    const store = createMipdStore();
-    const providers = store.getProviders();
-    const needles = matchers.map((m) => m.toLowerCase());
-    for (const p of providers) {
-      const rdns = (p.info?.rdns || "").toLowerCase();
-      const name = (p.info?.name || "").toLowerCase();
-      if (needles.some((n) => rdns.includes(n) || name.includes(n))) {
-        return p.provider;
-      }
+let mipdStoreSingleton: ReturnType<typeof createMipdStore> | null = null;
+function getMipdStore(): ReturnType<typeof createMipdStore> | null {
+  if (typeof window === "undefined") return null;
+  if (!mipdStoreSingleton) {
+    try {
+      mipdStoreSingleton = createMipdStore();
+    } catch {
+      return null;
     }
-  } catch {
-    // mipd throws on old browsers / SSR — swallow, fall through to
-    // window-namespace fallback in the caller.
+  }
+  return mipdStoreSingleton;
+}
+
+/**
+ * Look up an EIP-6963 announced provider by matching against its rdns
+ * or announced name. Loose substring matching — a wallet might announce
+ * as `com.kasperia.wallet` OR `io.kasperia` OR plain `kasperia`; needle
+ * on `kasperia` catches all three.
+ *
+ * Dev-mode: logs the full announced provider list on the first call
+ * so we can see EXACTLY what the wallet announces (rdns/name/uuid) if
+ * matching needs to be tightened.
+ */
+let eip6963LoggedInDev = false;
+function eip6963Provider(matchers: string[]): unknown {
+  const store = getMipdStore();
+  if (!store) return undefined;
+  const providers = store.getProviders();
+  if (process.env.NODE_ENV === "development" && !eip6963LoggedInDev && providers.length > 0) {
+    eip6963LoggedInDev = true;
+    // eslint-disable-next-line no-console
+    console.info(
+      "[EIP-6963] announced providers:",
+      providers.map((p) => ({ rdns: p.info?.rdns, name: p.info?.name, uuid: p.info?.uuid })),
+    );
+  }
+  const needles = matchers.map((m) => m.toLowerCase());
+  for (const p of providers) {
+    const rdns = (p.info?.rdns || "").toLowerCase();
+    const name = (p.info?.name || "").toLowerCase();
+    if (needles.some((n) => rdns.includes(n) || name.includes(n))) {
+      return p.provider;
+    }
   }
   return undefined;
 }
@@ -124,10 +151,6 @@ function injectedFrom(
     });
 }
 
-function hasAnyProvider(paths: string[], eip6963Matchers: string[] = []): boolean {
-  if (eip6963Matchers.length && eip6963Provider(eip6963Matchers)) return true;
-  return hasProvider(paths);
-}
 
 const kaswareWallet = (): Wallet => ({
   id: "kasware",
@@ -163,15 +186,20 @@ const kastleWallet = (): Wallet => ({
 // EIP-6963 (spec-compliant), no hardcoded window namespace needed. We
 // still keep the window fallbacks in case a future/older build ships
 // the injected-namespace shape instead.
+//
+// `installed: undefined` (rather than the hasAnyProvider check) means
+// RainbowKit ALWAYS shows the wallet as connectable — no "Get Kasperia"
+// download page even if we can't detect it at initial page render. If
+// the provider truly isn't available, connect() fails at click time
+// (worst case: user sees an error toast) which is better UX than
+// making the wallet look uninstallable to someone who literally has
+// it running. Detection was proving unreliable across page-load timing.
 const kasperiaWallet = (): Wallet => ({
   id: "kasperia",
   name: "Kasperia",
   iconUrl: "/wallet-icons/kasperia.jpg",
   iconBackground: "#0a1929",
-  installed: hasAnyProvider(
-    ["kasperia.ethereum", "kasperia.provider", "kasperia"],
-    ["kasperia"],
-  ),
+  installed: undefined,
   downloadUrls: {
     browserExtension: "https://kasperia.com",
   },
@@ -188,10 +216,7 @@ const kurncyWallet = (): Wallet => ({
   name: "Kurncy",
   iconUrl: "/wallet-icons/kurncy.jpg",
   iconBackground: "#0a1142",
-  installed: hasAnyProvider(
-    ["kurncy.ethereum", "kurncy.provider", "kurncy"],
-    ["kurncy"],
-  ),
+  installed: undefined,
   downloadUrls: {
     browserExtension: "https://kurncy.com",
   },
