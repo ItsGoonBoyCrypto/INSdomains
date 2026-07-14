@@ -119,26 +119,62 @@ function eip6963Provider(matchers: string[]): unknown {
 }
 
 /**
+ * A generic window.ethereum provider that has NONE of the known wallet
+ * flags — meaning it's almost certainly an in-app-browser inject from
+ * a wallet that isn't announcing via EIP-6963 or a custom namespace.
+ * This is the pattern Kasperia's in-app browser uses (confirmed by
+ * Liam 2026-07-15: Katbridge and other Kaspa dApps work in Kasperia's
+ * browser via plain window.ethereum injection).
+ *
+ * Safe to return this ONLY when: (a) window.ethereum exists, and (b)
+ * no known-wallet identity flag is set on it. If MetaMask/Rabby/etc.
+ * are the injecting wallet, THEIR named connector should handle it
+ * before this fallback fires.
+ */
+function anonymousInAppProvider(): unknown {
+  if (typeof window === "undefined") return undefined;
+  const eth = (window as unknown as Record<string, unknown>).ethereum as
+    | (Record<string, unknown> & { request?: unknown })
+    | undefined;
+  if (!eth || typeof eth.request !== "function") return undefined;
+  // If any well-known wallet flag is present, this is that wallet's provider —
+  // don't hijack it. This keeps desktop-with-multiple-wallets sane.
+  const KNOWN_FLAGS = [
+    "isMetaMask", "isRabby", "isCoinbaseWallet", "isBraveWallet",
+    "isTrust", "isPhantom", "isFrame", "isOkxWallet", "isTokenPocket",
+  ];
+  for (const flag of KNOWN_FLAGS) {
+    if (eth[flag]) return undefined;
+  }
+  return eth;
+}
+
+/**
  * Build a RainbowKit connector that resolves its provider by trying
  * EIP-6963 discovery FIRST (spec-compliant wallets), falling back to
- * hard-coded window namespaces for wallets that inject the older way.
+ * hard-coded window namespaces (older shape), and — if `useAnonymousFallback`
+ * is set — finally to a plain window.ethereum inject if it carries no
+ * competing wallet identity. The third tier is what makes in-app browsers
+ * (Kasperia, some Kurncy builds) work when they inject the generic way.
  */
 function injectedFrom(
   id: string,
   name: string,
   paths: string[],
-  eip6963Matchers: string[] = []
+  eip6963Matchers: string[] = [],
+  useAnonymousFallback = false,
 ): (details: WalletDetailsParams) => ReturnType<typeof createConnector> {
   return (walletDetails) =>
     createConnector((config) => {
       const base = injected({
         target: () => {
-          // Prefer EIP-6963 — this is what modern spec-compliant wallets
-          // (Kasperia confirmed 2026-07-14) announce themselves through.
           const eipProvider = eip6963Matchers.length
             ? eip6963Provider(eip6963Matchers)
             : undefined;
-          const provider = eipProvider ?? resolveProvider(paths);
+          const provider =
+            eipProvider ??
+            resolveProvider(paths) ??
+            (useAnonymousFallback ? anonymousInAppProvider() : undefined);
           if (!provider) return undefined;
           // Wagmi's Target#provider type is strict (EIP1193-shape); we have
           // already narrowed to "has a request function" via resolveProvider,
@@ -208,6 +244,8 @@ const kasperiaWallet = (): Wallet => ({
     "Kasperia",
     ["kasperia.ethereum", "kasperia.provider", "kasperia"],
     ["kasperia"],
+    true, // in-app browser fallback — Kasperia's browser injects plain
+          // window.ethereum (same as how Katbridge etc. see it there).
   ),
 });
 
@@ -225,6 +263,8 @@ const kurncyWallet = (): Wallet => ({
     "Kurncy",
     ["kurncy.ethereum", "kurncy.provider", "kurncy"],
     ["kurncy"],
+    true, // same rationale as Kasperia — Kaspa-native mobile wallets
+          // tend to inject plain window.ethereum in their in-app browser.
   ),
 });
 
