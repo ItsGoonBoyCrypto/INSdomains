@@ -169,6 +169,18 @@ export default function SafeWithdrawPage() {
   const registryHasBalance = (registryBalance?.value ?? 0n) > 0n;
   const splitterHasBalance = (splitterBalance?.value ?? 0n) > 0n;
 
+  // Igra L2 gas settings — explicitly overridden so MetaMask doesn't run
+  // its own estimation. MM's auto-sim would call execTransaction with
+  // from=0x0 → Safe's checkSignatures reverts with GS025 (msg.sender
+  // branch of the prevalidated sig fails) → MM falls back to block gas
+  // limit × worst-case price and reports "insufficient funds for gas"
+  // even when the user has plenty. By shipping explicit values we skip
+  // MM's estimation entirely.
+  const SAFE_EXEC_GAS = 200_000n;          // real cost ~68k; 3x buffer
+  const FLUSH_GAS      = 150_000n;
+  const IGRA_MAX_FEE   = 1_500_000_000_000n; // 1500 Gwei (floor is 1200)
+  const IGRA_PRIO_FEE  = 100_000_000_000n;   // 100 Gwei tip
+
   // Build the Safe tx: Safe → Registry.withdraw(destination)
   const execWithdrawTo = () => {
     if (!destValid || !address) return;
@@ -191,6 +203,9 @@ export default function SafeWithdrawPage() {
         "0x0000000000000000000000000000000000000000" as Address, // refundReceiver
         prevalidatedSig(address),     // signatures (pre-validated, no off-chain sig needed)
       ],
+      gas: SAFE_EXEC_GAS,
+      maxFeePerGas: IGRA_MAX_FEE,
+      maxPriorityFeePerGas: IGRA_PRIO_FEE,
     });
   };
 
@@ -216,6 +231,9 @@ export default function SafeWithdrawPage() {
         "0x0000000000000000000000000000000000000000" as Address,
         prevalidatedSig(address),
       ],
+      gas: SAFE_EXEC_GAS,
+      maxFeePerGas: IGRA_MAX_FEE,
+      maxPriorityFeePerGas: IGRA_PRIO_FEE,
     });
   };
 
@@ -226,6 +244,9 @@ export default function SafeWithdrawPage() {
       abi: SPLITTER_ABI,
       functionName: "flush",
       args: [],
+      gas: FLUSH_GAS,
+      maxFeePerGas: IGRA_MAX_FEE,
+      maxPriorityFeePerGas: IGRA_PRIO_FEE,
     });
   };
 
